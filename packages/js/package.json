@@ -1,6 +1,6 @@
 {
   "name": "@authon/js",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Authon core browser SDK — ShadowDOM login modal, OAuth, session management",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -28,7 +30,14 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authon", "auth", "authentication", "login", "oauth", "sdk"],
+  "keywords": [
+    "authon",
+    "auth",
+    "authentication",
+    "login",
+    "oauth",
+    "sdk"
+  ],
   "dependencies": {
     "@authon/shared": "workspace:*"
   },

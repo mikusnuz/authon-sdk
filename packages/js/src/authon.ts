@@ -140,8 +140,12 @@ export class Authon {
 
   private async startOAuthFlow(provider: OAuthProviderType): Promise<void> {
     try {
+      // Derive web URL from API URL for the callback page
+      // api.authon.dev → authon.dev
+      const webUrl = this.config.apiUrl.replace('://api.', '://');
+      const redirectUri = `${webUrl}/sdk/callback`;
       const { url } = await this.apiGet<{ url: string }>(
-        `/v1/auth/oauth/${provider}/url`,
+        `/v1/auth/oauth/${provider}/url?redirectUri=${encodeURIComponent(redirectUri)}`,
       );
       const width = 500;
       const height = 700;
