@@ -1,0 +1,42 @@
+{
+  "name": "@authup/vue",
+  "version": "0.1.0",
+  "description": "Authup Vue 3 SDK — plugin, composables, and components",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "directory": "packages/vue"
+  },
+  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/vue",
+  "publishConfig": { "access": "public" },
+  "keywords": ["authup", "auth", "vue", "composables", "sdk"],
+  "dependencies": {
+    "@authup/js": "workspace:*",
+    "@authup/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "vue": "^3.5.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3"
+  }
+}

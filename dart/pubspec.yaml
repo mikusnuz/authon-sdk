@@ -1,0 +1,11 @@
+name: authup
+description: Official Authup SDK for Dart and Flutter
+version: 0.1.0
+homepage: https://github.com/mikusnuz/authup-sdk/tree/main/dart
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  http: ^1.1.0
+  crypto: ^3.0.0

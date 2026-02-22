@@ -1,0 +1,40 @@
+{
+  "name": "@authup/node",
+  "version": "0.1.0",
+  "description": "Authup Node.js SDK — verify tokens, manage users, validate webhooks",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "directory": "packages/node"
+  },
+  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/node",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["authup", "auth", "authentication", "node", "server", "sdk"],
+  "dependencies": {
+    "@authup/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3"
+  }
+}
