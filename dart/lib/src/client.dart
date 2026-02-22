@@ -3,13 +3,13 @@ import 'package:http/http.dart' as http;
 import 'types.dart';
 import 'webhook.dart';
 
-/// Exception thrown when the Authup API returns an error.
-class AuthupException implements Exception {
+/// Exception thrown when the Authon API returns an error.
+class AuthonException implements Exception {
   final int statusCode;
   final String message;
   final String? code;
 
-  AuthupException({
+  AuthonException({
     required this.statusCode,
     required this.message,
     this.code,
@@ -17,11 +17,11 @@ class AuthupException implements Exception {
 
   @override
   String toString() =>
-      code != null ? '$code: $message' : 'AuthupException: $message';
+      code != null ? '$code: $message' : 'AuthonException: $message';
 }
 
-/// Server-side Authup client for Dart and Flutter.
-class AuthupBackend {
+/// Server-side Authon client for Dart and Flutter.
+class AuthonBackend {
   final String _secretKey;
   final String _apiUrl;
   final http.Client _httpClient;
@@ -29,12 +29,12 @@ class AuthupBackend {
   late final UserService users;
   late final WebhookService webhooks;
 
-  /// Creates a new [AuthupBackend] with the given [secretKey].
+  /// Creates a new [AuthonBackend] with the given [secretKey].
   ///
-  /// Optionally set [apiUrl] (defaults to `https://api.authup.dev`).
-  AuthupBackend({
+  /// Optionally set [apiUrl] (defaults to `https://api.authon.dev`).
+  AuthonBackend({
     required String secretKey,
-    String apiUrl = 'https://api.authup.dev',
+    String apiUrl = 'https://api.authon.dev',
     http.Client? httpClient,
   })  : _secretKey = secretKey,
         _apiUrl = apiUrl.replaceAll(RegExp(r'/$'), ''),
@@ -63,7 +63,7 @@ class AuthupBackend {
     final reqHeaders = {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer $_secretKey',
-      'User-Agent': 'authup-dart/0.1.0',
+      'User-Agent': 'authon-dart/0.1.0',
       ...?headers,
     };
 
@@ -100,7 +100,7 @@ class AuthupBackend {
         errorBody = jsonDecode(response.body) as Map<String, dynamic>;
       } catch (_) {}
 
-      throw AuthupException(
+      throw AuthonException(
         statusCode: response.statusCode,
         message: errorBody?['message'] as String? ?? response.body,
         code: errorBody?['code'] as String?,
@@ -119,7 +119,7 @@ class AuthupBackend {
 
 /// Handles user management operations.
 class UserService {
-  final AuthupBackend _backend;
+  final AuthonBackend _backend;
 
   UserService(this._backend);
 

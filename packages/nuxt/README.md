@@ -1,13 +1,13 @@
-# @authup/nuxt
+# @authon/nuxt
 
-Nuxt 3 module for [Authup](https://authup.dev) — auto-imported composables, components, and server middleware.
+Nuxt 3 module for [Authon](https://authon.dev) — auto-imported composables, components, and server middleware.
 
 ## Install
 
 ```bash
-npm install @authup/nuxt
+npm install @authon/nuxt
 # or
-pnpm add @authup/nuxt
+pnpm add @authon/nuxt
 ```
 
 Requires `nuxt >= 3.0.0`.
@@ -19,9 +19,9 @@ Requires `nuxt >= 3.0.0`.
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
-  modules: ['@authup/nuxt'],
-  authup: {
-    publishableKey: process.env.NUXT_PUBLIC_AUTHUP_KEY,
+  modules: ['@authon/nuxt'],
+  authon: {
+    publishableKey: process.env.NUXT_PUBLIC_AUTHON_KEY,
   },
 });
 ```
@@ -45,7 +45,7 @@ All composables and components are auto-imported:
 </template>
 
 <script setup>
-const { user, openSignIn } = useAuthup();
+const { user, openSignIn } = useAuthon();
 </script>
 ```
 
@@ -54,7 +54,7 @@ const { user, openSignIn } = useAuthup();
 ```ts
 // server/api/profile.get.ts
 export default defineEventHandler(async (event) => {
-  const user = await requireAuthupUser(event);
+  const user = await requireAuthonUser(event);
   return { user };
 });
 ```
@@ -65,7 +65,7 @@ export default defineEventHandler(async (event) => {
 
 ```ts
 // nuxt.config.ts
-authup: {
+authon: {
   publishableKey: string;
   secretKey?: string;        // For server-side verification
   apiUrl?: string;
@@ -77,7 +77,7 @@ authup: {
 
 | Composable | Description |
 |------------|-------------|
-| `useAuthup()` | Full auth state and actions |
+| `useAuthon()` | Full auth state and actions |
 | `useUser()` | Current user and loading state |
 
 ### Auto-imported Components
@@ -93,12 +93,12 @@ authup: {
 
 | Function | Description |
 |----------|-------------|
-| `requireAuthupUser(event)` | Get and verify the current user (throws 401 if unauthenticated) |
-| `getAuthupUser(event)` | Get the current user or null |
+| `requireAuthonUser(event)` | Get and verify the current user (throws 401 if unauthenticated) |
+| `getAuthonUser(event)` | Get the current user or null |
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

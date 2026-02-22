@@ -2,7 +2,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 
-from .types import AuthupUser, ListResult
+from .types import AuthonUser, ListResult
 from .webhook import verify_webhook as _verify_webhook
 from .types import WebhookEvent
 
@@ -10,7 +10,7 @@ from .types import WebhookEvent
 class _UsersAPI:
     """Sync users API."""
 
-    def __init__(self, client: "AuthupBackend") -> None:
+    def __init__(self, client: "AuthonBackend") -> None:
         self._client = client
 
     def list(
@@ -29,25 +29,25 @@ class _UsersAPI:
         data = self._client._request("GET", "/v1/users", params=params)
         return ListResult.from_dict(data)
 
-    def get(self, user_id: str) -> AuthupUser:
+    def get(self, user_id: str) -> AuthonUser:
         data = self._client._request("GET", f"/v1/users/{user_id}")
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
     def create(
         self,
         email: str,
         password: Optional[str] = None,
         display_name: Optional[str] = None,
-    ) -> AuthupUser:
+    ) -> AuthonUser:
         body: Dict[str, Any] = {"email": email}
         if password is not None:
             body["password"] = password
         if display_name is not None:
             body["displayName"] = display_name
         data = self._client._request("POST", "/v1/users", json_body=body)
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
-    def update(self, user_id: str, **kwargs: Any) -> AuthupUser:
+    def update(self, user_id: str, **kwargs: Any) -> AuthonUser:
         body: Dict[str, Any] = {}
         if "email" in kwargs:
             body["email"] = kwargs["email"]
@@ -56,21 +56,21 @@ class _UsersAPI:
         if "public_metadata" in kwargs:
             body["publicMetadata"] = kwargs["public_metadata"]
         data = self._client._request("PATCH", f"/v1/users/{user_id}", json_body=body)
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
     def delete(self, user_id: str) -> None:
         self._client._request("DELETE", f"/v1/users/{user_id}")
 
-    def ban(self, user_id: str, reason: Optional[str] = None) -> AuthupUser:
+    def ban(self, user_id: str, reason: Optional[str] = None) -> AuthonUser:
         body: Dict[str, Any] = {}
         if reason is not None:
             body["reason"] = reason
         data = self._client._request("POST", f"/v1/users/{user_id}/ban", json_body=body)
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
-    def unban(self, user_id: str) -> AuthupUser:
+    def unban(self, user_id: str) -> AuthonUser:
         data = self._client._request("POST", f"/v1/users/{user_id}/unban")
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
 
 class _WebhooksAPI:
@@ -85,29 +85,29 @@ class _WebhooksAPI:
         return _verify_webhook(payload, signature, secret)
 
 
-class AuthupBackend:
+class AuthonBackend:
     """
-    Synchronous Authup backend client.
+    Synchronous Authon backend client.
 
     Usage:
-        from authup import AuthupBackend
+        from authon import AuthonBackend
 
-        authup = AuthupBackend("sk_live_...")
+        authon = AuthonBackend("sk_live_...")
 
         # Verify a token
-        user = authup.verify_token("eyJ...")
+        user = authon.verify_token("eyJ...")
 
         # List users
-        result = authup.users.list(page=1, limit=10)
+        result = authon.users.list(page=1, limit=10)
 
         # Verify webhook
-        event = authup.webhooks.verify(payload, signature, secret)
+        event = authon.webhooks.verify(payload, signature, secret)
     """
 
     def __init__(
         self,
         secret_key: str,
-        api_url: str = "https://api.authup.dev",
+        api_url: str = "https://api.authon.dev",
     ) -> None:
         self._secret_key = secret_key
         self._api_url = api_url.rstrip("/")
@@ -122,13 +122,13 @@ class AuthupBackend:
         self.users = _UsersAPI(self)
         self.webhooks = _WebhooksAPI()
 
-    def verify_token(self, access_token: str) -> AuthupUser:
+    def verify_token(self, access_token: str) -> AuthonUser:
         data = self._request(
             "GET",
             "/v1/auth/token/verify",
             extra_headers={"Authorization": f"Bearer {access_token}"},
         )
-        return AuthupUser.from_dict(data)
+        return AuthonUser.from_dict(data)
 
     def _request(
         self,
@@ -148,7 +148,7 @@ class AuthupBackend:
         )
         if response.status_code >= 400:
             raise Exception(
-                f"Authup API error {response.status_code}: {response.text}"
+                f"Authon API error {response.status_code}: {response.text}"
             )
         if response.status_code == 204:
             return None
@@ -157,7 +157,7 @@ class AuthupBackend:
     def close(self) -> None:
         self._http.close()
 
-    def __enter__(self) -> "AuthupBackend":
+    def __enter__(self) -> "AuthonBackend":
         return self
 
     def __exit__(self, *args: Any) -> None:

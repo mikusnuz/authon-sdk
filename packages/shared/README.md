@@ -1,25 +1,25 @@
-# @authup/shared
+# @authon/shared
 
-Shared types and constants for [Authup](https://authup.dev) SDKs.
+Shared types and constants for [Authon](https://authon.dev) SDKs.
 
 ## Install
 
 ```bash
-npm install @authup/shared
+npm install @authon/shared
 # or
-pnpm add @authup/shared
+pnpm add @authon/shared
 ```
 
 ## Usage
 
 ```ts
 import type {
-  AuthupUser,
-  AuthupSession,
+  AuthonUser,
+  AuthonSession,
   AuthTokens,
   BrandingConfig,
   WebhookEvent,
-} from '@authup/shared';
+} from '@authon/shared';
 
 import {
   OAUTH_PROVIDERS,
@@ -29,7 +29,7 @@ import {
   API_KEY_PREFIXES,
   DEFAULT_BRANDING,
   DEFAULT_SESSION_CONFIG,
-} from '@authup/shared';
+} from '@authon/shared';
 ```
 
 ## API Reference
@@ -38,8 +38,8 @@ import {
 
 | Type | Description |
 |------|-------------|
-| `AuthupUser` | User object with id, email, displayName, avatarUrl, etc. |
-| `AuthupSession` | Active session with userId, ipAddress, expiresAt |
+| `AuthonUser` | User object with id, email, displayName, avatarUrl, etc. |
+| `AuthonSession` | Active session with userId, ipAddress, expiresAt |
 | `AuthTokens` | Token response: accessToken, refreshToken, expiresIn, user |
 | `BrandingConfig` | Visual customization: colors, logo, border radius, locale |
 | `SessionConfig` | TTL settings, max sessions, single session mode |
@@ -61,7 +61,7 @@ import {
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

@@ -1,7 +1,7 @@
 {
-  "name": "@authup/svelte",
+  "name": "@authon/svelte",
   "version": "0.1.0",
-  "description": "Authup Svelte SDK — stores and components",
+  "description": "Authon Svelte SDK — stores and components",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,17 +21,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/svelte"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/svelte",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/svelte",
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authup", "svelte", "auth", "store"],
+  "keywords": ["authon", "svelte", "auth", "store"],
   "dependencies": {
-    "@authup/js": "workspace:*",
-    "@authup/shared": "workspace:*"
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "peerDependencies": {
     "svelte": "^4.0.0 || ^5.0.0"

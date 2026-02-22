@@ -1,10 +1,10 @@
 import { writable, derived, type Readable } from 'svelte/store';
-import { Authup } from '@authup/js';
-import type { AuthupConfig } from '@authup/js';
-import type { AuthupUser } from '@authup/shared';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import type { AuthonUser } from '@authon/shared';
 
-export interface AuthupStore {
-  user: Readable<AuthupUser | null>;
+export interface AuthonStore {
+  user: Readable<AuthonUser | null>;
   isSignedIn: Readable<boolean>;
   isLoading: Readable<boolean>;
   signOut: () => Promise<void>;
@@ -12,35 +12,35 @@ export interface AuthupStore {
   openSignUp: () => Promise<void>;
   getToken: () => string | null;
   destroy: () => void;
-  client: Authup;
+  client: Authon;
 }
 
 /**
- * Creates an Authup store with reactive Svelte stores.
+ * Creates an Authon store with reactive Svelte stores.
  *
  * Usage:
  * ```ts
- * import { createAuthupStore } from '@authup/svelte'
+ * import { createAuthonStore } from '@authon/svelte'
  *
- * const authup = createAuthupStore('pk_live_...')
+ * const authon = createAuthonStore('pk_live_...')
  *
  * // In your component:
- * $: user = $authup.user
- * $: isSignedIn = $authup.isSignedIn
+ * $: user = $authon.user
+ * $: isSignedIn = $authon.isSignedIn
  * ```
  */
-export function createAuthupStore(
+export function createAuthonStore(
   publishableKey: string,
-  config?: Omit<AuthupConfig, 'mode'>,
-): AuthupStore {
-  const client = new Authup(publishableKey, config);
-  const userStore = writable<AuthupUser | null>(null);
+  config?: Omit<AuthonConfig, 'mode'>,
+): AuthonStore {
+  const client = new Authon(publishableKey, config);
+  const userStore = writable<AuthonUser | null>(null);
   const isLoadingStore = writable(true);
 
   const isSignedIn = derived(userStore, ($user) => $user !== null);
 
   client.on('signedIn', (user) => {
-    userStore.set(user as AuthupUser);
+    userStore.set(user as AuthonUser);
     isLoadingStore.set(false);
   });
 

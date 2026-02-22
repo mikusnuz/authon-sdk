@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-export interface AuthupMiddlewareOptions {
+export interface AuthonMiddlewareOptions {
   publicRoutes?: string[];
   signInUrl?: string;
   secretKey?: string;
@@ -17,7 +17,7 @@ function matchRoute(pathname: string, patterns: string[]): boolean {
   });
 }
 
-export function authupMiddleware(options: AuthupMiddlewareOptions = {}) {
+export function authonMiddleware(options: AuthonMiddlewareOptions = {}) {
   const { publicRoutes = ['/'], signInUrl = '/sign-in' } = options;
 
   return async (request: NextRequest) => {
@@ -28,7 +28,7 @@ export function authupMiddleware(options: AuthupMiddlewareOptions = {}) {
     }
 
     const token =
-      request.cookies.get('authup-token')?.value ||
+      request.cookies.get('authon-token')?.value ||
       request.headers.get('authorization')?.replace('Bearer ', '');
 
     if (!token) {
@@ -39,7 +39,7 @@ export function authupMiddleware(options: AuthupMiddlewareOptions = {}) {
     }
 
     const response = NextResponse.next();
-    response.headers.set('x-authup-token', token);
+    response.headers.set('x-authon-token', token);
     return response;
   };
 }

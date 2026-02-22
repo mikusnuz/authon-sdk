@@ -1,4 +1,4 @@
-package authup
+package authon
 
 import (
 	"bytes"
@@ -9,8 +9,8 @@ import (
 	"net/http"
 )
 
-// AuthupBackend is the server-side Authup client.
-type AuthupBackend struct {
+// AuthonBackend is the server-side Authon client.
+type AuthonBackend struct {
 	secretKey  string
 	apiURL     string
 	httpClient *http.Client
@@ -19,9 +19,9 @@ type AuthupBackend struct {
 	Webhooks *WebhookService
 }
 
-// NewAuthupBackend creates a new backend client with the given secret key.
-func NewAuthupBackend(secretKey string, opts ...Option) *AuthupBackend {
-	b := &AuthupBackend{
+// NewAuthonBackend creates a new backend client with the given secret key.
+func NewAuthonBackend(secretKey string, opts ...Option) *AuthonBackend {
+	b := &AuthonBackend{
 		secretKey:  secretKey,
 		apiURL:     defaultAPIURL,
 		httpClient: http.DefaultClient,
@@ -35,7 +35,7 @@ func NewAuthupBackend(secretKey string, opts ...Option) *AuthupBackend {
 }
 
 // VerifyToken verifies an access token and returns the associated user.
-func (b *AuthupBackend) VerifyToken(ctx context.Context, accessToken string) (*User, error) {
+func (b *AuthonBackend) VerifyToken(ctx context.Context, accessToken string) (*User, error) {
 	req, err := b.newRequest(ctx, http.MethodGet, "/v1/auth/verify", nil)
 	if err != nil {
 		return nil, err
@@ -51,7 +51,7 @@ func (b *AuthupBackend) VerifyToken(ctx context.Context, accessToken string) (*U
 
 // UserService handles user management operations.
 type UserService struct {
-	backend *AuthupBackend
+	backend *AuthonBackend
 }
 
 // List retrieves a paginated list of users.
@@ -152,49 +152,49 @@ func (s *UserService) Unban(ctx context.Context, userID string) (*User, error) {
 	return &user, nil
 }
 
-func (b *AuthupBackend) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
+func (b *AuthonBackend) newRequest(ctx context.Context, method, path string, body any) (*http.Request, error) {
 	url := b.apiURL + path
 
 	var bodyReader io.Reader
 	if body != nil {
 		data, err := json.Marshal(body)
 		if err != nil {
-			return nil, fmt.Errorf("authup: failed to marshal request body: %w", err)
+			return nil, fmt.Errorf("authon: failed to marshal request body: %w", err)
 		}
 		bodyReader = bytes.NewReader(data)
 	}
 
 	req, err := http.NewRequestWithContext(ctx, method, url, bodyReader)
 	if err != nil {
-		return nil, fmt.Errorf("authup: failed to create request: %w", err)
+		return nil, fmt.Errorf("authon: failed to create request: %w", err)
 	}
 
 	req.Header.Set("Authorization", "Bearer "+b.secretKey)
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "authup-go/0.1.0")
+	req.Header.Set("User-Agent", "authon-go/0.1.0")
 
 	return req, nil
 }
 
-func (b *AuthupBackend) do(req *http.Request, v any) error {
+func (b *AuthonBackend) do(req *http.Request, v any) error {
 	resp, err := b.httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("authup: request failed: %w", err)
+		return fmt.Errorf("authon: request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return fmt.Errorf("authup: failed to read response: %w", err)
+		return fmt.Errorf("authon: failed to read response: %w", err)
 	}
 
 	if resp.StatusCode >= 400 {
-		var apiErr AuthupError
+		var apiErr AuthonError
 		if json.Unmarshal(data, &apiErr) == nil && apiErr.Message != "" {
 			apiErr.StatusCode = resp.StatusCode
 			return &apiErr
 		}
-		return &AuthupError{
+		return &AuthonError{
 			StatusCode: resp.StatusCode,
 			Message:    string(data),
 		}
@@ -202,7 +202,7 @@ func (b *AuthupBackend) do(req *http.Request, v any) error {
 
 	if v != nil && len(data) > 0 {
 		if err := json.Unmarshal(data, v); err != nil {
-			return fmt.Errorf("authup: failed to decode response: %w", err)
+			return fmt.Errorf("authon: failed to decode response: %w", err)
 		}
 	}
 

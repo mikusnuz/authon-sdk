@@ -1,4 +1,4 @@
-export interface AuthupReactNativeConfig {
+export interface AuthonReactNativeConfig {
   publishableKey: string;
   apiUrl?: string;
 }
@@ -11,7 +11,7 @@ export interface AuthState {
   accessToken: string | null;
 }
 
-export interface AuthupUser {
+export interface AuthonUser {
   id: string;
   email?: string;
   emailVerified: boolean;

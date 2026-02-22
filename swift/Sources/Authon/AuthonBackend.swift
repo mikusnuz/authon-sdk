@@ -1,7 +1,7 @@
 import Foundation
 
-/// Server-side Authup client for Swift.
-public final class AuthupBackend: Sendable {
+/// Server-side Authon client for Swift.
+public final class AuthonBackend: Sendable {
     private let secretKey: String
     private let apiURL: String
     private let session: URLSession
@@ -13,12 +13,12 @@ public final class AuthupBackend: Sendable {
     /// Creates a new backend client.
     ///
     /// - Parameters:
-    ///   - secretKey: Your Authup secret API key.
-    ///   - apiURL: Custom API base URL (defaults to `https://api.authup.dev`).
+    ///   - secretKey: Your Authon secret API key.
+    ///   - apiURL: Custom API base URL (defaults to `https://api.authon.dev`).
     ///   - session: Custom URLSession (defaults to `.shared`).
     public init(
         secretKey: String,
-        apiURL: String = "https://api.authup.dev",
+        apiURL: String = "https://api.authon.dev",
         session: URLSession = .shared
     ) {
         self.secretKey = secretKey
@@ -38,14 +38,14 @@ public final class AuthupBackend: Sendable {
 
     private func makeRequest(method: String, path: String, body: (any Encodable)? = nil) throws -> URLRequest {
         guard let url = URL(string: "\(apiURL)\(path)") else {
-            throw AuthupError(statusCode: 0, message: "Invalid URL: \(apiURL)\(path)", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid URL: \(apiURL)\(path)", code: nil)
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(secretKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("authup-swift/0.1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("authon-swift/0.1.0", forHTTPHeaderField: "User-Agent")
 
         if let body = body {
             request.httpBody = try JSONEncoder().encode(body)
@@ -58,18 +58,18 @@ public final class AuthupBackend: Sendable {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthupError(statusCode: 0, message: "Invalid response", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid response", code: nil)
         }
 
         if httpResponse.statusCode >= 400 {
-            if let apiError = try? decoder.decode(AuthupError.self, from: data) {
-                throw AuthupError(
+            if let apiError = try? decoder.decode(AuthonError.self, from: data) {
+                throw AuthonError(
                     statusCode: httpResponse.statusCode,
                     message: apiError.message,
                     code: apiError.code
                 )
             }
-            throw AuthupError(
+            throw AuthonError(
                 statusCode: httpResponse.statusCode,
                 message: String(data: data, encoding: .utf8) ?? "Unknown error",
                 code: nil
@@ -83,18 +83,18 @@ public final class AuthupBackend: Sendable {
         let (data, response) = try await session.data(for: request)
 
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthupError(statusCode: 0, message: "Invalid response", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid response", code: nil)
         }
 
         if httpResponse.statusCode >= 400 {
-            if let apiError = try? decoder.decode(AuthupError.self, from: data) {
-                throw AuthupError(
+            if let apiError = try? decoder.decode(AuthonError.self, from: data) {
+                throw AuthonError(
                     statusCode: httpResponse.statusCode,
                     message: apiError.message,
                     code: apiError.code
                 )
             }
-            throw AuthupError(
+            throw AuthonError(
                 statusCode: httpResponse.statusCode,
                 message: String(data: data, encoding: .utf8) ?? "Unknown error",
                 code: nil
@@ -161,14 +161,14 @@ public final class UserService: Sendable {
 
     private func makeRequest(method: String, path: String, body: (any Encodable)? = nil) throws -> URLRequest {
         guard let url = URL(string: "\(apiURL)\(path)") else {
-            throw AuthupError(statusCode: 0, message: "Invalid URL", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid URL", code: nil)
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("Bearer \(secretKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("authup-swift/0.1.0", forHTTPHeaderField: "User-Agent")
+        request.setValue("authon-swift/0.1.0", forHTTPHeaderField: "User-Agent")
 
         if let body = body {
             request.httpBody = try JSONEncoder().encode(body)
@@ -180,13 +180,13 @@ public final class UserService: Sendable {
     private func perform<T: Decodable>(_ request: URLRequest) async throws -> T {
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthupError(statusCode: 0, message: "Invalid response", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid response", code: nil)
         }
         if httpResponse.statusCode >= 400 {
-            if let apiError = try? decoder.decode(AuthupError.self, from: data) {
-                throw AuthupError(statusCode: httpResponse.statusCode, message: apiError.message, code: apiError.code)
+            if let apiError = try? decoder.decode(AuthonError.self, from: data) {
+                throw AuthonError(statusCode: httpResponse.statusCode, message: apiError.message, code: apiError.code)
             }
-            throw AuthupError(statusCode: httpResponse.statusCode, message: String(data: data, encoding: .utf8) ?? "Unknown error", code: nil)
+            throw AuthonError(statusCode: httpResponse.statusCode, message: String(data: data, encoding: .utf8) ?? "Unknown error", code: nil)
         }
         return try decoder.decode(T.self, from: data)
     }
@@ -194,13 +194,13 @@ public final class UserService: Sendable {
     private func performVoid(_ request: URLRequest) async throws {
         let (data, response) = try await session.data(for: request)
         guard let httpResponse = response as? HTTPURLResponse else {
-            throw AuthupError(statusCode: 0, message: "Invalid response", code: nil)
+            throw AuthonError(statusCode: 0, message: "Invalid response", code: nil)
         }
         if httpResponse.statusCode >= 400 {
-            if let apiError = try? decoder.decode(AuthupError.self, from: data) {
-                throw AuthupError(statusCode: httpResponse.statusCode, message: apiError.message, code: apiError.code)
+            if let apiError = try? decoder.decode(AuthonError.self, from: data) {
+                throw AuthonError(statusCode: httpResponse.statusCode, message: apiError.message, code: apiError.code)
             }
-            throw AuthupError(statusCode: httpResponse.statusCode, message: String(data: data, encoding: .utf8) ?? "Unknown error", code: nil)
+            throw AuthonError(statusCode: httpResponse.statusCode, message: String(data: data, encoding: .utf8) ?? "Unknown error", code: nil)
         }
     }
 }

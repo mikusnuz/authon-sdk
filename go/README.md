@@ -1,11 +1,11 @@
-# authup-go
+# authon-go
 
-Official Go SDK for [Authup](https://authup.dev) — token verification, user management, and net/http middleware.
+Official Go SDK for [Authon](https://authon.dev) — token verification, user management, and net/http middleware.
 
 ## Install
 
 ```bash
-go get github.com/mikusnuz/authup-sdk/go
+go get github.com/mikusnuz/authon-sdk/go
 ```
 
 Requires Go >= 1.21.
@@ -21,11 +21,11 @@ import (
 	"fmt"
 	"log"
 
-	authup "github.com/mikusnuz/authup-sdk/go"
+	authon "github.com/mikusnuz/authon-sdk/go"
 )
 
 func main() {
-	client := authup.NewBackend("sk_live_...")
+	client := authon.NewBackend("sk_live_...")
 
 	user, err := client.VerifyToken("eyJ...")
 	if err != nil {
@@ -43,11 +43,11 @@ package main
 import (
 	"net/http"
 
-	authup "github.com/mikusnuz/authup-sdk/go"
+	authon "github.com/mikusnuz/authon-sdk/go"
 )
 
 func main() {
-	client := authup.NewBackend("sk_live_...")
+	client := authon.NewBackend("sk_live_...")
 	mux := http.NewServeMux()
 
 	// Protected route
@@ -60,7 +60,7 @@ func main() {
 }
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
-	user := authup.UserFromContext(r.Context())
+	user := authon.UserFromContext(r.Context())
 	// user.ID, user.Email, user.DisplayName, ...
 	w.Write([]byte("Hello, " + user.DisplayName))
 }
@@ -73,23 +73,23 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 ### User Management
 
 ```go
-client := authup.NewBackend("sk_live_...")
+client := authon.NewBackend("sk_live_...")
 
 // List users
-result, err := client.Users.List(authup.ListOptions{Page: 1, PerPage: 20})
+result, err := client.Users.List(authon.ListOptions{Page: 1, PerPage: 20})
 
 // Get a user
 user, err := client.Users.Get("user_abc123")
 
 // Create a user
-user, err := client.Users.Create(authup.CreateUserParams{
+user, err := client.Users.Create(authon.CreateUserParams{
 	Email:    "user@example.com",
 	Password: "securePassword",
 })
 
 // Update a user
-user, err := client.Users.Update("user_abc123", authup.UpdateUserParams{
-	DisplayName: authup.String("Updated Name"),
+user, err := client.Users.Update("user_abc123", authon.UpdateUserParams{
+	DisplayName: authon.String("Updated Name"),
 })
 
 // Delete a user
@@ -99,11 +99,11 @@ err := client.Users.Delete("user_abc123")
 ### Webhook Verification
 
 ```go
-client := authup.NewBackend("sk_live_...")
+client := authon.NewBackend("sk_live_...")
 
 data, err := client.Webhooks.Verify(
 	[]byte(requestBody),
-	r.Header.Get("X-Authup-Signature"),
+	r.Header.Get("X-Authon-Signature"),
 	"whsec_...",
 )
 if err != nil {
@@ -116,12 +116,12 @@ fmt.Println(data["type"]) // "user.created"
 ### Custom API URL
 
 ```go
-client := authup.NewBackend("sk_live_...", authup.WithAPIURL("https://custom.api.url"))
+client := authon.NewBackend("sk_live_...", authon.WithAPIURL("https://custom.api.url"))
 ```
 
 ## API Reference
 
-### `NewBackend(secretKey string, opts ...Option) *AuthupBackend`
+### `NewBackend(secretKey string, opts ...Option) *AuthonBackend`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
@@ -142,11 +142,11 @@ client := authup.NewBackend("sk_live_...", authup.WithAPIURL("https://custom.api
 | `Session` | Active session with UserID, Status, ExpireAt |
 | `WebhookEvent` | Webhook payload with ID, Type, Data, Timestamp |
 | `ListResult[T]` | Paginated list: Data, TotalCount, Page, PerPage |
-| `AuthupError` | API error with StatusCode, Message, Code |
+| `AuthonError` | API error with StatusCode, Message, Code |
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

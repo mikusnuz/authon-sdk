@@ -1,11 +1,11 @@
-# authup (Python)
+# authon (Python)
 
-Official Python SDK for [Authup](https://authup.dev) — verify tokens, manage users, and integrate with Django, Flask, and FastAPI.
+Official Python SDK for [Authon](https://authon.dev) — verify tokens, manage users, and integrate with Django, Flask, and FastAPI.
 
 ## Install
 
 ```bash
-pip install authup
+pip install authon
 ```
 
 Requires Python >= 3.8. Uses `httpx` for HTTP requests.
@@ -15,62 +15,62 @@ Requires Python >= 3.8. Uses `httpx` for HTTP requests.
 ### Basic Client
 
 ```python
-from authup import AuthupBackend
+from authon import AuthonBackend
 
-authup = AuthupBackend("sk_live_...")
+authon = AuthonBackend("sk_live_...")
 
 # Verify a token
-user = authup.verify_token("eyJ...")
+user = authon.verify_token("eyJ...")
 print(user.id, user.email)
 
 # List users
-result = authup.users.list(page=1, limit=10)
+result = authon.users.list(page=1, limit=10)
 for u in result.data:
     print(u.email)
 
 # Create a user
-new_user = authup.users.create(
+new_user = authon.users.create(
     email="user@example.com",
     password="securePassword",
     display_name="New User",
 )
 
 # Update a user
-authup.users.update("user_abc123", display_name="Updated Name")
+authon.users.update("user_abc123", display_name="Updated Name")
 
 # Ban / unban
-authup.users.ban("user_abc123", reason="Spam")
-authup.users.unban("user_abc123")
+authon.users.ban("user_abc123", reason="Spam")
+authon.users.unban("user_abc123")
 
 # Delete a user
-authup.users.delete("user_abc123")
+authon.users.delete("user_abc123")
 ```
 
 ### Async Client
 
 ```python
-from authup import AsyncAuthupBackend
+from authon import AsyncAuthonBackend
 
-authup = AsyncAuthupBackend("sk_live_...")
+authon = AsyncAuthonBackend("sk_live_...")
 
-user = await authup.verify_token("eyJ...")
-result = await authup.users.list(page=1, limit=10)
+user = await authon.verify_token("eyJ...")
+result = await authon.users.list(page=1, limit=10)
 ```
 
 ### FastAPI
 
 ```python
 from fastapi import FastAPI, Depends, Header
-from authup.middleware.fastapi import AuthupDependency
-from authup.types import AuthupUser
+from authon.middleware.fastapi import AuthonDependency
+from authon.types import AuthonUser
 
 app = FastAPI()
-authup_dep = AuthupDependency("sk_live_...")
+authon_dep = AuthonDependency("sk_live_...")
 
 @app.get("/api/profile")
 async def profile(
     authorization: str = Header(...),
-    user: AuthupUser = Depends(authup_dep),
+    user: AuthonUser = Depends(authon_dep),
 ):
     return {"id": user.id, "email": user.email}
 ```
@@ -79,14 +79,14 @@ async def profile(
 
 ```python
 from django.http import JsonResponse
-from authup import AuthupBackend
-from authup.middleware.django import authup_login_required
+from authon import AuthonBackend
+from authon.middleware.django import authon_login_required
 
-authup = AuthupBackend("sk_live_...")
+authon = AuthonBackend("sk_live_...")
 
-@authup_login_required(authup)
+@authon_login_required(authon)
 def profile(request):
-    user = request.authup_user
+    user = request.authon_user
     return JsonResponse({"id": user.id, "email": user.email})
 ```
 
@@ -94,27 +94,27 @@ def profile(request):
 
 ```python
 from flask import Flask, g, jsonify
-from authup import AuthupBackend
-from authup.middleware.flask import flask_authup_required
+from authon import AuthonBackend
+from authon.middleware.flask import flask_authon_required
 
 app = Flask(__name__)
-authup = AuthupBackend("sk_live_...")
+authon = AuthonBackend("sk_live_...")
 
 @app.route("/api/profile")
-@flask_authup_required(authup)
+@flask_authon_required(authon)
 def profile():
-    user = g.authup_user
+    user = g.authon_user
     return jsonify({"id": user.id, "email": user.email})
 ```
 
 ### Webhook Verification
 
 ```python
-from authup import verify_webhook
+from authon import verify_webhook
 
 event = verify_webhook(
     payload=request_body,
-    signature=request.headers["x-authup-signature"],
+    signature=request.headers["x-authon-signature"],
     secret="whsec_...",
 )
 print(event.type)  # "user.created"
@@ -122,36 +122,36 @@ print(event.type)  # "user.created"
 
 ## API Reference
 
-### `AuthupBackend(secret_key, api_url?)`
+### `AuthonBackend(secret_key, api_url?)`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `verify_token(token)` | `AuthupUser` | Verify an access token |
+| `verify_token(token)` | `AuthonUser` | Verify an access token |
 | `users.list(page?, limit?, search?)` | `ListResult` | List users |
-| `users.get(user_id)` | `AuthupUser` | Get a user |
-| `users.create(email, password?, display_name?)` | `AuthupUser` | Create a user |
-| `users.update(user_id, **kwargs)` | `AuthupUser` | Update a user |
+| `users.get(user_id)` | `AuthonUser` | Get a user |
+| `users.create(email, password?, display_name?)` | `AuthonUser` | Create a user |
+| `users.update(user_id, **kwargs)` | `AuthonUser` | Update a user |
 | `users.delete(user_id)` | `None` | Delete a user |
-| `users.ban(user_id, reason?)` | `AuthupUser` | Ban a user |
-| `users.unban(user_id)` | `AuthupUser` | Unban a user |
+| `users.ban(user_id, reason?)` | `AuthonUser` | Ban a user |
+| `users.unban(user_id)` | `AuthonUser` | Unban a user |
 | `webhooks.verify(payload, signature, secret)` | `WebhookEvent` | Verify webhook signature |
 
-### `AsyncAuthupBackend`
+### `AsyncAuthonBackend`
 
-Same API as `AuthupBackend`, but all methods are `async`.
+Same API as `AuthonBackend`, but all methods are `async`.
 
 ### Types
 
 | Type | Fields |
 |------|--------|
-| `AuthupUser` | `id`, `email`, `display_name`, `avatar_url`, `email_verified`, `banned`, `created_at` |
-| `AuthupSession` | `id`, `user_id`, `ip_address`, `expires_at` |
+| `AuthonUser` | `id`, `email`, `display_name`, `avatar_url`, `email_verified`, `banned`, `created_at` |
+| `AuthonSession` | `id`, `user_id`, `ip_address`, `expires_at` |
 | `WebhookEvent` | `id`, `type`, `project_id`, `timestamp`, `data` |
 | `ListResult` | `data`, `total`, `page`, `limit` |
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

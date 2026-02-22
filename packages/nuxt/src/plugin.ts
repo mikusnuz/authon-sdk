@@ -1,33 +1,33 @@
-import { Authup } from '@authup/js';
-import type { AuthupConfig } from '@authup/js';
-import type { AuthupUser } from '@authup/shared';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import type { AuthonUser } from '@authon/shared';
 
-export interface AuthupPluginState {
-  client: Authup;
-  user: AuthupUser | null;
+export interface AuthonPluginState {
+  client: Authon;
+  user: AuthonUser | null;
   isSignedIn: boolean;
   isLoading: boolean;
 }
 
 /**
- * Creates an Authup client instance for use as a Nuxt plugin.
+ * Creates an Authon client instance for use as a Nuxt plugin.
  *
- * Usage in plugins/authup.client.ts:
+ * Usage in plugins/authon.client.ts:
  * ```ts
- * import { createAuthupPlugin } from '@authup/nuxt'
+ * import { createAuthonPlugin } from '@authon/nuxt'
  *
  * export default defineNuxtPlugin(() => {
- *   const authup = createAuthupPlugin('pk_live_...', { theme: 'auto' })
- *   return { provide: { authup } }
+ *   const authon = createAuthonPlugin('pk_live_...', { theme: 'auto' })
+ *   return { provide: { authon } }
  * })
  * ```
  */
-export function createAuthupPlugin(
+export function createAuthonPlugin(
   publishableKey: string,
-  config?: Omit<AuthupConfig, 'mode'>,
-): AuthupPluginState {
-  const client = new Authup(publishableKey, config);
-  const state: AuthupPluginState = {
+  config?: Omit<AuthonConfig, 'mode'>,
+): AuthonPluginState {
+  const client = new Authon(publishableKey, config);
+  const state: AuthonPluginState = {
     client,
     user: null,
     isSignedIn: false,
@@ -35,7 +35,7 @@ export function createAuthupPlugin(
   };
 
   client.on('signedIn', (user) => {
-    state.user = user as AuthupUser;
+    state.user = user as AuthonUser;
     state.isSignedIn = true;
     state.isLoading = false;
   });

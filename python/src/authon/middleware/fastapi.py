@@ -1,41 +1,41 @@
 """
-FastAPI dependency for Authup token verification.
+FastAPI dependency for Authon token verification.
 
 Usage:
-    from authup.middleware.fastapi import AuthupDependency
+    from authon.middleware.fastapi import AuthonDependency
 
-    authup_dep = AuthupDependency("sk_live_...")
+    authon_dep = AuthonDependency("sk_live_...")
 
     @app.get("/protected")
-    async def protected(user: AuthupUser = Depends(authup_dep)):
+    async def protected(user: AuthonUser = Depends(authon_dep)):
         return {"email": user.email}
 """
 
 from typing import Optional
 
-from ..async_client import AsyncAuthupBackend
-from ..types import AuthupUser
+from ..async_client import AsyncAuthonBackend
+from ..types import AuthonUser
 
 
-class AuthupDependency:
+class AuthonDependency:
     """
     FastAPI dependency that verifies the Authorization header
-    and returns an AuthupUser.
+    and returns an AuthonUser.
     """
 
     def __init__(
         self,
         secret_key: str,
-        api_url: str = "https://api.authup.dev",
+        api_url: str = "https://api.authon.dev",
     ) -> None:
-        self._client = AsyncAuthupBackend(secret_key, api_url)
+        self._client = AsyncAuthonBackend(secret_key, api_url)
 
     async def __call__(
         self,
         authorization: Optional[str] = None,
-    ) -> AuthupUser:
+    ) -> AuthonUser:
         # FastAPI with Header dependency
-        # Users should use: Depends(authup_dep) with proper header extraction
+        # Users should use: Depends(authon_dep) with proper header extraction
         if not authorization:
             # Try to get from request directly
             raise _http_exception(401, "Missing authorization header")

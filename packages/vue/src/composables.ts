@@ -1,18 +1,18 @@
 import { inject, computed } from 'vue';
 import type { ComputedRef } from 'vue';
-import { AUTHUP_KEY } from './plugin';
-import type { AuthupState } from './plugin';
-import type { AuthupUser } from '@authup/shared';
+import { AUTHON_KEY } from './plugin';
+import type { AuthonState } from './plugin';
+import type { AuthonUser } from '@authon/shared';
 
-function requireState(): AuthupState {
-  const state = inject<AuthupState>(AUTHUP_KEY);
+function requireState(): AuthonState {
+  const state = inject<AuthonState>(AUTHON_KEY);
   if (!state) {
-    throw new Error('useAuthup() must be called inside a component tree with createAuthup() installed');
+    throw new Error('useAuthon() must be called inside a component tree with createAuthon() installed');
   }
   return state;
 }
 
-export function useAuthup(): AuthupState & {
+export function useAuthon(): AuthonState & {
   signOut: () => Promise<void>;
   openSignIn: () => Promise<void>;
   openSignUp: () => Promise<void>;
@@ -47,7 +47,7 @@ export function useAuthup(): AuthupState & {
   };
 }
 
-export function useUser(): { user: ComputedRef<AuthupUser | null>; isLoading: ComputedRef<boolean> } {
+export function useUser(): { user: ComputedRef<AuthonUser | null>; isLoading: ComputedRef<boolean> } {
   const s = requireState();
   return {
     user: computed(() => s.user),

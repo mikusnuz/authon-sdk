@@ -1,4 +1,4 @@
-package authup
+package authon
 
 import (
 	"crypto/hmac"
@@ -15,13 +15,13 @@ type WebhookService struct{}
 // Returns the parsed event data on success.
 func (w *WebhookService) Verify(payload []byte, signature string, secret string) (map[string]any, error) {
 	if len(payload) == 0 {
-		return nil, errors.New("authup: empty webhook payload")
+		return nil, errors.New("authon: empty webhook payload")
 	}
 	if signature == "" {
-		return nil, errors.New("authup: empty webhook signature")
+		return nil, errors.New("authon: empty webhook signature")
 	}
 	if secret == "" {
-		return nil, errors.New("authup: empty webhook secret")
+		return nil, errors.New("authon: empty webhook secret")
 	}
 
 	mac := hmac.New(sha256.New, []byte(secret))
@@ -29,12 +29,12 @@ func (w *WebhookService) Verify(payload []byte, signature string, secret string)
 	expected := hex.EncodeToString(mac.Sum(nil))
 
 	if !hmac.Equal([]byte(expected), []byte(signature)) {
-		return nil, errors.New("authup: invalid webhook signature")
+		return nil, errors.New("authon: invalid webhook signature")
 	}
 
 	var result map[string]any
 	if err := json.Unmarshal(payload, &result); err != nil {
-		return nil, errors.New("authup: failed to parse webhook payload: " + err.Error())
+		return nil, errors.New("authon: failed to parse webhook payload: " + err.Error())
 	}
 
 	return result, nil

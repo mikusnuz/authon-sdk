@@ -1,7 +1,7 @@
 {
-  "name": "@authup/node",
+  "name": "@authon/node",
   "version": "0.1.0",
-  "description": "Authup Node.js SDK — verify tokens, manage users, validate webhooks",
+  "description": "Authon Node.js SDK — verify tokens, manage users, validate webhooks",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,16 +21,16 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/node"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/node",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/node",
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authup", "auth", "authentication", "node", "server", "sdk"],
+  "keywords": ["authon", "auth", "authentication", "node", "server", "sdk"],
   "dependencies": {
-    "@authup/shared": "workspace:*"
+    "@authon/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

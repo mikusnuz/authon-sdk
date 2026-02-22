@@ -1,6 +1,6 @@
-import type { AuthupUser, BrandingConfig } from '@authup/shared';
+import type { AuthonUser, BrandingConfig } from '@authon/shared';
 
-export interface AuthupConfig {
+export interface AuthonConfig {
   apiUrl?: string;
   mode?: 'popup' | 'embedded';
   containerId?: string;
@@ -9,11 +9,11 @@ export interface AuthupConfig {
   appearance?: Partial<BrandingConfig>;
 }
 
-export interface AuthupEvents {
-  signedIn: (user: AuthupUser) => void;
+export interface AuthonEvents {
+  signedIn: (user: AuthonUser) => void;
   signedOut: () => void;
   tokenRefreshed: (token: string) => void;
   error: (error: Error) => void;
 }
 
-export type AuthupEventType = keyof AuthupEvents;
+export type AuthonEventType = keyof AuthonEvents;

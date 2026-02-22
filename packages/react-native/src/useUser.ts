@@ -1,11 +1,11 @@
-import { useAuthup } from './useAuthup';
-import type { AuthupUser } from './types';
+import { useAuthon } from './useAuthon';
+import type { AuthonUser } from './types';
 
 export function useUser(): {
   isLoaded: boolean;
   isSignedIn: boolean;
-  user: AuthupUser | null;
+  user: AuthonUser | null;
 } {
-  const { isLoaded, isSignedIn, user } = useAuthup();
+  const { isLoaded, isSignedIn, user } = useAuthon();
   return { isLoaded, isSignedIn, user };
 }

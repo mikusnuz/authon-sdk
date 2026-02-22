@@ -1,8 +1,8 @@
 import { defineComponent, h, onMounted, ref, computed } from 'vue';
-import { useAuthup } from './composables';
+import { useAuthon } from './composables';
 
-export const AuthupSignIn = defineComponent({
-  name: 'AuthupSignIn',
+export const AuthonSignIn = defineComponent({
+  name: 'AuthonSignIn',
   props: {
     mode: {
       type: String as () => 'popup' | 'embedded',
@@ -10,7 +10,7 @@ export const AuthupSignIn = defineComponent({
     },
   },
   setup(props) {
-    const { client } = useAuthup();
+    const { client } = useAuthon();
 
     onMounted(() => {
       if (props.mode === 'popup') {
@@ -20,15 +20,15 @@ export const AuthupSignIn = defineComponent({
 
     return () => {
       if (props.mode === 'embedded') {
-        return h('div', { id: 'authup-signin-container' });
+        return h('div', { id: 'authon-signin-container' });
       }
       return null;
     };
   },
 });
 
-export const AuthupSignUp = defineComponent({
-  name: 'AuthupSignUp',
+export const AuthonSignUp = defineComponent({
+  name: 'AuthonSignUp',
   props: {
     mode: {
       type: String as () => 'popup' | 'embedded',
@@ -36,7 +36,7 @@ export const AuthupSignUp = defineComponent({
     },
   },
   setup(props) {
-    const { client } = useAuthup();
+    const { client } = useAuthon();
 
     onMounted(() => {
       if (props.mode === 'popup') {
@@ -46,17 +46,17 @@ export const AuthupSignUp = defineComponent({
 
     return () => {
       if (props.mode === 'embedded') {
-        return h('div', { id: 'authup-signup-container' });
+        return h('div', { id: 'authon-signup-container' });
       }
       return null;
     };
   },
 });
 
-export const AuthupUserButton = defineComponent({
-  name: 'AuthupUserButton',
+export const AuthonUserButton = defineComponent({
+  name: 'AuthonUserButton',
   setup() {
-    const { user, isSignedIn, signOut, openSignIn } = useAuthup();
+    const { user, isSignedIn, signOut, openSignIn } = useAuthon();
     const open = ref(false);
 
     const initials = computed(() => {
@@ -176,10 +176,10 @@ export const AuthupUserButton = defineComponent({
   },
 });
 
-export const AuthupSignedIn = defineComponent({
-  name: 'AuthupSignedIn',
+export const AuthonSignedIn = defineComponent({
+  name: 'AuthonSignedIn',
   setup(_, { slots }) {
-    const { isSignedIn, isLoading } = useAuthup();
+    const { isSignedIn, isLoading } = useAuthon();
     return () => {
       if (isLoading || !isSignedIn) return null;
       return slots.default?.();
@@ -187,10 +187,10 @@ export const AuthupSignedIn = defineComponent({
   },
 });
 
-export const AuthupSignedOut = defineComponent({
-  name: 'AuthupSignedOut',
+export const AuthonSignedOut = defineComponent({
+  name: 'AuthonSignedOut',
   setup(_, { slots }) {
-    const { isSignedIn, isLoading } = useAuthup();
+    const { isSignedIn, isLoading } = useAuthon();
     return () => {
       if (isLoading || isSignedIn) return null;
       return slots.default?.();

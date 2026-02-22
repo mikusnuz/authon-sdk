@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 
 
 @dataclass
-class AuthupUser:
+class AuthonUser:
     id: str
     project_id: str
     email: Optional[str] = None
@@ -20,7 +20,7 @@ class AuthupUser:
     updated_at: str = ""
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuthupUser":
+    def from_dict(cls, data: Dict[str, Any]) -> "AuthonUser":
         return cls(
             id=data["id"],
             project_id=data.get("projectId", ""),
@@ -40,7 +40,7 @@ class AuthupUser:
 
 
 @dataclass
-class AuthupSession:
+class AuthonSession:
     id: str
     user_id: str
     ip_address: Optional[str] = None
@@ -51,7 +51,7 @@ class AuthupSession:
     expires_at: str = ""
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "AuthupSession":
+    def from_dict(cls, data: Dict[str, Any]) -> "AuthonSession":
         return cls(
             id=data["id"],
             user_id=data.get("userId", ""),
@@ -85,7 +85,7 @@ class WebhookEvent:
 
 @dataclass
 class ListResult:
-    data: List[AuthupUser]
+    data: List[AuthonUser]
     total: int
     page: int
     limit: int
@@ -93,7 +93,7 @@ class ListResult:
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ListResult":
         return cls(
-            data=[AuthupUser.from_dict(u) for u in data.get("data", [])],
+            data=[AuthonUser.from_dict(u) for u in data.get("data", [])],
             total=data.get("total", 0),
             page=data.get("page", 1),
             limit=data.get("limit", 20),

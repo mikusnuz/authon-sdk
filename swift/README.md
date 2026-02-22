@@ -1,6 +1,6 @@
-# Authup (Swift)
+# Authon (Swift)
 
-Official Swift SDK for [Authup](https://authup.dev) — authenticate users in iOS and macOS apps.
+Official Swift SDK for [Authon](https://authon.dev) — authenticate users in iOS and macOS apps.
 
 ## Install
 
@@ -9,46 +9,46 @@ Official Swift SDK for [Authup](https://authup.dev) — authenticate users in iO
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/mikusnuz/authup-sdk.git", from: "0.1.0")
+    .package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")
 ]
 ```
 
-Or add via Xcode: File > Add Package Dependencies > `https://github.com/mikusnuz/authup-sdk.git`
+Or add via Xcode: File > Add Package Dependencies > `https://github.com/mikusnuz/authon-sdk.git`
 
 ## Quick Start
 
 ### Initialize
 
 ```swift
-import Authup
+import Authon
 
-let authup = AuthupClient(publishableKey: "pk_live_...")
+let authon = AuthonClient(publishableKey: "pk_live_...")
 ```
 
 ### Sign In
 
 ```swift
 // OAuth (opens ASWebAuthenticationSession)
-let user = try await authup.signIn(with: .google)
+let user = try await authon.signIn(with: .google)
 print(user.email ?? "No email")
 
 // Email/password
-let user = try await authup.signIn(email: "user@example.com", password: "password")
+let user = try await authon.signIn(email: "user@example.com", password: "password")
 
 // Apple Sign In (native)
-let user = try await authup.signIn(with: .apple)
+let user = try await authon.signIn(with: .apple)
 ```
 
 ### Auth State
 
 ```swift
 // Check current user
-if let user = authup.currentUser {
+if let user = authon.currentUser {
     print("Signed in as \(user.displayName ?? user.email ?? "unknown")")
 }
 
 // Listen for changes
-authup.onAuthStateChanged { user in
+authon.onAuthStateChanged { user in
     if let user {
         print("Signed in: \(user.id)")
     } else {
@@ -57,20 +57,20 @@ authup.onAuthStateChanged { user in
 }
 
 // Get access token
-let token = try await authup.getToken()
+let token = try await authon.getToken()
 
 // Sign out
-try await authup.signOut()
+try await authon.signOut()
 ```
 
 ### SwiftUI
 
 ```swift
 import SwiftUI
-import Authup
+import Authon
 
 struct ContentView: View {
-    @StateObject private var auth = AuthupObservable(publishableKey: "pk_live_...")
+    @StateObject private var auth = AuthonObservable(publishableKey: "pk_live_...")
 
     var body: some View {
         Group {
@@ -100,28 +100,28 @@ struct ContentView: View {
 
 ## API Reference
 
-### `AuthupClient`
+### `AuthonClient`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `signIn(with: OAuthProvider)` | `async throws -> AuthupUser` | OAuth sign-in |
-| `signIn(email:password:)` | `async throws -> AuthupUser` | Email sign-in |
+| `signIn(with: OAuthProvider)` | `async throws -> AuthonUser` | OAuth sign-in |
+| `signIn(email:password:)` | `async throws -> AuthonUser` | Email sign-in |
 | `signOut()` | `async throws` | Sign out |
 | `getToken()` | `async throws -> String` | Get current access token |
-| `currentUser` | `AuthupUser?` | Current user (synchronous) |
+| `currentUser` | `AuthonUser?` | Current user (synchronous) |
 | `onAuthStateChanged(_:)` | `() -> Void` | Listen for auth changes (returns unsubscribe) |
 
-### `AuthupObservable` (SwiftUI)
+### `AuthonObservable` (SwiftUI)
 
 ObservableObject with `@Published` properties:
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `user` | `AuthupUser?` | Current user |
+| `user` | `AuthonUser?` | Current user |
 | `isSignedIn` | `Bool` | Whether signed in |
 | `isLoading` | `Bool` | Loading state |
 
-### `AuthupUser`
+### `AuthonUser`
 
 | Property | Type |
 |----------|------|
@@ -142,7 +142,7 @@ Tokens are stored in the iOS/macOS Keychain using `kSecClassGenericPassword`, en
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

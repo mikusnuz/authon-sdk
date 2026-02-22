@@ -1,46 +1,46 @@
 import { setContext, getContext } from 'svelte';
-import type { AuthupConfig } from '@authup/js';
-import { createAuthupStore, type AuthupStore } from './store';
+import type { AuthonConfig } from '@authon/js';
+import { createAuthonStore, type AuthonStore } from './store';
 
-const AUTHUP_CONTEXT_KEY = Symbol('authup');
+const AUTHON_CONTEXT_KEY = Symbol('authon');
 
 /**
- * Initialize Authup in a Svelte component tree.
+ * Initialize Authon in a Svelte component tree.
  * Call this in your root layout or top-level component.
  *
  * Usage in +layout.svelte:
  * ```svelte
  * <script>
- *   import { initAuthup } from '@authup/svelte'
- *   const authup = initAuthup('pk_live_...')
+ *   import { initAuthon } from '@authon/svelte'
+ *   const authon = initAuthon('pk_live_...')
  * </script>
  * ```
  */
-export function initAuthup(
+export function initAuthon(
   publishableKey: string,
-  config?: Omit<AuthupConfig, 'mode'>,
-): AuthupStore {
-  const store = createAuthupStore(publishableKey, config);
-  setContext(AUTHUP_CONTEXT_KEY, store);
+  config?: Omit<AuthonConfig, 'mode'>,
+): AuthonStore {
+  const store = createAuthonStore(publishableKey, config);
+  setContext(AUTHON_CONTEXT_KEY, store);
   return store;
 }
 
 /**
- * Get the Authup store from Svelte context.
- * Must be called within a component tree where `initAuthup` was called.
+ * Get the Authon store from Svelte context.
+ * Must be called within a component tree where `initAuthon` was called.
  *
  * Usage:
  * ```svelte
  * <script>
- *   import { getAuthup } from '@authup/svelte'
- *   const { user, isSignedIn, signOut } = getAuthup()
+ *   import { getAuthon } from '@authon/svelte'
+ *   const { user, isSignedIn, signOut } = getAuthon()
  * </script>
  * ```
  */
-export function getAuthup(): AuthupStore {
-  const store = getContext<AuthupStore | undefined>(AUTHUP_CONTEXT_KEY);
+export function getAuthon(): AuthonStore {
+  const store = getContext<AuthonStore | undefined>(AUTHON_CONTEXT_KEY);
   if (!store) {
-    throw new Error('getAuthup() must be called within a component tree where initAuthup() was called.');
+    throw new Error('getAuthon() must be called within a component tree where initAuthon() was called.');
   }
   return store;
 }

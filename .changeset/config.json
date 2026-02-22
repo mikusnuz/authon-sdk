@@ -2,21 +2,21 @@
   "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
   "changelog": [
     "@changesets/changelog-github",
-    { "repo": "mikusnuz/authup-sdk" }
+    { "repo": "mikusnuz/authon-sdk" }
   ],
   "commit": false,
   "fixed": [
     [
-      "@authup/shared",
-      "@authup/js",
-      "@authup/react",
-      "@authup/nextjs",
-      "@authup/vue",
-      "@authup/nuxt",
-      "@authup/svelte",
-      "@authup/angular",
-      "@authup/react-native",
-      "@authup/node"
+      "@authon/shared",
+      "@authon/js",
+      "@authon/react",
+      "@authon/nextjs",
+      "@authon/vue",
+      "@authon/nuxt",
+      "@authon/svelte",
+      "@authon/angular",
+      "@authon/react-native",
+      "@authon/node"
     ]
   ],
   "linked": [],

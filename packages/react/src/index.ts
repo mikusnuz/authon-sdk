@@ -1,6 +1,6 @@
-export { AuthupProvider } from './AuthupProvider';
-export type { AuthupContextValue } from './AuthupProvider';
-export { useAuthup } from './useAuthup';
+export { AuthonProvider } from './AuthonProvider';
+export type { AuthonContextValue } from './AuthonProvider';
+export { useAuthon } from './useAuthon';
 export { useUser } from './useUser';
 export { SignIn } from './SignIn';
 export { SignUp } from './SignUp';

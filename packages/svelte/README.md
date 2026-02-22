@@ -1,13 +1,13 @@
-# @authup/svelte
+# @authon/svelte
 
-Svelte SDK for [Authup](https://authup.dev) — stores, actions, and components.
+Svelte SDK for [Authon](https://authon.dev) — stores, actions, and components.
 
 ## Install
 
 ```bash
-npm install @authup/svelte
+npm install @authon/svelte
 # or
-pnpm add @authup/svelte
+pnpm add @authon/svelte
 ```
 
 Requires `svelte >= 4.0.0`.
@@ -17,10 +17,10 @@ Requires `svelte >= 4.0.0`.
 ### 1. Initialize
 
 ```ts
-// src/lib/authup.ts
-import { initAuthup } from '@authup/svelte';
+// src/lib/authon.ts
+import { initAuthon } from '@authon/svelte';
 
-export const authup = initAuthup({
+export const authon = initAuthon({
   publishableKey: 'pk_live_...',
 });
 ```
@@ -29,8 +29,8 @@ export const authup = initAuthup({
 
 ```svelte
 <script>
-  import { user, isSignedIn, isLoading } from '@authup/svelte';
-  import { openSignIn, signOut } from '@authup/svelte';
+  import { user, isSignedIn, isLoading } from '@authon/svelte';
+  import { openSignIn, signOut } from '@authon/svelte';
 </script>
 
 {#if $isLoading}
@@ -47,7 +47,7 @@ export const authup = initAuthup({
 
 ```svelte
 <script>
-  import { SignedIn, SignedOut, UserButton } from '@authup/svelte';
+  import { SignedIn, SignedOut, UserButton } from '@authon/svelte';
 </script>
 
 <SignedIn>
@@ -64,7 +64,7 @@ export const authup = initAuthup({
 
 | Store | Type | Description |
 |-------|------|-------------|
-| `user` | `Readable<AuthupUser \| null>` | Current user |
+| `user` | `Readable<AuthonUser \| null>` | Current user |
 | `isSignedIn` | `Readable<boolean>` | Whether the user is signed in |
 | `isLoading` | `Readable<boolean>` | Whether auth state is loading |
 
@@ -87,7 +87,7 @@ export const authup = initAuthup({
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

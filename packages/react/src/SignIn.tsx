@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useAuthup } from './useAuthup';
+import { useAuthon } from './useAuthon';
 
 interface SignInProps {
   mode?: 'popup' | 'embedded';
@@ -7,7 +7,7 @@ interface SignInProps {
 }
 
 export function SignIn({ mode = 'popup' }: SignInProps) {
-  const { client } = useAuthup();
+  const { client } = useAuthon();
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -17,7 +17,7 @@ export function SignIn({ mode = 'popup' }: SignInProps) {
   }, [client, mode]);
 
   if (mode === 'embedded') {
-    return <div ref={containerRef} id="authup-signin-container" />;
+    return <div ref={containerRef} id="authon-signin-container" />;
   }
 
   return null;

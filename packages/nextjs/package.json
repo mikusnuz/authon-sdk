@@ -1,7 +1,7 @@
 {
-  "name": "@authup/nextjs",
+  "name": "@authon/nextjs",
   "version": "0.1.0",
-  "description": "Authup Next.js SDK — middleware, server helpers, and React components",
+  "description": "Authon Next.js SDK — middleware, server helpers, and React components",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -26,15 +26,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/nextjs"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/nextjs",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/nextjs",
   "publishConfig": { "access": "public" },
-  "keywords": ["authup", "auth", "nextjs", "middleware", "sdk"],
+  "keywords": ["authon", "auth", "nextjs", "middleware", "sdk"],
   "dependencies": {
-    "@authup/shared": "workspace:*",
-    "@authup/react": "workspace:*"
+    "@authon/shared": "workspace:*",
+    "@authon/react": "workspace:*"
   },
   "peerDependencies": {
     "next": "^14.0.0 || ^15.0.0"

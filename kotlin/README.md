@@ -1,6 +1,6 @@
-# authup-kotlin
+# authon-kotlin
 
-Official Kotlin/Android SDK for [Authup](https://authup.dev) — authenticate users in Android apps.
+Official Kotlin/Android SDK for [Authon](https://authon.dev) — authenticate users in Android apps.
 
 ## Install
 
@@ -9,7 +9,7 @@ Official Kotlin/Android SDK for [Authup](https://authup.dev) — authenticate us
 ```kotlin
 // build.gradle.kts
 dependencies {
-    implementation("dev.authup:sdk:0.1.0")
+    implementation("dev.authon:sdk:0.1.0")
 }
 ```
 
@@ -27,9 +27,9 @@ dependencyResolutionManagement {
 ### Initialize
 
 ```kotlin
-import dev.authup.sdk.AuthupClient
+import dev.authon.sdk.AuthonClient
 
-val authup = AuthupClient(
+val authon = AuthonClient(
     publishableKey = "pk_live_...",
     context = applicationContext,
 )
@@ -39,28 +39,28 @@ val authup = AuthupClient(
 
 ```kotlin
 // OAuth (opens Custom Tab)
-val user = authup.signInWithOAuth(OAuthProvider.GOOGLE, activity)
-Log.d("Authup", "Signed in: ${user.email}")
+val user = authon.signInWithOAuth(OAuthProvider.GOOGLE, activity)
+Log.d("Authon", "Signed in: ${user.email}")
 
 // Email/password
-val user = authup.signInWithEmail("user@example.com", "password")
+val user = authon.signInWithEmail("user@example.com", "password")
 
 // Google One Tap
-val user = authup.signInWithGoogleOneTap(activity)
+val user = authon.signInWithGoogleOneTap(activity)
 ```
 
 ### Auth State
 
 ```kotlin
 // Check current user
-val user = authup.currentUser
+val user = authon.currentUser
 if (user != null) {
-    Log.d("Authup", "Signed in as ${user.displayName}")
+    Log.d("Authon", "Signed in as ${user.displayName}")
 }
 
 // Observe state (Flow)
 lifecycleScope.launch {
-    authup.authState.collect { state ->
+    authon.authState.collect { state ->
         when {
             state.isLoading -> showLoading()
             state.user != null -> showProfile(state.user)
@@ -70,20 +70,20 @@ lifecycleScope.launch {
 }
 
 // Get access token
-val token = authup.getToken()
+val token = authon.getToken()
 
 // Sign out
-authup.signOut()
+authon.signOut()
 ```
 
 ### Jetpack Compose
 
 ```kotlin
-import dev.authup.sdk.compose.rememberAuthupState
+import dev.authon.sdk.compose.rememberAuthonState
 
 @Composable
 fun App() {
-    val auth = rememberAuthupState(publishableKey = "pk_live_...")
+    val auth = rememberAuthonState(publishableKey = "pk_live_...")
 
     when {
         auth.isLoading -> CircularProgressIndicator()
@@ -108,19 +108,19 @@ fun App() {
 
 ## API Reference
 
-### `AuthupClient`
+### `AuthonClient`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `signInWithOAuth(provider, activity)` | `suspend AuthupUser` | OAuth sign-in via Custom Tab |
-| `signInWithEmail(email, password)` | `suspend AuthupUser` | Email sign-in |
-| `signInWithGoogleOneTap(activity)` | `suspend AuthupUser` | Google One Tap sign-in |
+| `signInWithOAuth(provider, activity)` | `suspend AuthonUser` | OAuth sign-in via Custom Tab |
+| `signInWithEmail(email, password)` | `suspend AuthonUser` | Email sign-in |
+| `signInWithGoogleOneTap(activity)` | `suspend AuthonUser` | Google One Tap sign-in |
 | `signOut()` | `suspend Unit` | Sign out |
 | `getToken()` | `suspend String?` | Get current access token |
-| `currentUser` | `AuthupUser?` | Current user (synchronous) |
+| `currentUser` | `AuthonUser?` | Current user (synchronous) |
 | `authState` | `StateFlow<AuthState>` | Observable auth state |
 
-### `AuthupUser`
+### `AuthonUser`
 
 | Property | Type |
 |----------|------|
@@ -141,7 +141,7 @@ Tokens are stored using Android `EncryptedSharedPreferences` (AndroidX Security)
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

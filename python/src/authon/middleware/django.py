@@ -1,30 +1,30 @@
 """
-Django middleware/decorator for Authup token verification.
+Django middleware/decorator for Authon token verification.
 
 Usage:
-    from authup.middleware.django import authup_login_required
+    from authon.middleware.django import authon_login_required
 
-    authup = AuthupBackend("sk_live_...")
+    authon = AuthonBackend("sk_live_...")
 
-    @authup_login_required(authup)
+    @authon_login_required(authon)
     def my_view(request):
-        user = request.authup_user  # AuthupUser instance
+        user = request.authon_user  # AuthonUser instance
         return JsonResponse({"email": user.email})
 """
 
 from functools import wraps
 from typing import Any, Callable
 
-from ..client import AuthupBackend
-from ..types import AuthupUser
+from ..client import AuthonBackend
+from ..types import AuthonUser
 
 
-def authup_login_required(
-    authup: AuthupBackend,
+def authon_login_required(
+    authon: AuthonBackend,
 ) -> Callable[..., Any]:
     """
     Decorator that verifies the Authorization header and attaches
-    the AuthupUser to `request.authup_user`.
+    the AuthonUser to `request.authon_user`.
     """
 
     def decorator(view_func: Callable[..., Any]) -> Callable[..., Any]:
@@ -42,8 +42,8 @@ def authup_login_required(
             token = auth_header[7:]  # Strip "Bearer "
 
             try:
-                user: AuthupUser = authup.verify_token(token)
-                request.authup_user = user  # type: ignore
+                user: AuthonUser = authon.verify_token(token)
+                request.authon_user = user  # type: ignore
             except Exception:
                 from django.http import JsonResponse  # type: ignore
 

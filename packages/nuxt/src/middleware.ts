@@ -1,20 +1,20 @@
-import type { AuthupPluginState } from './plugin';
+import type { AuthonPluginState } from './plugin';
 
 /**
  * Route middleware factory for protecting authenticated routes.
  *
  * Usage in middleware/auth.ts:
  * ```ts
- * import { createAuthMiddleware } from '@authup/nuxt'
+ * import { createAuthMiddleware } from '@authon/nuxt'
  *
  * export default defineNuxtRouteMiddleware((to, from) => {
- *   const { $authup } = useNuxtApp()
- *   return createAuthMiddleware($authup, '/login')(to, from)
+ *   const { $authon } = useNuxtApp()
+ *   return createAuthMiddleware($authon, '/login')(to, from)
  * })
  * ```
  */
 export function createAuthMiddleware(
-  authup: AuthupPluginState,
+  authon: AuthonPluginState,
   redirectTo = '/sign-in',
 ) {
   return (
@@ -23,7 +23,7 @@ export function createAuthMiddleware(
   ): { path: string; query: { redirect: string } } | undefined => {
     if (to.path === redirectTo) return undefined;
 
-    if (!authup.isSignedIn) {
+    if (!authon.isSignedIn) {
       return {
         path: redirectTo,
         query: { redirect: to.fullPath },

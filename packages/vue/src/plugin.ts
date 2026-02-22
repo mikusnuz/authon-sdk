@@ -1,25 +1,25 @@
 import type { App } from 'vue';
 import { reactive } from 'vue';
-import { Authup } from '@authup/js';
-import type { AuthupConfig } from '@authup/js';
-import type { AuthupUser } from '@authup/shared';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import type { AuthonUser } from '@authon/shared';
 
-export const AUTHUP_KEY = Symbol('authup');
+export const AUTHON_KEY = Symbol('authon');
 
-export interface AuthupState {
+export interface AuthonState {
   isSignedIn: boolean;
   isLoading: boolean;
-  user: AuthupUser | null;
-  client: Authup | null;
+  user: AuthonUser | null;
+  client: Authon | null;
 }
 
-export interface AuthupPluginOptions {
+export interface AuthonPluginOptions {
   publishableKey: string;
-  config?: AuthupConfig;
+  config?: AuthonConfig;
 }
 
-export function createAuthup(options: AuthupPluginOptions) {
-  const state = reactive<AuthupState>({
+export function createAuthon(options: AuthonPluginOptions) {
+  const state = reactive<AuthonState>({
     isSignedIn: false,
     isLoading: true,
     user: null,
@@ -28,11 +28,11 @@ export function createAuthup(options: AuthupPluginOptions) {
 
   return {
     install(app: App) {
-      const client = new Authup(options.publishableKey, options.config);
-      state.client = client as unknown as Authup;
+      const client = new Authon(options.publishableKey, options.config);
+      state.client = client as unknown as Authon;
 
       client.on('signedIn', (user) => {
-        state.user = user as AuthupUser;
+        state.user = user as AuthonUser;
         state.isSignedIn = true;
         state.isLoading = false;
       });
@@ -48,9 +48,9 @@ export function createAuthup(options: AuthupPluginOptions) {
 
       state.isLoading = false;
 
-      app.provide(AUTHUP_KEY, state);
+      app.provide(AUTHON_KEY, state);
 
-      app.config.globalProperties.$authup = state;
+      app.config.globalProperties.$authon = state;
     },
   };
 }

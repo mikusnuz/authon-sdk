@@ -1,4 +1,4 @@
-package dev.authup.sdk
+package dev.authon.sdk
 
 import com.google.gson.Gson
 import javax.crypto.Mac

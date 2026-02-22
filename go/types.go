@@ -1,8 +1,8 @@
-package authup
+package authon
 
 import "time"
 
-// User represents an Authup user.
+// User represents an Authon user.
 type User struct {
 	ID              string            `json:"id"`
 	Email           string            `json:"email,omitempty"`
@@ -38,7 +38,7 @@ type Session struct {
 	CreatedAt    time.Time `json:"createdAt"`
 }
 
-// WebhookEvent represents an incoming webhook event from Authup.
+// WebhookEvent represents an incoming webhook event from Authon.
 type WebhookEvent struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
@@ -81,14 +81,14 @@ type UpdateUserParams struct {
 	Metadata  *map[string]any `json:"metadata,omitempty"`
 }
 
-// AuthupError represents an API error response.
-type AuthupError struct {
+// AuthonError represents an API error response.
+type AuthonError struct {
 	StatusCode int    `json:"statusCode"`
 	Message    string `json:"message"`
 	Code       string `json:"code,omitempty"`
 }
 
-func (e *AuthupError) Error() string {
+func (e *AuthonError) Error() string {
 	if e.Code != "" {
 		return e.Code + ": " + e.Message
 	}

@@ -12,12 +12,12 @@ def verify_webhook(
     secret: str,
 ) -> WebhookEvent:
     """
-    Verify an Authup webhook signature (HMAC-SHA256) and parse the event.
+    Verify an Authon webhook signature (HMAC-SHA256) and parse the event.
 
     Args:
         payload: Raw request body as string or bytes.
-        signature: Value of the x-authup-signature header (e.g. "sha256=abc123...").
-        secret: Webhook signing secret from the Authup dashboard.
+        signature: Value of the x-authon-signature header (e.g. "sha256=abc123...").
+        secret: Webhook signing secret from the Authon dashboard.
 
     Returns:
         Parsed WebhookEvent.

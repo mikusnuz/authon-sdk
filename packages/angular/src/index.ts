@@ -1,3 +1,3 @@
-export { AuthupService, AUTHUP_CONFIG, type AuthupServiceConfig } from './service';
+export { AuthonService, AUTHON_CONFIG, type AuthonServiceConfig } from './service';
 export { authGuard } from './guard';
-export { provideAuthup } from './helpers';
+export { provideAuthon } from './helpers';

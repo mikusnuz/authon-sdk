@@ -1,15 +1,15 @@
-import { AuthupService, AUTHUP_CONFIG, type AuthupServiceConfig } from './service';
+import { AuthonService, AUTHON_CONFIG, type AuthonServiceConfig } from './service';
 
 /**
  * Provider factory for Angular standalone components.
  *
  * Usage in app.config.ts:
  * ```ts
- * import { provideAuthup } from '@authup/angular';
+ * import { provideAuthon } from '@authon/angular';
  *
  * export const appConfig = {
  *   providers: [
- *     ...provideAuthup({ publishableKey: 'pk_live_...' }),
+ *     ...provideAuthon({ publishableKey: 'pk_live_...' }),
  *   ],
  * };
  * ```
@@ -17,16 +17,16 @@ import { AuthupService, AUTHUP_CONFIG, type AuthupServiceConfig } from './servic
  * Then inject in your components:
  * ```ts
  * import { Inject } from '@angular/core';
- * import { AUTHUP_CONFIG, AuthupService } from '@authup/angular';
+ * import { AUTHON_CONFIG, AuthonService } from '@authon/angular';
  *
- * constructor(@Inject('AuthupService') private authup: AuthupService) {}
+ * constructor(@Inject('AuthonService') private authon: AuthonService) {}
  * ```
  */
-export function provideAuthup(config: AuthupServiceConfig) {
-  const service = new AuthupService(config);
+export function provideAuthon(config: AuthonServiceConfig) {
+  const service = new AuthonService(config);
 
   return [
-    { provide: AUTHUP_CONFIG, useValue: config },
-    { provide: 'AuthupService', useValue: service },
+    { provide: AUTHON_CONFIG, useValue: config },
+    { provide: 'AuthonService', useValue: service },
   ];
 }

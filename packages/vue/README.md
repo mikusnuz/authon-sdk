@@ -1,13 +1,13 @@
-# @authup/vue
+# @authon/vue
 
-Vue 3 SDK for [Authup](https://authup.dev) — plugin, composables, and components.
+Vue 3 SDK for [Authon](https://authon.dev) — plugin, composables, and components.
 
 ## Install
 
 ```bash
-npm install @authup/vue
+npm install @authon/vue
 # or
-pnpm add @authup/vue
+pnpm add @authon/vue
 ```
 
 Requires `vue >= 3.3.0`.
@@ -19,11 +19,11 @@ Requires `vue >= 3.3.0`.
 ```ts
 // main.ts
 import { createApp } from 'vue';
-import { AuthupPlugin } from '@authup/vue';
+import { AuthonPlugin } from '@authon/vue';
 import App from './App.vue';
 
 const app = createApp(App);
-app.use(AuthupPlugin, {
+app.use(AuthonPlugin, {
   publishableKey: 'pk_live_...',
 });
 app.mount('#app');
@@ -33,9 +33,9 @@ app.mount('#app');
 
 ```vue
 <script setup lang="ts">
-import { useAuthup, useUser } from '@authup/vue';
+import { useAuthon, useUser } from '@authon/vue';
 
-const { isSignedIn, openSignIn, signOut } = useAuthup();
+const { isSignedIn, openSignIn, signOut } = useAuthon();
 const { user, isLoading } = useUser();
 </script>
 
@@ -64,9 +64,9 @@ const { user, isLoading } = useUser();
 </template>
 
 <script setup lang="ts">
-import { SignedIn, SignedOut, UserButton, useAuthup } from '@authup/vue';
+import { SignedIn, SignedOut, UserButton, useAuthon } from '@authon/vue';
 
-const { openSignIn } = useAuthup();
+const { openSignIn } = useAuthon();
 </script>
 ```
 
@@ -75,7 +75,7 @@ const { openSignIn } = useAuthup();
 ### Plugin
 
 ```ts
-app.use(AuthupPlugin, {
+app.use(AuthonPlugin, {
   publishableKey: string;
   apiUrl?: string;
   theme?: 'light' | 'dark' | 'auto';
@@ -86,19 +86,19 @@ app.use(AuthupPlugin, {
 
 ### Composables
 
-#### `useAuthup()`
+#### `useAuthon()`
 
 ```ts
 const {
   isSignedIn,  // Ref<boolean>
   isLoading,   // Ref<boolean>
-  user,        // Ref<AuthupUser | null>
+  user,        // Ref<AuthonUser | null>
   signOut,     // () => Promise<void>
   openSignIn,  // () => Promise<void>
   openSignUp,  // () => Promise<void>
   getToken,    // () => string | null
-  client,      // Authup instance
-} = useAuthup();
+  client,      // Authon instance
+} = useAuthon();
 ```
 
 #### `useUser()`
@@ -118,7 +118,7 @@ const { user, isLoading } = useUser();
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

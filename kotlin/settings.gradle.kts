@@ -1,1 +1,1 @@
-rootProject.name = "authup-sdk"
+rootProject.name = "authon-sdk"

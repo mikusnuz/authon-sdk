@@ -3,7 +3,7 @@ plugins {
     `maven-publish`
 }
 
-group = "dev.authup"
+group = "dev.authon"
 version = "0.1.0"
 
 repositories {
@@ -32,14 +32,14 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            groupId = "dev.authup"
+            groupId = "dev.authon"
             artifactId = "sdk"
             version = project.version.toString()
 
             pom {
-                name.set("Authup SDK")
-                description.set("Official Authup SDK for Kotlin/JVM")
-                url.set("https://github.com/mikusnuz/authup-sdk")
+                name.set("Authon SDK")
+                description.set("Official Authon SDK for Kotlin/JVM")
+                url.set("https://github.com/mikusnuz/authon-sdk")
                 licenses {
                     license {
                         name.set("MIT License")

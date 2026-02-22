@@ -1,13 +1,13 @@
-# @authup/react
+# @authon/react
 
-React SDK for [Authup](https://authup.dev) — Provider, hooks, and pre-built components.
+React SDK for [Authon](https://authon.dev) — Provider, hooks, and pre-built components.
 
 ## Install
 
 ```bash
-npm install @authup/react
+npm install @authon/react
 # or
-pnpm add @authup/react
+pnpm add @authon/react
 ```
 
 Requires `react >= 18.0.0`.
@@ -16,20 +16,20 @@ Requires `react >= 18.0.0`.
 
 ```tsx
 import {
-  AuthupProvider,
+  AuthonProvider,
   SignedIn,
   SignedOut,
   UserButton,
   useUser,
-  useAuthup,
-} from '@authup/react';
+  useAuthon,
+} from '@authon/react';
 
 function App() {
   return (
-    <AuthupProvider publishableKey="pk_live_...">
+    <AuthonProvider publishableKey="pk_live_...">
       <Header />
       <Main />
-    </AuthupProvider>
+    </AuthonProvider>
   );
 }
 
@@ -47,7 +47,7 @@ function Header() {
 }
 
 function SignInButton() {
-  const { openSignIn } = useAuthup();
+  const { openSignIn } = useAuthon();
   return <button onClick={() => openSignIn()}>Sign In</button>;
 }
 
@@ -61,27 +61,27 @@ function Main() {
 
 ## API Reference
 
-### `<AuthupProvider>`
+### `<AuthonProvider>`
 
 Wraps your app and provides auth context.
 
 ```tsx
-<AuthupProvider
+<AuthonProvider
   publishableKey="pk_live_..."
   config={{
-    apiUrl: 'https://api.authup.dev',
+    apiUrl: 'https://api.authon.dev',
     theme: 'auto',
     locale: 'en',
     appearance: { primaryColorStart: '#7c3aed' },
   }}
 >
   {children}
-</AuthupProvider>
+</AuthonProvider>
 ```
 
 ### Hooks
 
-#### `useAuthup()`
+#### `useAuthon()`
 
 Returns the full auth context:
 
@@ -89,13 +89,13 @@ Returns the full auth context:
 const {
   isSignedIn,  // boolean
   isLoading,   // boolean
-  user,        // AuthupUser | null
+  user,        // AuthonUser | null
   signOut,     // () => Promise<void>
   openSignIn,  // () => Promise<void>
   openSignUp,  // () => Promise<void>
   getToken,    // () => string | null
-  client,      // Authup instance
-} = useAuthup();
+  client,      // Authon instance
+} = useAuthon();
 ```
 
 #### `useUser()`
@@ -130,7 +130,7 @@ const { user, isLoading } = useUser();
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

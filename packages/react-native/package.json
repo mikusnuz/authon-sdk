@@ -1,7 +1,7 @@
 {
-  "name": "@authup/react-native",
+  "name": "@authon/react-native",
   "version": "0.1.0",
-  "description": "Authup React Native SDK — mobile authentication",
+  "description": "Authon React Native SDK — mobile authentication",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,15 +21,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/react-native"
   },
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authup", "react-native", "mobile", "auth"],
+  "keywords": ["authon", "react-native", "mobile", "auth"],
   "dependencies": {
-    "@authup/shared": "workspace:*"
+    "@authon/shared": "workspace:*"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

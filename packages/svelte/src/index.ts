@@ -1,3 +1,3 @@
-export { createAuthupStore } from './store';
-export type { AuthupStore } from './store';
-export { initAuthup, getAuthup } from './context';
+export { createAuthonStore } from './store';
+export type { AuthonStore } from './store';
+export { initAuthon, getAuthon } from './context';

@@ -1,4 +1,4 @@
-import type { AuthupService } from './service';
+import type { AuthonService } from './service';
 
 /**
  * Route guard factory for Angular Router (CanActivateFn style).
@@ -8,30 +8,30 @@ import type { AuthupService } from './service';
  *
  * ```ts
  * import { inject } from '@angular/core';
- * import { authGuard } from '@authup/angular';
- * import { AuthupService } from './authup.service'; // your injectable wrapper
+ * import { authGuard } from '@authon/angular';
+ * import { AuthonService } from './authon.service'; // your injectable wrapper
  *
  * const routes = [
  *   {
  *     path: 'dashboard',
  *     component: DashboardComponent,
  *     canActivate: [() => {
- *       const authup = inject(AuthupService);
- *       return authGuard(authup, '/login');
+ *       const authon = inject(AuthonService);
+ *       return authGuard(authon, '/login');
  *     }],
  *   },
  * ];
  * ```
  */
 export function authGuard(
-  authupService: AuthupService,
+  authonService: AuthonService,
   redirectTo = '/sign-in',
 ): boolean | { path: string } {
-  if (authupService.isLoading) {
+  if (authonService.isLoading) {
     return false;
   }
 
-  if (!authupService.isSignedIn) {
+  if (!authonService.isSignedIn) {
     return { path: redirectTo };
   }
 

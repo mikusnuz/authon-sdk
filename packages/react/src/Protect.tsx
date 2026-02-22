@@ -1,15 +1,15 @@
 import type { ReactNode } from 'react';
-import type { AuthupUser } from '@authup/shared';
-import { useAuthup } from './useAuthup';
+import type { AuthonUser } from '@authon/shared';
+import { useAuthon } from './useAuthon';
 
 interface ProtectProps {
   children: ReactNode;
   fallback?: ReactNode;
-  condition?: (user: AuthupUser) => boolean;
+  condition?: (user: AuthonUser) => boolean;
 }
 
 export function Protect({ children, fallback = null, condition }: ProtectProps) {
-  const { isSignedIn, isLoading, user } = useAuthup();
+  const { isSignedIn, isLoading, user } = useAuthon();
 
   if (isLoading) return null;
   if (!isSignedIn || !user) return <>{fallback}</>;

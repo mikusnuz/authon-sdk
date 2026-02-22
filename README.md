@@ -1,45 +1,45 @@
-# Authup SDK
+# Authon SDK
 
-Official SDKs for [Authup](https://authup.dev) — the authentication platform for modern apps.
+Official SDKs for [Authon](https://authon.dev) — the authentication platform for modern apps.
 
-![Version](https://img.shields.io/npm/v/@authup/js?label=version)
+![Version](https://img.shields.io/npm/v/@authon/js?label=version)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Packages
 
 | Package | Registry | Description |
 |---------|----------|-------------|
-| [`@authup/shared`](./packages/shared) | [npm](https://www.npmjs.com/package/@authup/shared) | Shared types and constants |
-| [`@authup/js`](./packages/js) | [npm](https://www.npmjs.com/package/@authup/js) | Core browser SDK — ShadowDOM modal, OAuth, sessions |
-| [`@authup/react`](./packages/react) | [npm](https://www.npmjs.com/package/@authup/react) | React hooks and components |
-| [`@authup/nextjs`](./packages/nextjs) | [npm](https://www.npmjs.com/package/@authup/nextjs) | Next.js middleware and server helpers |
-| [`@authup/vue`](./packages/vue) | [npm](https://www.npmjs.com/package/@authup/vue) | Vue 3 plugin, composables, components |
-| [`@authup/nuxt`](./packages/nuxt) | [npm](https://www.npmjs.com/package/@authup/nuxt) | Nuxt 3 module |
-| [`@authup/svelte`](./packages/svelte) | [npm](https://www.npmjs.com/package/@authup/svelte) | Svelte stores and components |
-| [`@authup/angular`](./packages/angular) | [npm](https://www.npmjs.com/package/@authup/angular) | Angular service and guard |
-| [`@authup/react-native`](./packages/react-native) | [npm](https://www.npmjs.com/package/@authup/react-native) | React Native mobile SDK |
-| [`@authup/node`](./packages/node) | [npm](https://www.npmjs.com/package/@authup/node) | Node.js server SDK |
-| [`authup` (Python)](./python) | [PyPI](https://pypi.org/project/authup/) | Django, Flask, FastAPI |
-| [`authup-go`](./go) | [Go modules](https://pkg.go.dev/github.com/mikusnuz/authup-sdk/go) | Go net/http middleware |
-| [`authup` (Dart)](./dart) | [pub.dev](https://pub.dev/packages/authup) | Flutter SDK |
-| [`Authup` (Swift)](./swift) | SPM | iOS/macOS SDK |
-| [`authup-kotlin`](./kotlin) | Maven | Android SDK |
+| [`@authon/shared`](./packages/shared) | [npm](https://www.npmjs.com/package/@authon/shared) | Shared types and constants |
+| [`@authon/js`](./packages/js) | [npm](https://www.npmjs.com/package/@authon/js) | Core browser SDK — ShadowDOM modal, OAuth, sessions |
+| [`@authon/react`](./packages/react) | [npm](https://www.npmjs.com/package/@authon/react) | React hooks and components |
+| [`@authon/nextjs`](./packages/nextjs) | [npm](https://www.npmjs.com/package/@authon/nextjs) | Next.js middleware and server helpers |
+| [`@authon/vue`](./packages/vue) | [npm](https://www.npmjs.com/package/@authon/vue) | Vue 3 plugin, composables, components |
+| [`@authon/nuxt`](./packages/nuxt) | [npm](https://www.npmjs.com/package/@authon/nuxt) | Nuxt 3 module |
+| [`@authon/svelte`](./packages/svelte) | [npm](https://www.npmjs.com/package/@authon/svelte) | Svelte stores and components |
+| [`@authon/angular`](./packages/angular) | [npm](https://www.npmjs.com/package/@authon/angular) | Angular service and guard |
+| [`@authon/react-native`](./packages/react-native) | [npm](https://www.npmjs.com/package/@authon/react-native) | React Native mobile SDK |
+| [`@authon/node`](./packages/node) | [npm](https://www.npmjs.com/package/@authon/node) | Node.js server SDK |
+| [`authon` (Python)](./python) | [PyPI](https://pypi.org/project/authon/) | Django, Flask, FastAPI |
+| [`authon-go`](./go) | [Go modules](https://pkg.go.dev/github.com/mikusnuz/authon-sdk/go) | Go net/http middleware |
+| [`authon` (Dart)](./dart) | [pub.dev](https://pub.dev/packages/authon) | Flutter SDK |
+| [`Authon` (Swift)](./swift) | SPM | iOS/macOS SDK |
+| [`authon-kotlin`](./kotlin) | Maven | Android SDK |
 
 ## Quick Start
 
 ### React
 
 ```bash
-npm install @authup/react
+npm install @authon/react
 ```
 
 ```tsx
-import { AuthupProvider, SignedIn, SignedOut, UserButton } from '@authup/react';
-import { useUser } from '@authup/react';
+import { AuthonProvider, SignedIn, SignedOut, UserButton } from '@authon/react';
+import { useUser } from '@authon/react';
 
 function App() {
   return (
-    <AuthupProvider publishableKey="pk_live_...">
+    <AuthonProvider publishableKey="pk_live_...">
       <SignedIn>
         <UserButton />
         <Dashboard />
@@ -47,7 +47,7 @@ function App() {
       <SignedOut>
         <LandingPage />
       </SignedOut>
-    </AuthupProvider>
+    </AuthonProvider>
   );
 }
 
@@ -60,15 +60,15 @@ function Dashboard() {
 ### Next.js
 
 ```bash
-npm install @authup/nextjs
+npm install @authon/nextjs
 ```
 
 ```ts
 // middleware.ts
-import { authMiddleware } from '@authup/nextjs';
+import { authMiddleware } from '@authon/nextjs';
 
 export default authMiddleware({
-  publishableKey: process.env.NEXT_PUBLIC_AUTHUP_KEY!,
+  publishableKey: process.env.NEXT_PUBLIC_AUTHON_KEY!,
   publicRoutes: ['/', '/about', '/pricing'],
 });
 
@@ -79,15 +79,15 @@ export const config = {
 
 ```tsx
 // app/layout.tsx
-import { AuthupProvider } from '@authup/nextjs';
+import { AuthonProvider } from '@authon/nextjs';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html>
       <body>
-        <AuthupProvider publishableKey={process.env.NEXT_PUBLIC_AUTHUP_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
           {children}
-        </AuthupProvider>
+        </AuthonProvider>
       </body>
     </html>
   );
@@ -96,7 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 ```ts
 // Server-side token verification
-import { currentUser } from '@authup/nextjs/server';
+import { currentUser } from '@authon/nextjs/server';
 
 export async function GET() {
   const user = await currentUser();
@@ -108,15 +108,15 @@ export async function GET() {
 ### Node.js
 
 ```bash
-npm install @authup/node
+npm install @authon/node
 ```
 
 ```ts
-import { AuthupBackend, expressMiddleware } from '@authup/node';
+import { AuthonBackend, expressMiddleware } from '@authon/node';
 
 // Middleware — protects routes automatically
 app.use('/api', expressMiddleware({
-  secretKey: process.env.AUTHUP_SECRET_KEY!,
+  secretKey: process.env.AUTHON_SECRET_KEY!,
 }));
 
 app.get('/api/profile', (req, res) => {
@@ -124,34 +124,34 @@ app.get('/api/profile', (req, res) => {
 });
 
 // Direct client usage
-const authup = new AuthupBackend(process.env.AUTHUP_SECRET_KEY!);
+const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
 
-const user = await authup.verifyToken(accessToken);
-const users = await authup.users.list({ page: 1, limit: 10 });
-const event = authup.webhooks.verify(payload, signature, webhookSecret);
+const user = await authon.verifyToken(accessToken);
+const users = await authon.users.list({ page: 1, limit: 10 });
+const event = authon.webhooks.verify(payload, signature, webhookSecret);
 ```
 
 ### Python (FastAPI)
 
 ```bash
-pip install authup
+pip install authon
 ```
 
 ```python
 from fastapi import FastAPI, Depends
-from authup import AuthupBackend, require_auth, AuthupUser
+from authon import AuthonBackend, require_auth, AuthonUser
 
-authup = AuthupBackend(secret_key="sk_live_...")
+authon = AuthonBackend(secret_key="sk_live_...")
 app = FastAPI()
 
 @app.get("/api/profile")
-async def profile(user: AuthupUser = Depends(require_auth(authup))):
+async def profile(user: AuthonUser = Depends(require_auth(authon))):
     return {"id": user.id, "email": user.email}
 ```
 
 ## Documentation
 
-Full documentation is available at [authup.dev/docs](https://authup.dev/docs).
+Full documentation is available at [authon.dev/docs](https://authon.dev/docs).
 
 ## Contributing
 
@@ -159,8 +159,8 @@ We welcome contributions. Please open an issue first to discuss any changes you'
 
 ```bash
 # Clone and install
-git clone https://github.com/mikusnuz/authup-sdk.git
-cd authup-sdk
+git clone https://github.com/mikusnuz/authon-sdk.git
+cd authon-sdk
 pnpm install
 
 # Build all packages

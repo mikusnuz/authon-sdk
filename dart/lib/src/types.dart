@@ -1,4 +1,4 @@
-/// Represents an Authup user.
+/// Represents an Authon user.
 class User {
   final String id;
   final String? email;
@@ -140,7 +140,7 @@ class Session {
       };
 }
 
-/// Represents an incoming webhook event from Authup.
+/// Represents an incoming webhook event from Authon.
 class WebhookEvent {
   final String id;
   final String type;

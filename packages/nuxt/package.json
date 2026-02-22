@@ -1,7 +1,7 @@
 {
-  "name": "@authup/nuxt",
+  "name": "@authon/nuxt",
   "version": "0.1.0",
-  "description": "Authup Nuxt 3 module — auto-imported composables and middleware",
+  "description": "Authon Nuxt 3 module — auto-imported composables and middleware",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,17 +21,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/nuxt"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/nuxt",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/nuxt",
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authup", "nuxt", "auth", "module"],
+  "keywords": ["authon", "nuxt", "auth", "module"],
   "dependencies": {
-    "@authup/js": "workspace:*",
-    "@authup/shared": "workspace:*"
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "peerDependencies": {
     "nuxt": "^3.0.0"

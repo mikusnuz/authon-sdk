@@ -2,8 +2,8 @@
 import PackageDescription
 
 let package = Package(
-    name: "Authup",
+    name: "Authon",
     platforms: [.iOS(.v15), .macOS(.v12)],
-    products: [.library(name: "Authup", targets: ["Authup"])],
-    targets: [.target(name: "Authup", path: "Sources/Authup")]
+    products: [.library(name: "Authon", targets: ["Authon"])],
+    targets: [.target(name: "Authon", path: "Sources/Authon")]
 )

@@ -1,18 +1,18 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AuthupMobileClient } from './client';
-import type { AuthState, AuthupReactNativeConfig, AuthupUser, SignInParams, SignUpParams } from './types';
+import { AuthonMobileClient } from './client';
+import type { AuthState, AuthonReactNativeConfig, AuthonUser, SignInParams, SignUpParams } from './types';
 
-export interface AuthupContextValue extends AuthState {
-  user: AuthupUser | null;
+export interface AuthonContextValue extends AuthState {
+  user: AuthonUser | null;
   signIn: (params: SignInParams) => Promise<void>;
   signUp: (params: SignUpParams) => Promise<void>;
   signOut: () => Promise<void>;
   getToken: () => string | null;
 }
 
-export const AuthupContext = createContext<AuthupContextValue | null>(null);
+export const AuthonContext = createContext<AuthonContextValue | null>(null);
 
-interface AuthupProviderProps extends AuthupReactNativeConfig {
+interface AuthonProviderProps extends AuthonReactNativeConfig {
   children: React.ReactNode;
   storage?: {
     getItem(key: string): Promise<string | null>;
@@ -21,8 +21,8 @@ interface AuthupProviderProps extends AuthupReactNativeConfig {
   };
 }
 
-export function AuthupProvider({ children, storage, ...config }: AuthupProviderProps) {
-  const clientRef = useRef<AuthupMobileClient | null>(null);
+export function AuthonProvider({ children, storage, ...config }: AuthonProviderProps) {
+  const clientRef = useRef<AuthonMobileClient | null>(null);
   const [authState, setAuthState] = useState<AuthState>({
     isLoaded: false,
     isSignedIn: false,
@@ -30,10 +30,10 @@ export function AuthupProvider({ children, storage, ...config }: AuthupProviderP
     sessionId: null,
     accessToken: null,
   });
-  const [user, setUser] = useState<AuthupUser | null>(null);
+  const [user, setUser] = useState<AuthonUser | null>(null);
 
   if (!clientRef.current) {
-    clientRef.current = new AuthupMobileClient(config);
+    clientRef.current = new AuthonMobileClient(config);
   }
 
   const client = clientRef.current;
@@ -102,7 +102,7 @@ export function AuthupProvider({ children, storage, ...config }: AuthupProviderP
     return client.getAccessToken();
   }, [client]);
 
-  const value = useMemo<AuthupContextValue>(
+  const value = useMemo<AuthonContextValue>(
     () => ({
       ...authState,
       user,
@@ -114,5 +114,5 @@ export function AuthupProvider({ children, storage, ...config }: AuthupProviderP
     [authState, user, signIn, signUp, signOut, getToken],
   );
 
-  return <AuthupContext.Provider value={value}>{children}</AuthupContext.Provider>;
+  return <AuthonContext.Provider value={value}>{children}</AuthonContext.Provider>;
 }

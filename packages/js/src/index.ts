@@ -1,4 +1,4 @@
-export { Authup } from './authup';
-export type { AuthupConfig, AuthupEvents, AuthupEventType } from './types';
+export { Authon } from './authon';
+export type { AuthonConfig, AuthonEvents, AuthonEventType } from './types';
 export { getProviderButtonConfig } from './providers';
 export type { ProviderButtonConfig } from './providers';

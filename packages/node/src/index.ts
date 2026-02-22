@@ -1,3 +1,3 @@
-export { AuthupBackend } from './authup';
+export { AuthonBackend } from './authon';
 export { expressMiddleware, fastifyPlugin } from './middleware';
-export type { AuthupMiddlewareOptions } from './middleware';
+export type { AuthonMiddlewareOptions } from './middleware';

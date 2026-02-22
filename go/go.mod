@@ -1,3 +1,3 @@
-module github.com/mikusnuz/authup-sdk/go
+module github.com/mikusnuz/authon-sdk/go
 
 go 1.21

@@ -1,12 +1,12 @@
-export { AuthupProvider, AuthupContext } from './AuthupProvider';
-export type { AuthupContextValue } from './AuthupProvider';
-export { useAuthup } from './useAuthup';
+export { AuthonProvider, AuthonContext } from './AuthonProvider';
+export type { AuthonContextValue } from './AuthonProvider';
+export { useAuthon } from './useAuthon';
 export { useUser } from './useUser';
-export { AuthupMobileClient } from './client';
+export { AuthonMobileClient } from './client';
 export type {
-  AuthupReactNativeConfig,
+  AuthonReactNativeConfig,
   AuthState,
-  AuthupUser,
+  AuthonUser,
   SignInParams,
   SignUpParams,
 } from './types';

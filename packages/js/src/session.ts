@@ -1,8 +1,8 @@
-import type { AuthupUser, AuthTokens } from '@authup/shared';
+import type { AuthonUser, AuthTokens } from '@authon/shared';
 
 export class SessionManager {
   private accessToken: string | null = null;
-  private user: AuthupUser | null = null;
+  private user: AuthonUser | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private apiUrl: string;
   private publishableKey: string;
@@ -16,7 +16,7 @@ export class SessionManager {
     return this.accessToken;
   }
 
-  getUser(): AuthupUser | null {
+  getUser(): AuthonUser | null {
     return this.user;
   }
 

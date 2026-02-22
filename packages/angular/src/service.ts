@@ -1,50 +1,50 @@
-import { Authup } from '@authup/js';
-import type { AuthupConfig } from '@authup/js';
-import type { AuthupUser } from '@authup/shared';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import type { AuthonUser } from '@authon/shared';
 
 /**
- * Injection token key for Authup configuration.
+ * Injection token key for Authon configuration.
  * Used with Angular's InjectionToken.
  */
-export const AUTHUP_CONFIG = 'AUTHUP_CONFIG';
+export const AUTHON_CONFIG = 'AUTHON_CONFIG';
 
-export interface AuthupServiceConfig {
+export interface AuthonServiceConfig {
   publishableKey: string;
-  config?: Omit<AuthupConfig, 'mode'>;
+  config?: Omit<AuthonConfig, 'mode'>;
 }
 
 /**
- * Plain class wrapping @authup/js for Angular dependency injection.
+ * Plain class wrapping @authon/js for Angular dependency injection.
  *
  * Since tsup cannot compile Angular decorators, this is a plain class.
  * Users should wrap it in their own injectable service:
  *
  * ```ts
  * import { Injectable } from '@angular/core';
- * import { AuthupService as BaseAuthupService } from '@authup/angular';
+ * import { AuthonService as BaseAuthonService } from '@authon/angular';
  *
  * @Injectable({ providedIn: 'root' })
- * export class AuthupService extends BaseAuthupService {
+ * export class AuthonService extends BaseAuthonService {
  *   constructor() {
  *     super({ publishableKey: 'pk_live_...' });
  *   }
  * }
  * ```
  *
- * Or use the `provideAuthup()` helper for standalone components.
+ * Or use the `provideAuthon()` helper for standalone components.
  */
-export class AuthupService {
-  private client: Authup;
-  private _user: AuthupUser | null = null;
+export class AuthonService {
+  private client: Authon;
+  private _user: AuthonUser | null = null;
   private _isSignedIn = false;
   private _isLoading = true;
   private _listeners: Array<() => void> = [];
 
-  constructor(config: AuthupServiceConfig) {
-    this.client = new Authup(config.publishableKey, config.config);
+  constructor(config: AuthonServiceConfig) {
+    this.client = new Authon(config.publishableKey, config.config);
 
     this.client.on('signedIn', (user) => {
-      this._user = user as AuthupUser;
+      this._user = user as AuthonUser;
       this._isSignedIn = true;
       this._isLoading = false;
       this.notifyListeners();
@@ -64,7 +64,7 @@ export class AuthupService {
     this._isLoading = false;
   }
 
-  get user(): AuthupUser | null {
+  get user(): AuthonUser | null {
     return this._user;
   }
 
@@ -95,7 +95,7 @@ export class AuthupService {
     return this.client.getToken();
   }
 
-  getClient(): Authup {
+  getClient(): Authon {
     return this.client;
   }
 

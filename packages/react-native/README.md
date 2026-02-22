@@ -1,13 +1,13 @@
-# @authup/react-native
+# @authon/react-native
 
-React Native SDK for [Authup](https://authup.dev) — native OAuth, secure token storage, and React hooks.
+React Native SDK for [Authon](https://authon.dev) — native OAuth, secure token storage, and React hooks.
 
 ## Install
 
 ```bash
-npm install @authup/react-native
+npm install @authon/react-native
 # or
-pnpm add @authup/react-native
+pnpm add @authon/react-native
 ```
 
 Requires `react-native >= 0.72`, `expo-auth-session`, and `expo-secure-store` (or bare RN equivalents).
@@ -18,13 +18,13 @@ Requires `react-native >= 0.72`, `expo-auth-session`, and `expo-secure-store` (o
 
 ```tsx
 // App.tsx
-import { AuthupProvider } from '@authup/react-native';
+import { AuthonProvider } from '@authon/react-native';
 
 export default function App() {
   return (
-    <AuthupProvider publishableKey="pk_live_...">
+    <AuthonProvider publishableKey="pk_live_...">
       <Navigation />
-    </AuthupProvider>
+    </AuthonProvider>
   );
 }
 ```
@@ -32,11 +32,11 @@ export default function App() {
 ### 2. Use Hooks
 
 ```tsx
-import { useAuthup, useUser } from '@authup/react-native';
+import { useAuthon, useUser } from '@authon/react-native';
 import { View, Text, Button } from 'react-native';
 
 function ProfileScreen() {
-  const { isSignedIn, signOut } = useAuthup();
+  const { isSignedIn, signOut } = useAuthon();
   const { user } = useUser();
 
   if (!isSignedIn) {
@@ -52,7 +52,7 @@ function ProfileScreen() {
 }
 
 function SignInScreen() {
-  const { signInWithOAuth, signInWithEmail } = useAuthup();
+  const { signInWithOAuth, signInWithEmail } = useAuthon();
 
   return (
     <View>
@@ -65,13 +65,13 @@ function SignInScreen() {
 
 ## API Reference
 
-### `<AuthupProvider>`
+### `<AuthonProvider>`
 
 ```tsx
-<AuthupProvider
+<AuthonProvider
   publishableKey="pk_live_..."
   config={{
-    apiUrl: 'https://api.authup.dev',
+    apiUrl: 'https://api.authon.dev',
     scheme: 'myapp',  // Custom URL scheme for OAuth redirect
   }}
 >
@@ -79,18 +79,18 @@ function SignInScreen() {
 
 ### Hooks
 
-#### `useAuthup()`
+#### `useAuthon()`
 
 ```ts
 const {
   isSignedIn,       // boolean
   isLoading,        // boolean
-  user,             // AuthupUser | null
+  user,             // AuthonUser | null
   signInWithOAuth,  // (provider: string) => Promise<void>
-  signInWithEmail,  // (email: string, password: string) => Promise<AuthupUser>
+  signInWithEmail,  // (email: string, password: string) => Promise<AuthonUser>
   signOut,          // () => Promise<void>
   getToken,         // () => Promise<string | null>
-} = useAuthup();
+} = useAuthon();
 ```
 
 #### `useUser()`
@@ -105,7 +105,7 @@ Tokens are stored using `expo-secure-store` (Expo) or the platform keychain (bar
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

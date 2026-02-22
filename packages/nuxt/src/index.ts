@@ -1,7 +1,7 @@
-export { authupModule as default } from './module';
-export { authupModule } from './module';
-export type { AuthupModuleOptions } from './module';
-export { createAuthupPlugin } from './plugin';
-export type { AuthupPluginState } from './plugin';
-export { useAuthup, useUser } from './composables';
+export { authonModule as default } from './module';
+export { authonModule } from './module';
+export type { AuthonModuleOptions } from './module';
+export { createAuthonPlugin } from './plugin';
+export type { AuthonPluginState } from './plugin';
+export { useAuthon, useUser } from './composables';
 export { createAuthMiddleware } from './middleware';

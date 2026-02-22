@@ -1,10 +1,10 @@
-export { createAuthup, AUTHUP_KEY } from './plugin';
-export type { AuthupState, AuthupPluginOptions } from './plugin';
-export { useAuthup, useUser } from './composables';
+export { createAuthon, AUTHON_KEY } from './plugin';
+export type { AuthonState, AuthonPluginOptions } from './plugin';
+export { useAuthon, useUser } from './composables';
 export {
-  AuthupSignIn,
-  AuthupSignUp,
-  AuthupUserButton,
-  AuthupSignedIn,
-  AuthupSignedOut,
+  AuthonSignIn,
+  AuthonSignUp,
+  AuthonUserButton,
+  AuthonSignedIn,
+  AuthonSignedOut,
 } from './components';

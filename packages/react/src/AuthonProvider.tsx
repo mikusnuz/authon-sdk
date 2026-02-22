@@ -1,39 +1,39 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import { Authup } from '@authup/js';
-import type { AuthupConfig } from '@authup/js';
-import type { AuthupUser } from '@authup/shared';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import type { AuthonUser } from '@authon/shared';
 
-export interface AuthupContextValue {
+export interface AuthonContextValue {
   isSignedIn: boolean;
   isLoading: boolean;
-  user: AuthupUser | null;
+  user: AuthonUser | null;
   signOut: () => Promise<void>;
   openSignIn: () => Promise<void>;
   openSignUp: () => Promise<void>;
   getToken: () => string | null;
-  client: Authup | null;
+  client: Authon | null;
 }
 
-export const AuthupContext = createContext<AuthupContextValue | null>(null);
+export const AuthonContext = createContext<AuthonContextValue | null>(null);
 
-interface AuthupProviderProps {
+interface AuthonProviderProps {
   publishableKey: string;
   children: ReactNode;
-  config?: Omit<AuthupConfig, 'mode'>;
+  config?: Omit<AuthonConfig, 'mode'>;
 }
 
-export function AuthupProvider({ publishableKey, children, config }: AuthupProviderProps) {
-  const [user, setUser] = useState<AuthupUser | null>(null);
+export function AuthonProvider({ publishableKey, children, config }: AuthonProviderProps) {
+  const [user, setUser] = useState<AuthonUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const clientRef = useRef<Authup | null>(null);
+  const clientRef = useRef<Authon | null>(null);
 
   useEffect(() => {
-    const client = new Authup(publishableKey, config);
+    const client = new Authon(publishableKey, config);
     clientRef.current = client;
 
     client.on('signedIn', (u) => {
-      setUser(u as AuthupUser);
+      setUser(u as AuthonUser);
       setIsLoading(false);
     });
 
@@ -70,7 +70,7 @@ export function AuthupProvider({ publishableKey, children, config }: AuthupProvi
     return clientRef.current?.getToken() ?? null;
   }, []);
 
-  const value = useMemo<AuthupContextValue>(
+  const value = useMemo<AuthonContextValue>(
     () => ({
       isSignedIn: !!user,
       isLoading,
@@ -84,5 +84,5 @@ export function AuthupProvider({ publishableKey, children, config }: AuthupProvi
     [user, isLoading, signOut, openSignIn, openSignUp, getToken],
   );
 
-  return <AuthupContext.Provider value={value}>{children}</AuthupContext.Provider>;
+  return <AuthonContext.Provider value={value}>{children}</AuthonContext.Provider>;
 }

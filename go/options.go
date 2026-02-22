@@ -1,13 +1,13 @@
-package authup
+package authon
 
-const defaultAPIURL = "https://api.authup.dev"
+const defaultAPIURL = "https://api.authon.dev"
 
-// Option configures the AuthupBackend client.
-type Option func(*AuthupBackend)
+// Option configures the AuthonBackend client.
+type Option func(*AuthonBackend)
 
 // WithAPIURL sets a custom API base URL.
 func WithAPIURL(url string) Option {
-	return func(b *AuthupBackend) {
+	return func(b *AuthonBackend) {
 		b.apiURL = url
 	}
 }

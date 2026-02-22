@@ -1,17 +1,17 @@
-import type { AuthupUser } from '@authup/shared';
-import { AuthupBackend } from './authup';
+import type { AuthonUser } from '@authon/shared';
+import { AuthonBackend } from './authon';
 
-export interface AuthupMiddlewareOptions {
+export interface AuthonMiddlewareOptions {
   secretKey: string;
   apiUrl?: string;
   onError?: (error: Error) => void;
 }
 
-export function expressMiddleware(options: AuthupMiddlewareOptions) {
-  const client = new AuthupBackend(options.secretKey, { apiUrl: options.apiUrl });
+export function expressMiddleware(options: AuthonMiddlewareOptions) {
+  const client = new AuthonBackend(options.secretKey, { apiUrl: options.apiUrl });
 
   return async (
-    req: { headers: Record<string, string | string[] | undefined>; auth?: AuthupUser },
+    req: { headers: Record<string, string | string[] | undefined>; auth?: AuthonUser },
     res: { status: (code: number) => { json: (body: unknown) => void } },
     next: (err?: unknown) => void,
   ) => {
@@ -33,11 +33,11 @@ export function expressMiddleware(options: AuthupMiddlewareOptions) {
   };
 }
 
-export function fastifyPlugin(options: AuthupMiddlewareOptions) {
-  const client = new AuthupBackend(options.secretKey, { apiUrl: options.apiUrl });
+export function fastifyPlugin(options: AuthonMiddlewareOptions) {
+  const client = new AuthonBackend(options.secretKey, { apiUrl: options.apiUrl });
 
   return async (
-    request: { headers: Record<string, string | string[] | undefined>; auth?: AuthupUser },
+    request: { headers: Record<string, string | string[] | undefined>; auth?: AuthonUser },
     reply: { code: (code: number) => { send: (body: unknown) => void } },
   ) => {
     const authHeader = request.headers['authorization'];

@@ -1,6 +1,6 @@
 import Foundation
 
-/// Represents an Authup user.
+/// Represents an Authon user.
 public struct User: Codable, Sendable {
     public let id: String
     public let email: String?
@@ -119,7 +119,7 @@ public struct UpdateUserParams: Codable, Sendable {
 }
 
 /// API error response.
-public struct AuthupError: Error, Codable, Sendable {
+public struct AuthonError: Error, Codable, Sendable {
     public let statusCode: Int
     public let message: String
     public let code: String?

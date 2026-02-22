@@ -1,8 +1,8 @@
-package dev.authup.sdk
+package dev.authon.sdk
 
 import java.time.Instant
 
-/** Represents an Authup user. */
+/** Represents an Authon user. */
 data class User(
     val id: String,
     val email: String? = null,
@@ -82,7 +82,7 @@ data class UpdateUserParams(
 )
 
 /** API error response. */
-class AuthupException(
+class AuthonException(
     val statusCode: Int,
     override val message: String,
     val code: String? = null,

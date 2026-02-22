@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
-import { useAuthup } from './useAuthup';
+import { useAuthon } from './useAuthon';
 
 interface SignedOutProps {
   children: ReactNode;
 }
 
 export function SignedOut({ children }: SignedOutProps) {
-  const { isSignedIn, isLoading } = useAuthup();
+  const { isSignedIn, isLoading } = useAuthon();
   if (isLoading || isSignedIn) return null;
   return <>{children}</>;
 }

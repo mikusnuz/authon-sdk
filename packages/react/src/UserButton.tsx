@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAuthup } from './useAuthup';
+import { useAuthon } from './useAuthon';
 
 export function UserButton() {
-  const { user, signOut, openSignIn, isSignedIn } = useAuthup();
+  const { user, signOut, openSignIn, isSignedIn } = useAuthon();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

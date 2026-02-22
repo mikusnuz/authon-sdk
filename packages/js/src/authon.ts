@@ -1,11 +1,11 @@
-import type { AuthupUser, AuthTokens, BrandingConfig, OAuthProviderType } from '@authup/shared';
-import type { AuthupConfig, AuthupEventType, AuthupEvents } from './types';
+import type { AuthonUser, AuthTokens, BrandingConfig, OAuthProviderType } from '@authon/shared';
+import type { AuthonConfig, AuthonEventType, AuthonEvents } from './types';
 import { ModalRenderer } from './modal';
 import { SessionManager } from './session';
 
-export class Authup {
+export class Authon {
   private publishableKey: string;
-  private config: Required<Omit<AuthupConfig, 'containerId' | 'appearance'>> & {
+  private config: Required<Omit<AuthonConfig, 'containerId' | 'appearance'>> & {
     containerId?: string;
     appearance?: Partial<BrandingConfig>;
   };
@@ -16,10 +16,10 @@ export class Authup {
   private providers: OAuthProviderType[] = [];
   private initialized = false;
 
-  constructor(publishableKey: string, config?: AuthupConfig) {
+  constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
     this.config = {
-      apiUrl: config?.apiUrl || 'https://api.authup.dev',
+      apiUrl: config?.apiUrl || 'https://api.authon.dev',
       mode: config?.mode || 'popup',
       theme: config?.theme || 'auto',
       locale: config?.locale || 'en',
@@ -46,7 +46,7 @@ export class Authup {
     await this.startOAuthFlow(provider);
   }
 
-  async signInWithEmail(email: string, password: string): Promise<AuthupUser> {
+  async signInWithEmail(email: string, password: string): Promise<AuthonUser> {
     const tokens = await this.apiPost<AuthTokens>('/v1/auth/signin', { email, password });
     this.session.setSession(tokens);
     this.emit('signedIn', tokens.user);
@@ -57,7 +57,7 @@ export class Authup {
     email: string,
     password: string,
     meta?: { displayName?: string },
-  ): Promise<AuthupUser> {
+  ): Promise<AuthonUser> {
     const tokens = await this.apiPost<AuthTokens>('/v1/auth/signup', {
       email,
       password,
@@ -73,7 +73,7 @@ export class Authup {
     this.emit('signedOut');
   }
 
-  getUser(): AuthupUser | null {
+  getUser(): AuthonUser | null {
     return this.session.getUser();
   }
 
@@ -81,7 +81,7 @@ export class Authup {
     return this.session.getToken();
   }
 
-  on<K extends AuthupEventType>(event: K, listener: AuthupEvents[K]): () => void {
+  on<K extends AuthonEventType>(event: K, listener: AuthonEvents[K]): () => void {
     if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     const set = this.listeners.get(event)!;
     set.add(listener as (...args: unknown[]) => void);
@@ -149,12 +149,12 @@ export class Authup {
       const top = window.screenY + (window.outerHeight - height) / 2;
       const popup = window.open(
         url,
-        'authup-oauth',
+        'authon-oauth',
         `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
       );
 
       const handler = async (e: MessageEvent) => {
-        if (e.data?.type === 'authup-oauth-callback') {
+        if (e.data?.type === 'authon-oauth-callback') {
           window.removeEventListener('message', handler);
           popup?.close();
           try {

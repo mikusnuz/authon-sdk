@@ -1,6 +1,6 @@
 // ── Types ──
 
-export interface AuthupUser {
+export interface AuthonUser {
   id: string;
   projectId: string;
   email: string | null;
@@ -17,7 +17,7 @@ export interface AuthupUser {
   updatedAt: string;
 }
 
-export interface AuthupSession {
+export interface AuthonSession {
   id: string;
   userId: string;
   ipAddress: string | null;
@@ -28,7 +28,7 @@ export interface AuthupSession {
   expiresAt: string;
 }
 
-export interface AuthupProvider {
+export interface AuthonProvider {
   provider: string;
   enabled: boolean;
   sortOrder: number;
@@ -66,7 +66,7 @@ export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
-  user: AuthupUser;
+  user: AuthonUser;
 }
 
 export interface WebhookEvent {

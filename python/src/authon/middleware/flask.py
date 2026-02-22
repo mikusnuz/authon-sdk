@@ -1,32 +1,32 @@
 """
-Flask decorator for Authup token verification.
+Flask decorator for Authon token verification.
 
 Usage:
-    from authup.middleware.flask import flask_authup_required
+    from authon.middleware.flask import flask_authon_required
 
-    authup = AuthupBackend("sk_live_...")
+    authon = AuthonBackend("sk_live_...")
 
     @app.route("/protected")
-    @flask_authup_required(authup)
+    @flask_authon_required(authon)
     def protected():
         from flask import g
-        user = g.authup_user  # AuthupUser instance
+        user = g.authon_user  # AuthonUser instance
         return {"email": user.email}
 """
 
 from functools import wraps
 from typing import Any, Callable
 
-from ..client import AuthupBackend
-from ..types import AuthupUser
+from ..client import AuthonBackend
+from ..types import AuthonUser
 
 
-def flask_authup_required(
-    authup: AuthupBackend,
+def flask_authon_required(
+    authon: AuthonBackend,
 ) -> Callable[..., Any]:
     """
     Decorator that verifies the Authorization header and stores
-    the AuthupUser in `flask.g.authup_user`.
+    the AuthonUser in `flask.g.authon_user`.
     """
 
     def decorator(f: Callable[..., Any]) -> Callable[..., Any]:
@@ -41,8 +41,8 @@ def flask_authup_required(
             token = auth_header[7:]  # Strip "Bearer "
 
             try:
-                user: AuthupUser = authup.verify_token(token)
-                g.authup_user = user
+                user: AuthonUser = authon.verify_token(token)
+                g.authon_user = user
             except Exception:
                 return jsonify({"error": "Invalid token"}), 401
 

@@ -1,4 +1,4 @@
-import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type OAuthProviderType } from '@authup/shared';
+import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type OAuthProviderType } from '@authon/shared';
 
 export interface ProviderButtonConfig {
   provider: OAuthProviderType;

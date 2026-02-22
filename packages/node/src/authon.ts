@@ -1,7 +1,7 @@
-import type { AuthupUser } from '@authup/shared';
+import type { AuthonUser } from '@authon/shared';
 import { createHmac, timingSafeEqual } from 'crypto';
 
-interface AuthupBackendConfig {
+interface AuthonBackendConfig {
   apiUrl?: string;
 }
 
@@ -18,23 +18,23 @@ interface ListResult<T> {
   limit: number;
 }
 
-export class AuthupBackend {
+export class AuthonBackend {
   private secretKey: string;
   private apiUrl: string;
 
-  constructor(secretKey: string, config?: AuthupBackendConfig) {
+  constructor(secretKey: string, config?: AuthonBackendConfig) {
     this.secretKey = secretKey;
-    this.apiUrl = config?.apiUrl || 'https://api.authup.dev';
+    this.apiUrl = config?.apiUrl || 'https://api.authon.dev';
   }
 
-  async verifyToken(accessToken: string): Promise<AuthupUser> {
-    return this.request<AuthupUser>('GET', '/v1/auth/token/verify', undefined, {
+  async verifyToken(accessToken: string): Promise<AuthonUser> {
+    return this.request<AuthonUser>('GET', '/v1/auth/token/verify', undefined, {
       Authorization: `Bearer ${accessToken}`,
     });
   }
 
   users = {
-    list: (options?: ListOptions): Promise<ListResult<AuthupUser>> => {
+    list: (options?: ListOptions): Promise<ListResult<AuthonUser>> => {
       const params = new URLSearchParams();
       if (options?.page) params.set('page', String(options.page));
       if (options?.limit) params.set('limit', String(options.limit));
@@ -43,7 +43,7 @@ export class AuthupBackend {
       return this.request('GET', `/v1/users${qs ? `?${qs}` : ''}`);
     },
 
-    get: (userId: string): Promise<AuthupUser> => {
+    get: (userId: string): Promise<AuthonUser> => {
       return this.request('GET', `/v1/users/${userId}`);
     },
 
@@ -51,14 +51,14 @@ export class AuthupBackend {
       email: string;
       password?: string;
       displayName?: string;
-    }): Promise<AuthupUser> => {
+    }): Promise<AuthonUser> => {
       return this.request('POST', '/v1/users', data);
     },
 
     update: (
       userId: string,
       data: Partial<{ email: string; displayName: string; publicMetadata: Record<string, unknown> }>,
-    ): Promise<AuthupUser> => {
+    ): Promise<AuthonUser> => {
       return this.request('PATCH', `/v1/users/${userId}`, data);
     },
 
@@ -66,11 +66,11 @@ export class AuthupBackend {
       return this.request('DELETE', `/v1/users/${userId}`);
     },
 
-    ban: (userId: string, reason?: string): Promise<AuthupUser> => {
+    ban: (userId: string, reason?: string): Promise<AuthonUser> => {
       return this.request('POST', `/v1/users/${userId}/ban`, { reason });
     },
 
-    unban: (userId: string): Promise<AuthupUser> => {
+    unban: (userId: string): Promise<AuthonUser> => {
       return this.request('POST', `/v1/users/${userId}/unban`);
     },
   };
@@ -114,7 +114,7 @@ export class AuthupBackend {
 
     if (!res.ok) {
       const text = await res.text();
-      throw new Error(`Authup API error ${res.status}: ${text}`);
+      throw new Error(`Authon API error ${res.status}: ${text}`);
     }
 
     if (res.status === 204) return undefined as T;

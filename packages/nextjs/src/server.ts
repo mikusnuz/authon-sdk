@@ -1,10 +1,10 @@
-import type { AuthupUser } from '@authup/shared';
+import type { AuthonUser } from '@authon/shared';
 
 async function getTokenFromCookies(): Promise<string | null> {
   try {
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    return cookieStore.get('authup-token')?.value ?? null;
+    return cookieStore.get('authon-token')?.value ?? null;
   } catch {
     return null;
   }
@@ -14,9 +14,9 @@ async function verifyTokenWithApi(
   token: string,
   secretKey?: string,
   apiUrl?: string,
-): Promise<AuthupUser | null> {
-  const url = apiUrl || process.env['AUTHUP_API_URL'] || 'https://api.authup.dev';
-  const key = secretKey || process.env['AUTHUP_SECRET_KEY'];
+): Promise<AuthonUser | null> {
+  const url = apiUrl || process.env['AUTHON_API_URL'] || 'https://api.authon.dev';
+  const key = secretKey || process.env['AUTHON_SECRET_KEY'];
   if (!key) return null;
 
   try {
@@ -28,13 +28,13 @@ async function verifyTokenWithApi(
       },
     });
     if (!res.ok) return null;
-    return res.json() as Promise<AuthupUser>;
+    return res.json() as Promise<AuthonUser>;
   } catch {
     return null;
   }
 }
 
-export async function currentUser(): Promise<AuthupUser | null> {
+export async function currentUser(): Promise<AuthonUser | null> {
   const token = await getTokenFromCookies();
   if (!token) return null;
   return verifyTokenWithApi(token);
@@ -42,7 +42,7 @@ export async function currentUser(): Promise<AuthupUser | null> {
 
 export async function auth(): Promise<{
   userId: string | null;
-  user: AuthupUser | null;
+  user: AuthonUser | null;
   getToken: () => string | null;
 }> {
   const token = await getTokenFromCookies();

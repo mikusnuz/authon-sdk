@@ -1,7 +1,7 @@
 {
-  "name": "@authup/angular",
+  "name": "@authon/angular",
   "version": "0.1.0",
-  "description": "Authup Angular SDK — service, guard, and components",
+  "description": "Authon Angular SDK — service, guard, and components",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,17 +21,17 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/angular"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/angular",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/angular",
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authup", "angular", "auth", "guard"],
+  "keywords": ["authon", "angular", "auth", "guard"],
   "dependencies": {
-    "@authup/js": "workspace:*",
-    "@authup/shared": "workspace:*"
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "peerDependencies": {
     "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0"

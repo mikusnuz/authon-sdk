@@ -1,13 +1,13 @@
-# authup (Dart/Flutter)
+# authon (Dart/Flutter)
 
-Official Dart SDK for [Authup](https://authup.dev) — authenticate users in Flutter apps with OAuth, email/password, and session management.
+Official Dart SDK for [Authon](https://authon.dev) — authenticate users in Flutter apps with OAuth, email/password, and session management.
 
 ## Install
 
 ```yaml
 # pubspec.yaml
 dependencies:
-  authup: ^0.1.0
+  authon: ^0.1.0
 ```
 
 ```bash
@@ -19,12 +19,12 @@ dart pub get
 ### Flutter Setup
 
 ```dart
-import 'package:authup/authup.dart';
+import 'package:authon/authon.dart';
 import 'package:flutter/material.dart';
 
 void main() {
   runApp(
-    AuthupProvider(
+    AuthonProvider(
       publishableKey: 'pk_live_...',
       child: const MyApp(),
     ),
@@ -35,28 +35,28 @@ void main() {
 ### Sign In
 
 ```dart
-import 'package:authup/authup.dart';
+import 'package:authon/authon.dart';
 
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final authup = Authup.of(context);
+    final authon = Authon.of(context);
 
     return Column(
       children: [
         ElevatedButton(
-          onPressed: () => authup.signInWithOAuth(OAuthProvider.google),
+          onPressed: () => authon.signInWithOAuth(OAuthProvider.google),
           child: const Text('Sign in with Google'),
         ),
         ElevatedButton(
-          onPressed: () => authup.signInWithOAuth(OAuthProvider.apple),
+          onPressed: () => authon.signInWithOAuth(OAuthProvider.apple),
           child: const Text('Sign in with Apple'),
         ),
         ElevatedButton(
           onPressed: () async {
-            final user = await authup.signInWithEmail(
+            final user = await authon.signInWithEmail(
               'user@example.com',
               'password',
             );
@@ -78,7 +78,7 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AuthupBuilder(
+    return AuthonBuilder(
       builder: (context, state) {
         if (state.isLoading) return const CircularProgressIndicator();
         if (!state.isSignedIn) return const SignInScreen();
@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             Text('Welcome, ${state.user!.displayName}'),
             ElevatedButton(
-              onPressed: () => Authup.of(context).signOut(),
+              onPressed: () => Authon.of(context).signOut(),
               child: const Text('Sign Out'),
             ),
           ],
@@ -100,7 +100,7 @@ class HomeScreen extends StatelessWidget {
 
 ## API Reference
 
-### `AuthupProvider`
+### `AuthonProvider`
 
 | Property | Type | Description |
 |----------|------|-------------|
@@ -108,22 +108,22 @@ class HomeScreen extends StatelessWidget {
 | `apiUrl` | `String?` | Custom API URL |
 | `child` | `Widget` | Child widget tree |
 
-### `Authup.of(context)`
+### `Authon.of(context)`
 
 | Method | Returns | Description |
 |--------|---------|-------------|
-| `signInWithOAuth(provider)` | `Future<AuthupUser>` | OAuth sign-in |
-| `signInWithEmail(email, password)` | `Future<AuthupUser>` | Email sign-in |
+| `signInWithOAuth(provider)` | `Future<AuthonUser>` | OAuth sign-in |
+| `signInWithEmail(email, password)` | `Future<AuthonUser>` | Email sign-in |
 | `signOut()` | `Future<void>` | Sign out |
-| `user` | `AuthupUser?` | Current user |
+| `user` | `AuthonUser?` | Current user |
 | `isSignedIn` | `bool` | Whether signed in |
 | `getToken()` | `Future<String?>` | Get current access token |
 
-### `AuthupBuilder`
+### `AuthonBuilder`
 
 Reactive widget that rebuilds when auth state changes.
 
-### `AuthupUser`
+### `AuthonUser`
 
 | Property | Type |
 |----------|------|
@@ -136,7 +136,7 @@ Reactive widget that rebuilds when auth state changes.
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

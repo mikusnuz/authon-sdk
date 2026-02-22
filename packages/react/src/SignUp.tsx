@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
-import { useAuthup } from './useAuthup';
+import { useAuthon } from './useAuthon';
 
 interface SignUpProps {
   mode?: 'popup' | 'embedded';
 }
 
 export function SignUp({ mode = 'popup' }: SignUpProps) {
-  const { client } = useAuthup();
+  const { client } = useAuthon();
 
   useEffect(() => {
     if (mode === 'popup') {
@@ -15,7 +15,7 @@ export function SignUp({ mode = 'popup' }: SignUpProps) {
   }, [client, mode]);
 
   if (mode === 'embedded') {
-    return <div id="authup-signup-container" />;
+    return <div id="authon-signup-container" />;
   }
 
   return null;

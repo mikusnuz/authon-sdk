@@ -1,6 +1,6 @@
-import type { AuthupReactNativeConfig, AuthupUser, SignInParams, SignUpParams } from './types';
+import type { AuthonReactNativeConfig, AuthonUser, SignInParams, SignUpParams } from './types';
 
-const DEFAULT_API_URL = 'https://api.authup.dev';
+const DEFAULT_API_URL = 'https://api.authon.dev';
 
 interface TokenPair {
   accessToken: string;
@@ -14,15 +14,15 @@ type TokenStorage = {
   removeItem(key: string): Promise<void>;
 };
 
-const STORAGE_KEY = '@authup/tokens';
+const STORAGE_KEY = '@authon/tokens';
 
-export class AuthupMobileClient {
+export class AuthonMobileClient {
   private apiUrl: string;
   private publishableKey: string;
   private tokens: TokenPair | null = null;
   private storage: TokenStorage | null = null;
 
-  constructor(config: AuthupReactNativeConfig) {
+  constructor(config: AuthonReactNativeConfig) {
     this.publishableKey = config.publishableKey;
     this.apiUrl = (config.apiUrl || DEFAULT_API_URL).replace(/\/$/, '');
   }
@@ -79,10 +79,10 @@ export class AuthupMobileClient {
     }
   }
 
-  async getUser(): Promise<AuthupUser | null> {
+  async getUser(): Promise<AuthonUser | null> {
     if (!this.tokens) return null;
     try {
-      return (await this.request('GET', '/v1/auth/me')) as AuthupUser;
+      return (await this.request('GET', '/v1/auth/me')) as AuthonUser;
     } catch {
       return null;
     }

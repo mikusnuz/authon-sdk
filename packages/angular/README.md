@@ -1,13 +1,13 @@
-# @authup/angular
+# @authon/angular
 
-Angular SDK for [Authup](https://authup.dev) — service, guard, and interceptor.
+Angular SDK for [Authon](https://authon.dev) — service, guard, and interceptor.
 
 ## Install
 
 ```bash
-npm install @authup/angular
+npm install @authon/angular
 # or
-pnpm add @authup/angular
+pnpm add @authon/angular
 ```
 
 Requires `@angular/core >= 16.0.0`.
@@ -18,11 +18,11 @@ Requires `@angular/core >= 16.0.0`.
 
 ```ts
 // app.config.ts
-import { provideAuthup } from '@authup/angular';
+import { provideAuthon } from '@authon/angular';
 
 export const appConfig = {
   providers: [
-    provideAuthup({
+    provideAuthon({
       publishableKey: 'pk_live_...',
     }),
   ],
@@ -33,7 +33,7 @@ export const appConfig = {
 
 ```ts
 import { Component } from '@angular/core';
-import { AuthupService } from '@authup/angular';
+import { AuthonService } from '@authon/angular';
 
 @Component({
   selector: 'app-header',
@@ -47,7 +47,7 @@ import { AuthupService } from '@authup/angular';
   `,
 })
 export class HeaderComponent {
-  constructor(public auth: AuthupService) {}
+  constructor(public auth: AuthonService) {}
 }
 ```
 
@@ -55,7 +55,7 @@ export class HeaderComponent {
 
 ```ts
 // app.routes.ts
-import { authGuard } from '@authup/angular';
+import { authGuard } from '@authon/angular';
 
 export const routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
@@ -69,12 +69,12 @@ Automatically attach the access token to outgoing requests:
 
 ```ts
 // app.config.ts
-import { provideAuthup, authInterceptor } from '@authup/angular';
+import { provideAuthon, authInterceptor } from '@authon/angular';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 
 export const appConfig = {
   providers: [
-    provideAuthup({ publishableKey: 'pk_live_...' }),
+    provideAuthon({ publishableKey: 'pk_live_...' }),
     provideHttpClient(withInterceptors([authInterceptor])),
   ],
 };
@@ -82,11 +82,11 @@ export const appConfig = {
 
 ## API Reference
 
-### `AuthupService`
+### `AuthonService`
 
 | Property / Method | Type | Description |
 |-------------------|------|-------------|
-| `user()` | `Signal<AuthupUser \| null>` | Current user signal |
+| `user()` | `Signal<AuthonUser \| null>` | Current user signal |
 | `isSignedIn()` | `Signal<boolean>` | Whether signed in |
 | `isLoading()` | `Signal<boolean>` | Loading state |
 | `openSignIn()` | `Promise<void>` | Open sign-in modal |
@@ -108,7 +108,7 @@ export const appConfig = {
 
 ## Documentation
 
-[authup.dev/docs](https://authup.dev/docs)
+[authon.dev/docs](https://authon.dev/docs)
 
 ## License
 

@@ -1,6 +1,6 @@
 export {
-  AuthupProvider,
-  useAuthup,
+  AuthonProvider,
+  useAuthon,
   useUser,
   SignIn,
   SignUp,
@@ -8,7 +8,7 @@ export {
   SignedIn,
   SignedOut,
   Protect,
-} from '@authup/react';
-export type { AuthupContextValue } from '@authup/react';
-export { authupMiddleware } from './middleware';
-export type { AuthupMiddlewareOptions } from './middleware';
+} from '@authon/react';
+export type { AuthonContextValue } from '@authon/react';
+export { authonMiddleware } from './middleware';
+export type { AuthonMiddlewareOptions } from './middleware';

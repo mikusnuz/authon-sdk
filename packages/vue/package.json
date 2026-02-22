@@ -1,7 +1,7 @@
 {
-  "name": "@authup/vue",
+  "name": "@authon/vue",
   "version": "0.1.0",
-  "description": "Authup Vue 3 SDK — plugin, composables, and components",
+  "description": "Authon Vue 3 SDK — plugin, composables, and components",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -21,15 +21,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mikusnuz/authup-sdk.git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
     "directory": "packages/vue"
   },
-  "homepage": "https://github.com/mikusnuz/authup-sdk/tree/main/packages/vue",
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/vue",
   "publishConfig": { "access": "public" },
-  "keywords": ["authup", "auth", "vue", "composables", "sdk"],
+  "keywords": ["authon", "auth", "vue", "composables", "sdk"],
   "dependencies": {
-    "@authup/js": "workspace:*",
-    "@authup/shared": "workspace:*"
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.3.0"

@@ -1,4 +1,4 @@
-package dev.authup.sdk
+package dev.authon.sdk
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -7,14 +7,14 @@ import java.net.HttpURLConnection
 import java.net.URI
 
 /**
- * Server-side Authup client for Kotlin/JVM.
+ * Server-side Authon client for Kotlin/JVM.
  *
- * @param secretKey Your Authup secret API key.
- * @param apiUrl Custom API base URL (defaults to `https://api.authup.dev`).
+ * @param secretKey Your Authon secret API key.
+ * @param apiUrl Custom API base URL (defaults to `https://api.authon.dev`).
  */
-class AuthupBackend @JvmOverloads constructor(
+class AuthonBackend @JvmOverloads constructor(
     private val secretKey: String,
-    private val apiUrl: String = "https://api.authup.dev",
+    private val apiUrl: String = "https://api.authon.dev",
 ) {
     private val gson = Gson()
     private val baseUrl = apiUrl.trimEnd('/')
@@ -105,7 +105,7 @@ class AuthupBackend @JvmOverloads constructor(
             }
             connection.setRequestProperty("Authorization", "Bearer $secretKey")
             connection.setRequestProperty("Content-Type", "application/json")
-            connection.setRequestProperty("User-Agent", "authup-kotlin/0.1.0")
+            connection.setRequestProperty("User-Agent", "authon-kotlin/0.1.0")
             connection.connectTimeout = 30_000
             connection.readTimeout = 30_000
 
@@ -128,15 +128,15 @@ class AuthupBackend @JvmOverloads constructor(
             if (responseCode >= 400) {
                 try {
                     val error = gson.fromJson(responseBody, ErrorResponse::class.java)
-                    throw AuthupException(
+                    throw AuthonException(
                         statusCode = responseCode,
                         message = error?.message ?: responseBody,
                         code = error?.code,
                     )
-                } catch (e: AuthupException) {
+                } catch (e: AuthonException) {
                     throw e
                 } catch (_: Exception) {
-                    throw AuthupException(statusCode = responseCode, message = responseBody)
+                    throw AuthonException(statusCode = responseCode, message = responseBody)
                 }
             }
 

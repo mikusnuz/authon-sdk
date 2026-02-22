@@ -1,4 +1,4 @@
-package authup
+package authon
 
 import (
 	"context"
@@ -8,12 +8,12 @@ import (
 
 type contextKey string
 
-const userContextKey contextKey = "authup_user"
+const userContextKey contextKey = "authon_user"
 
 // AuthMiddleware returns an HTTP middleware that verifies the Authorization
 // header and sets the authenticated user on the request context.
 // Unauthenticated requests receive a 401 response.
-func AuthMiddleware(backend *AuthupBackend) func(http.Handler) http.Handler {
+func AuthMiddleware(backend *AuthonBackend) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")

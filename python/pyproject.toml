@@ -3,18 +3,18 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "authup"
+name = "authon"
 version = "0.1.0"
-description = "Official Authup Python SDK — verify tokens, manage users, validate webhooks"
+description = "Official Authon Python SDK — verify tokens, manage users, validate webhooks"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
 dependencies = ["httpx>=0.24.0"]
-keywords = ["authup", "auth", "authentication", "sdk"]
+keywords = ["authon", "auth", "authentication", "sdk"]
 
 [project.urls]
-Homepage = "https://github.com/mikusnuz/authup-sdk"
-Repository = "https://github.com/mikusnuz/authup-sdk/tree/main/python"
+Homepage = "https://github.com/mikusnuz/authon-sdk"
+Repository = "https://github.com/mikusnuz/authon-sdk/tree/main/python"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/authup"]
+packages = ["src/authon"]
