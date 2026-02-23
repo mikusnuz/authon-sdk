@@ -1,6 +1,6 @@
 {
   "name": "@authon/react",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Authon React SDK — Provider, hooks, and components for React apps",
   "type": "module",
   "main": "./dist/index.cjs",

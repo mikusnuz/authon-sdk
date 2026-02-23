@@ -1,6 +1,6 @@
 {
   "name": "@authon/react-native",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Authon React Native SDK — mobile authentication",
   "type": "module",
   "main": "./dist/index.cjs",

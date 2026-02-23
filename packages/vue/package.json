@@ -1,6 +1,6 @@
 {
   "name": "@authon/vue",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Authon Vue 3 SDK — plugin, composables, and components",
   "type": "module",
   "main": "./dist/index.cjs",

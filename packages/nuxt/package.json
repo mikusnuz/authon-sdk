@@ -1,6 +1,6 @@
 {
   "name": "@authon/nuxt",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Authon Nuxt 3 module — auto-imported composables and middleware",
   "type": "module",
   "main": "./dist/index.cjs",

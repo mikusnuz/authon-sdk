@@ -177,12 +177,14 @@ export class Authon {
 
       let resolved = false;
       let cleaned = false;
+      const storageKey = `authon-oauth-${state}`;
 
       const resolve = (tokens: AuthTokens) => {
         if (resolved) return;
         resolved = true;
         cleanup();
-        try { if (!popup.closed) popup.close(); } catch { /* ignore */ }
+        try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
+        try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
         this.session.setSession(tokens);
         this.modal?.close();
         this.emit('signedIn', tokens.user);
@@ -196,26 +198,7 @@ export class Authon {
         this.emit('error', new Error(msg));
       };
 
-      const cleanup = () => {
-        if (cleaned) return;
-        cleaned = true;
-        window.removeEventListener('message', messageHandler);
-        if (apiPollTimer) clearInterval(apiPollTimer);
-        if (closePollTimer) clearInterval(closePollTimer);
-        if (maxTimer) clearTimeout(maxTimer);
-      };
-
-      // 1. postMessage handler (fast path — Chrome/Firefox)
-      const messageHandler = (e: MessageEvent) => {
-        if (e.data?.type !== 'authon-oauth-callback') return;
-        if (e.data.tokens) {
-          resolve(e.data.tokens as AuthTokens);
-        }
-      };
-      window.addEventListener('message', messageHandler);
-
-      // 2. API polling (Safari fallback — window.opener severed by COOP)
-      const apiPollTimer = setInterval(async () => {
+      const pollApi = async () => {
         if (resolved || cleaned) return;
         try {
           const result = await this.apiGet<{ status: string; accessToken?: string; refreshToken?: string; expiresIn?: number; user?: AuthonUser; message?: string }>(
@@ -234,19 +217,74 @@ export class Authon {
         } catch {
           // Network error — keep polling
         }
-      }, 1500);
+      };
 
-      // 3. Popup close detection
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        window.removeEventListener('message', messageHandler);
+        window.removeEventListener('storage', storageHandler);
+        document.removeEventListener('visibilitychange', visibilityHandler);
+        if (apiPollTimer) clearInterval(apiPollTimer);
+        if (closePollTimer) clearInterval(closePollTimer);
+        if (maxTimer) clearTimeout(maxTimer);
+      };
+
+      // 1. postMessage handler (fast path — Chrome/Firefox desktop)
+      const messageHandler = (e: MessageEvent) => {
+        if (e.data?.type !== 'authon-oauth-callback') return;
+        if (e.data.tokens) {
+          resolve(e.data.tokens as AuthTokens);
+        }
+      };
+      window.addEventListener('message', messageHandler);
+
+      // 2. localStorage handler (mobile fallback — cross-tab communication)
+      const storageHandler = (e: StorageEvent) => {
+        if (e.key !== storageKey || !e.newValue) return;
+        try {
+          const data = JSON.parse(e.newValue);
+          if (data.tokens) resolve(data.tokens as AuthTokens);
+          else if (data.error) handleError(data.error);
+        } catch { /* ignore */ }
+      };
+      window.addEventListener('storage', storageHandler);
+
+      // Also check localStorage immediately in case it was set before listener
+      try {
+        const existing = localStorage.getItem(storageKey);
+        if (existing) {
+          const data = JSON.parse(existing);
+          if (data.tokens) { resolve(data.tokens as AuthTokens); return; }
+        }
+      } catch { /* ignore */ }
+
+      // 3. API polling (fallback for all browsers)
+      const apiPollTimer = setInterval(pollApi, 1500);
+
+      // 4. visibilitychange — poll immediately when tab regains focus (mobile)
+      const visibilityHandler = () => {
+        if (document.visibilityState === 'visible' && !resolved && !cleaned) {
+          pollApi();
+        }
+      };
+      document.addEventListener('visibilitychange', visibilityHandler);
+
+      // 5. Popup close detection
       const closePollTimer = setInterval(() => {
         if (resolved || cleaned) return;
         try {
-          if (popup.closed) {
+          if (popup && popup.closed) {
             clearInterval(closePollTimer);
-            // Give polling a few more seconds to pick up the result
+            // Poll immediately + give a few more seconds
+            pollApi();
             setTimeout(() => {
               if (resolved || cleaned) return;
-              cleanup();
-              this.modal?.hideLoading();
+              pollApi().then(() => {
+                if (resolved || cleaned) return;
+                cleanup();
+                this.modal?.hideLoading();
+              });
             }, 3000);
           }
         } catch {
@@ -254,7 +292,7 @@ export class Authon {
         }
       }, 500);
 
-      // 4. Max timeout (3 minutes)
+      // 6. Max timeout (3 minutes)
       const maxTimer = setTimeout(() => {
         if (resolved || cleaned) return;
         cleanup();

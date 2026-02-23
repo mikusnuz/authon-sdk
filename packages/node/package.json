@@ -1,6 +1,6 @@
 {
   "name": "@authon/node",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Authon Node.js SDK — verify tokens, manage users, validate webhooks",
   "type": "module",
   "main": "./dist/index.cjs",
