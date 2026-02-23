@@ -103,12 +103,12 @@ export class Authon {
   private async ensureInitialized(): Promise<void> {
     if (this.initialized) return;
     try {
-      const [branding, providers] = await Promise.all([
+      const [branding, providersRes] = await Promise.all([
         this.apiGet<BrandingConfig>('/v1/auth/branding'),
         this.apiGet<{ providers: OAuthProviderType[] }>('/v1/auth/providers'),
       ]);
       this.branding = { ...branding, ...this.config.appearance };
-      this.providers = providers.providers;
+      this.providers = providersRes.providers;
       this.initialized = true;
     } catch (err) {
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
@@ -120,15 +120,22 @@ export class Authon {
     if (!this.modal) {
       this.modal = new ModalRenderer({
         mode: this.config.mode,
+        theme: this.config.theme,
         containerId: this.config.containerId,
         branding: this.branding || undefined,
         onProviderClick: (provider) => this.startOAuthFlow(provider),
         onEmailSubmit: (email, password, isSignUp) => {
-          if (isSignUp) {
-            this.signUpWithEmail(email, password).then(() => this.modal?.close());
-          } else {
-            this.signInWithEmail(email, password).then(() => this.modal?.close());
-          }
+          this.modal?.clearError();
+          const promise = isSignUp
+            ? this.signUpWithEmail(email, password)
+            : this.signInWithEmail(email, password);
+          promise
+            .then(() => this.modal?.close())
+            .catch((err) => {
+              const msg = err instanceof Error ? err.message : String(err);
+              this.modal?.showError(msg || 'Authentication failed');
+              this.emit('error', err instanceof Error ? err : new Error(msg));
+            });
         },
         onClose: () => this.modal?.close(),
       });
@@ -140,13 +147,14 @@ export class Authon {
 
   private async startOAuthFlow(provider: OAuthProviderType): Promise<void> {
     try {
-      // Derive web URL from API URL for the callback page
-      // api.authon.dev → authon.dev
-      const webUrl = this.config.apiUrl.replace('://api.', '://');
-      const redirectUri = `${webUrl}/sdk/callback`;
-      const { url } = await this.apiGet<{ url: string }>(
+      const redirectUri = `${this.config.apiUrl}/v1/auth/oauth/redirect`;
+      const { url, state } = await this.apiGet<{ url: string; state: string }>(
         `/v1/auth/oauth/${provider}/url?redirectUri=${encodeURIComponent(redirectUri)}`,
       );
+
+      this.modal?.showLoading();
+
+      // Open popup
       const width = 500;
       const height = 700;
       const left = window.screenX + (window.outerWidth - width) / 2;
@@ -157,27 +165,103 @@ export class Authon {
         `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no`,
       );
 
-      const handler = async (e: MessageEvent) => {
-        if (e.data?.type === 'authon-oauth-callback') {
-          window.removeEventListener('message', handler);
-          popup?.close();
-          try {
-            const tokens = await this.apiPost<AuthTokens>('/v1/auth/oauth/callback', {
-              code: e.data.code,
-              state: e.data.state,
-              codeVerifier: e.data.codeVerifier,
-              provider,
-            });
-            this.session.setSession(tokens);
-            this.modal?.close();
-            this.emit('signedIn', tokens.user);
-          } catch (err) {
-            this.emit('error', err instanceof Error ? err : new Error(String(err)));
-          }
+      if (!popup || popup.closed) {
+        this.modal?.hideLoading();
+        this.modal?.showBanner(
+          'Pop-up blocked. Please allow pop-ups for this site and try again.',
+          'warning',
+        );
+        this.emit('error', new Error('Popup was blocked by the browser'));
+        return;
+      }
+
+      let resolved = false;
+      let cleaned = false;
+
+      const resolve = (tokens: AuthTokens) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        try { if (!popup.closed) popup.close(); } catch { /* ignore */ }
+        this.session.setSession(tokens);
+        this.modal?.close();
+        this.emit('signedIn', tokens.user);
+      };
+
+      const handleError = (msg: string) => {
+        if (resolved) return;
+        cleanup();
+        this.modal?.hideLoading();
+        this.modal?.showError(msg);
+        this.emit('error', new Error(msg));
+      };
+
+      const cleanup = () => {
+        if (cleaned) return;
+        cleaned = true;
+        window.removeEventListener('message', messageHandler);
+        if (apiPollTimer) clearInterval(apiPollTimer);
+        if (closePollTimer) clearInterval(closePollTimer);
+        if (maxTimer) clearTimeout(maxTimer);
+      };
+
+      // 1. postMessage handler (fast path — Chrome/Firefox)
+      const messageHandler = (e: MessageEvent) => {
+        if (e.data?.type !== 'authon-oauth-callback') return;
+        if (e.data.tokens) {
+          resolve(e.data.tokens as AuthTokens);
         }
       };
-      window.addEventListener('message', handler);
+      window.addEventListener('message', messageHandler);
+
+      // 2. API polling (Safari fallback — window.opener severed by COOP)
+      const apiPollTimer = setInterval(async () => {
+        if (resolved || cleaned) return;
+        try {
+          const result = await this.apiGet<{ status: string; accessToken?: string; refreshToken?: string; expiresIn?: number; user?: AuthonUser; message?: string }>(
+            `/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`,
+          );
+          if (result.status === 'completed' && result.accessToken) {
+            resolve({
+              accessToken: result.accessToken,
+              refreshToken: result.refreshToken!,
+              expiresIn: result.expiresIn!,
+              user: result.user!,
+            });
+          } else if (result.status === 'error') {
+            handleError(result.message || 'Authentication failed');
+          }
+        } catch {
+          // Network error — keep polling
+        }
+      }, 1500);
+
+      // 3. Popup close detection
+      const closePollTimer = setInterval(() => {
+        if (resolved || cleaned) return;
+        try {
+          if (popup.closed) {
+            clearInterval(closePollTimer);
+            // Give polling a few more seconds to pick up the result
+            setTimeout(() => {
+              if (resolved || cleaned) return;
+              cleanup();
+              this.modal?.hideLoading();
+            }, 3000);
+          }
+        } catch {
+          // Cross-origin access error — popup still open
+        }
+      }, 500);
+
+      // 4. Max timeout (3 minutes)
+      const maxTimer = setTimeout(() => {
+        if (resolved || cleaned) return;
+        cleanup();
+        this.modal?.hideLoading();
+      }, 180_000);
     } catch (err) {
+      this.modal?.hideLoading();
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
     }
   }
@@ -187,7 +271,7 @@ export class Authon {
       headers: { 'x-api-key': this.publishableKey },
       credentials: 'include',
     });
-    if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
     return res.json();
   }
 
@@ -201,7 +285,20 @@ export class Authon {
       credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (!res.ok) throw new Error(`API ${path}: ${res.status}`);
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
     return res.json();
+  }
+
+  private async parseApiError(res: Response, path: string): Promise<string> {
+    try {
+      const body = await res.json();
+      if (Array.isArray(body.message) && body.message.length > 0) {
+        return body.message[0];
+      }
+      if (typeof body.message === 'string' && body.message !== 'Bad Request') {
+        return body.message;
+      }
+    } catch { /* ignore */ }
+    return `API ${path}: ${res.status}`;
   }
 }

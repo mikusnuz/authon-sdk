@@ -1,6 +1,6 @@
 {
   "name": "@authon/svelte",
-  "version": "0.1.0",
+  "version": "0.1.14",
   "description": "Authon Svelte SDK — stores and components",
   "type": "module",
   "main": "./dist/index.cjs",

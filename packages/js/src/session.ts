@@ -2,6 +2,7 @@ import type { AuthonUser, AuthTokens } from '@authon/shared';
 
 export class SessionManager {
   private accessToken: string | null = null;
+  private refreshToken: string | null = null;
   private user: AuthonUser | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private apiUrl: string;
@@ -22,12 +23,16 @@ export class SessionManager {
 
   setSession(tokens: AuthTokens): void {
     this.accessToken = tokens.accessToken;
+    this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
-    this.scheduleRefresh(tokens.expiresIn);
+    if (tokens.expiresIn && tokens.expiresIn > 0) {
+      this.scheduleRefresh(tokens.expiresIn);
+    }
   }
 
   clearSession(): void {
     this.accessToken = null;
+    this.refreshToken = null;
     this.user = null;
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
@@ -37,11 +42,16 @@ export class SessionManager {
 
   private scheduleRefresh(expiresIn: number): void {
     if (this.refreshTimer) clearTimeout(this.refreshTimer);
-    const refreshIn = Math.max((expiresIn - 60) * 1000, 5000);
+    // Refresh 60 seconds before expiry
+    const refreshIn = Math.max((expiresIn - 60) * 1000, 30000);
     this.refreshTimer = setTimeout(() => this.refresh(), refreshIn);
   }
 
   async refresh(): Promise<AuthTokens | null> {
+    if (!this.refreshToken) {
+      this.clearSession();
+      return null;
+    }
     try {
       const res = await fetch(`${this.apiUrl}/v1/auth/token/refresh`, {
         method: 'POST',
@@ -50,6 +60,7 @@ export class SessionManager {
           'x-api-key': this.publishableKey,
         },
         credentials: 'include',
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
       });
       if (!res.ok) {
         this.clearSession();

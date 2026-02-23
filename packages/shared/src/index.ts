@@ -53,6 +53,7 @@ export interface BrandingConfig {
   privacyUrl?: string;
   customCss?: string;
   locale?: string;
+  showSecuredBy?: boolean;
 }
 
 export interface SessionConfig {
@@ -71,7 +72,7 @@ export interface AuthTokens {
 
 export interface WebhookEvent {
   id: string;
-  type: WebhookEventType;
+  type: string;
   projectId: string;
   timestamp: string;
   data: Record<string, unknown>;
@@ -152,6 +153,7 @@ export const DEFAULT_BRANDING: BrandingConfig = {
   borderRadius: 12,
   showEmailPassword: true,
   showDivider: true,
+  showSecuredBy: true,
   locale: 'en',
 };
 
