@@ -1,6 +1,6 @@
 {
   "name": "@authon/node",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Authon Node.js SDK — verify tokens, manage users, validate webhooks",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -30,7 +30,7 @@
   },
   "keywords": ["authon", "auth", "authentication", "node", "server", "sdk"],
   "dependencies": {
-    "@authon/shared": "workspace:*"
+    "@authon/shared": "^0.1.15"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

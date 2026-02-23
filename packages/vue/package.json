@@ -1,6 +1,6 @@
 {
   "name": "@authon/vue",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Authon Vue 3 SDK — plugin, composables, and components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -28,8 +28,8 @@
   "publishConfig": { "access": "public" },
   "keywords": ["authon", "auth", "vue", "composables", "sdk"],
   "dependencies": {
-    "@authon/js": "workspace:*",
-    "@authon/shared": "workspace:*"
+    "@authon/js": "^0.1.15",
+    "@authon/shared": "^0.1.15"
   },
   "peerDependencies": {
     "vue": "^3.3.0"

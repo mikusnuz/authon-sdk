@@ -1,6 +1,6 @@
 {
   "name": "@authon/react",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "description": "Authon React SDK — Provider, hooks, and components for React apps",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -30,8 +30,8 @@
   },
   "keywords": ["authon", "auth", "authentication", "react", "hooks", "sdk"],
   "dependencies": {
-    "@authon/js": "workspace:*",
-    "@authon/shared": "workspace:*"
+    "@authon/js": "^0.1.15",
+    "@authon/shared": "^0.1.15"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
