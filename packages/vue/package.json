@@ -1,6 +1,6 @@
 {
   "name": "@authon/vue",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Authon Vue 3 SDK — plugin, composables, and components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -25,11 +27,19 @@
     "directory": "packages/vue"
   },
   "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/vue",
-  "publishConfig": { "access": "public" },
-  "keywords": ["authon", "auth", "vue", "composables", "sdk"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "authon",
+    "auth",
+    "vue",
+    "composables",
+    "sdk"
+  ],
   "dependencies": {
-    "@authon/js": "^0.1.15",
-    "@authon/shared": "^0.1.15"
+    "@authon/js": "^0.1.17",
+    "@authon/shared": "^0.1.17"
   },
   "peerDependencies": {
     "vue": "^3.3.0"

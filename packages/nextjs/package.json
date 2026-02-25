@@ -1,6 +1,6 @@
 {
   "name": "@authon/nextjs",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Authon Next.js SDK — middleware, server helpers, and React components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -18,7 +18,9 @@
       "require": "./dist/server.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -30,11 +32,19 @@
     "directory": "packages/nextjs"
   },
   "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/nextjs",
-  "publishConfig": { "access": "public" },
-  "keywords": ["authon", "auth", "nextjs", "middleware", "sdk"],
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "authon",
+    "auth",
+    "nextjs",
+    "middleware",
+    "sdk"
+  ],
   "dependencies": {
-    "@authon/shared": "^0.1.15",
-    "@authon/react": "^0.1.15"
+    "@authon/shared": "^0.1.17",
+    "@authon/react": "^0.1.17"
   },
   "peerDependencies": {
     "next": "^14.0.0 || ^15.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "@authon/react-native",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Authon React Native SDK — mobile authentication",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -27,9 +29,14 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authon", "react-native", "mobile", "auth"],
+  "keywords": [
+    "authon",
+    "react-native",
+    "mobile",
+    "auth"
+  ],
   "dependencies": {
-    "@authon/shared": "^0.1.15"
+    "@authon/shared": "^0.1.17"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",

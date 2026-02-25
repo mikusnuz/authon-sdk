@@ -1,6 +1,6 @@
 {
   "name": "@authon/shared",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Shared types and constants for Authon SDKs",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -28,7 +30,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authon", "auth", "authentication", "types", "sdk"],
+  "keywords": [
+    "authon",
+    "auth",
+    "authentication",
+    "types",
+    "sdk"
+  ],
   "devDependencies": {
     "tsup": "^8.0.0",
     "typescript": "^5.9.3"

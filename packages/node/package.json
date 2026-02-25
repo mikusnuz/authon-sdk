@@ -1,6 +1,6 @@
 {
   "name": "@authon/node",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "description": "Authon Node.js SDK — verify tokens, manage users, validate webhooks",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
@@ -28,9 +30,16 @@
   "publishConfig": {
     "access": "public"
   },
-  "keywords": ["authon", "auth", "authentication", "node", "server", "sdk"],
+  "keywords": [
+    "authon",
+    "auth",
+    "authentication",
+    "node",
+    "server",
+    "sdk"
+  ],
   "dependencies": {
-    "@authon/shared": "^0.1.15"
+    "@authon/shared": "^0.1.17"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
