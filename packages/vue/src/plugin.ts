@@ -46,6 +46,11 @@ export function createAuthon(options: AuthonPluginOptions) {
         state.isLoading = false;
       });
 
+      const existingUser = client.getUser();
+      if (existingUser) {
+        state.user = existingUser as AuthonUser;
+        state.isSignedIn = true;
+      }
       state.isLoading = false;
 
       app.provide(AUTHON_KEY, state);

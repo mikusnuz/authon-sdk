@@ -32,8 +32,11 @@ authon.on('signedOut', () => {
 // Email/password sign-in
 const user = await authon.signInWithEmail('user@example.com', 'password');
 
-// OAuth sign-in (opens popup)
+// OAuth sign-in (uses dashboard default flow: auto | popup | redirect)
 await authon.signInWithOAuth('google');
+
+// Optional runtime override
+await authon.signInWithOAuth('google', { flowMode: 'redirect' });
 
 // Get current user and token
 const currentUser = authon.getUser();
@@ -71,7 +74,7 @@ const authon = new Authon('pk_live_...', {
 | `openSignUp()` | `Promise<void>` | Open the sign-up modal |
 | `signInWithEmail(email, password)` | `Promise<AuthonUser>` | Sign in with email/password |
 | `signUpWithEmail(email, password, meta?)` | `Promise<AuthonUser>` | Register with email/password |
-| `signInWithOAuth(provider)` | `Promise<void>` | Start OAuth flow in popup window |
+| `signInWithOAuth(provider, options?)` | `Promise<void>` | Start OAuth flow (`auto`, `popup`, `redirect`) |
 | `signOut()` | `Promise<void>` | Sign out and clear session |
 | `getUser()` | `AuthonUser \| null` | Get current user |
 | `getToken()` | `string \| null` | Get current access token |

@@ -52,6 +52,10 @@ export function createAuthonStore(
     isLoadingStore.set(false);
   });
 
+  const existingUser = client.getUser();
+  if (existingUser) {
+    userStore.set(existingUser);
+  }
   isLoadingStore.set(false);
 
   return {

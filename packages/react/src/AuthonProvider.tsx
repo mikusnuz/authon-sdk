@@ -45,6 +45,10 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
       setIsLoading(false);
     });
 
+    const existingUser = client.getUser();
+    if (existingUser) {
+      setUser(existingUser);
+    }
     setIsLoading(false);
 
     return () => {

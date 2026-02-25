@@ -1,5 +1,7 @@
 import type { AuthonUser, BrandingConfig } from '@authon/shared';
 
+export type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
+
 export interface AuthonConfig {
   apiUrl?: string;
   mode?: 'popup' | 'embedded';
@@ -7,6 +9,10 @@ export interface AuthonConfig {
   theme?: 'light' | 'dark' | 'auto';
   locale?: string;
   appearance?: Partial<BrandingConfig>;
+}
+
+export interface OAuthSignInOptions {
+  flowMode?: OAuthFlowMode;
 }
 
 export interface AuthonEvents {

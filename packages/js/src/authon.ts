@@ -1,7 +1,18 @@
 import type { AuthonUser, AuthTokens, BrandingConfig, OAuthProviderType } from '@authon/shared';
-import type { AuthonConfig, AuthonEventType, AuthonEvents } from './types';
+import type {
+  AuthonConfig,
+  AuthonEventType,
+  AuthonEvents,
+  OAuthFlowMode,
+  OAuthSignInOptions,
+} from './types';
 import { ModalRenderer } from './modal';
 import { SessionManager } from './session';
+
+interface ProvidersResponse {
+  providers: OAuthProviderType[];
+  providerConfigs?: Partial<Record<OAuthProviderType, { oauthFlow?: OAuthFlowMode }>>;
+}
 
 export class Authon {
   private publishableKey: string;
@@ -14,6 +25,7 @@ export class Authon {
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
   private branding: BrandingConfig | null = null;
   private providers: OAuthProviderType[] = [];
+  private providerFlowModes: Partial<Record<OAuthProviderType, OAuthFlowMode>> = {};
   private initialized = false;
 
   constructor(publishableKey: string, config?: AuthonConfig) {
@@ -27,6 +39,7 @@ export class Authon {
       appearance: config?.appearance,
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl);
+    this.consumeRedirectResultFromUrl();
   }
 
   // ── Public API ──
@@ -41,9 +54,9 @@ export class Authon {
     this.getModal().open('signUp');
   }
 
-  async signInWithOAuth(provider: OAuthProviderType): Promise<void> {
+  async signInWithOAuth(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void> {
     await this.ensureInitialized();
-    await this.startOAuthFlow(provider);
+    await this.startOAuthFlow(provider, options);
   }
 
   async signInWithEmail(email: string, password: string): Promise<AuthonUser> {
@@ -105,10 +118,16 @@ export class Authon {
     try {
       const [branding, providersRes] = await Promise.all([
         this.apiGet<BrandingConfig>('/v1/auth/branding'),
-        this.apiGet<{ providers: OAuthProviderType[] }>('/v1/auth/providers'),
+        this.apiGet<ProvidersResponse>('/v1/auth/providers'),
       ]);
       this.branding = { ...branding, ...this.config.appearance };
       this.providers = providersRes.providers;
+      this.providerFlowModes = {};
+      for (const provider of this.providers) {
+        this.providerFlowModes[provider] = this.normalizeFlowMode(
+          providersRes.providerConfigs?.[provider]?.oauthFlow,
+        );
+      }
       this.initialized = true;
     } catch (err) {
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
@@ -145,12 +164,18 @@ export class Authon {
     return this.modal;
   }
 
-  private async startOAuthFlow(provider: OAuthProviderType): Promise<void> {
+  private async startOAuthFlow(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void> {
     try {
-      const redirectUri = `${this.config.apiUrl}/v1/auth/oauth/redirect`;
-      const { url, state } = await this.apiGet<{ url: string; state: string }>(
-        `/v1/auth/oauth/${provider}/url?redirectUri=${encodeURIComponent(redirectUri)}`,
-      );
+      const configuredFlow = this.providerFlowModes[provider] ?? 'auto';
+      const flowMode = this.normalizeFlowMode(options?.flowMode ?? configuredFlow);
+
+      if (flowMode === 'redirect') {
+        this.modal?.showLoading();
+        await this.startRedirectOAuthFlow(provider);
+        return;
+      }
+
+      const { url, state } = await this.requestOAuthAuthorization(provider, 'popup');
 
       this.modal?.showLoading();
 
@@ -166,11 +191,13 @@ export class Authon {
       );
 
       if (!popup || popup.closed) {
+        if (flowMode === 'auto') {
+          this.modal?.showBanner('Popup unavailable. Continuing with redirect sign-in…', 'warning');
+          await this.startRedirectOAuthFlow(provider);
+          return;
+        }
         this.modal?.hideLoading();
-        this.modal?.showBanner(
-          'Pop-up blocked. Please allow pop-ups for this site and try again.',
-          'warning',
-        );
+        this.modal?.showBanner('Pop-up blocked. Please allow pop-ups for this site and try again.', 'warning');
         this.emit('error', new Error('Popup was blocked by the browser'));
         return;
       }
@@ -302,6 +329,88 @@ export class Authon {
       this.modal?.hideLoading();
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
     }
+  }
+
+  private normalizeFlowMode(mode: unknown): OAuthFlowMode {
+    if (mode === 'popup' || mode === 'redirect' || mode === 'auto') {
+      return mode;
+    }
+    return 'auto';
+  }
+
+  private async requestOAuthAuthorization(
+    provider: OAuthProviderType,
+    flowMode: 'popup' | 'redirect',
+    returnTo?: string,
+  ): Promise<{ url: string; state: string; flowMode?: 'popup' | 'redirect' }> {
+    const redirectUri = `${this.config.apiUrl}/v1/auth/oauth/redirect`;
+    const params = new URLSearchParams({
+      redirectUri,
+      flow: flowMode,
+    });
+
+    if (returnTo) {
+      params.set('returnTo', returnTo);
+    }
+
+    return this.apiGet<{ url: string; state: string; flowMode?: 'popup' | 'redirect' }>(
+      `/v1/auth/oauth/${provider}/url?${params.toString()}`,
+    );
+  }
+
+  private async startRedirectOAuthFlow(provider: OAuthProviderType): Promise<void> {
+    const { url } = await this.requestOAuthAuthorization(
+      provider,
+      'redirect',
+      window.location.href,
+    );
+    window.location.assign(url);
+  }
+
+  private consumeRedirectResultFromUrl(): void {
+    if (typeof window === 'undefined') return;
+
+    let currentUrl: URL;
+    try {
+      currentUrl = new URL(window.location.href);
+    } catch {
+      return;
+    }
+
+    const state = currentUrl.searchParams.get('authon_oauth_state');
+    const explicitError = currentUrl.searchParams.get('authon_oauth_error');
+    if (!state && !explicitError) return;
+
+    let consumed = false;
+
+    if (state) {
+      try {
+        const storageKey = `authon-oauth-${state}`;
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const data = JSON.parse(stored) as { tokens?: AuthTokens; error?: string };
+          if (data.tokens) {
+            this.session.setSession(data.tokens);
+            this.emit('signedIn', data.tokens.user);
+            consumed = true;
+          } else if (data.error) {
+            this.emit('error', new Error(data.error));
+            consumed = true;
+          }
+          localStorage.removeItem(storageKey);
+        }
+      } catch {
+        // Ignore storage parsing failures
+      }
+    }
+
+    if (!consumed && explicitError) {
+      this.emit('error', new Error(explicitError));
+    }
+
+    currentUrl.searchParams.delete('authon_oauth_state');
+    currentUrl.searchParams.delete('authon_oauth_error');
+    window.history.replaceState({}, '', currentUrl.toString());
   }
 
   private async apiGet<T>(path: string): Promise<T> {

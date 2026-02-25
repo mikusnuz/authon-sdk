@@ -49,6 +49,11 @@ export function createAuthonPlugin(
     state.isLoading = false;
   });
 
+  const existingUser = client.getUser();
+  if (existingUser) {
+    state.user = existingUser;
+    state.isSignedIn = true;
+  }
   state.isLoading = false;
 
   return state;

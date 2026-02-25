@@ -61,6 +61,11 @@ export class AuthonService {
       this.notifyListeners();
     });
 
+    const existingUser = this.client.getUser();
+    if (existingUser) {
+      this._user = existingUser as AuthonUser;
+      this._isSignedIn = true;
+    }
     this._isLoading = false;
   }
 
