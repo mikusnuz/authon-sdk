@@ -220,6 +220,7 @@ export class Authon {
       const handleError = (msg: string) => {
         if (resolved) return;
         cleanup();
+        this.session.clearSession();
         this.modal?.hideLoading();
         this.modal?.showError(msg);
         this.emit('error', new Error(msg));
