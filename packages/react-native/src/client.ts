@@ -21,7 +21,7 @@ type TokenStorage = {
   removeItem(key: string): Promise<void>;
 };
 
-const STORAGE_KEY = '@authon/tokens';
+const STORAGE_KEY = 'authon-tokens';
 
 export class AuthonMobileClient {
   private apiUrl: string;
