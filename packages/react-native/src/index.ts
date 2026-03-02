@@ -9,4 +9,9 @@ export type {
   AuthonUser,
   SignInParams,
   SignUpParams,
+  AuthonEventType,
+  AuthonEvents,
+  BrandingConfig,
+  OAuthProviderType,
+  TokenPair,
 } from './types';

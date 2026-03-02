@@ -1,3 +1,13 @@
+import type {
+  AuthonUser as SharedAuthonUser,
+  BrandingConfig,
+  OAuthProviderType,
+} from '@authon/shared';
+
+export type { BrandingConfig, OAuthProviderType };
+
+export type AuthonUser = SharedAuthonUser;
+
 export interface AuthonReactNativeConfig {
   publishableKey: string;
   apiUrl?: string;
@@ -11,23 +21,6 @@ export interface AuthState {
   accessToken: string | null;
 }
 
-export interface AuthonUser {
-  id: string;
-  projectId: string;
-  email: string | null;
-  displayName: string | null;
-  avatarUrl: string | null;
-  phone: string | null;
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  isBanned: boolean;
-  publicMetadata: Record<string, unknown> | null;
-  lastSignInAt: string | null;
-  signInCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface SignInParams {
   strategy: 'email_password' | 'oauth';
   email?: string;
@@ -39,4 +32,26 @@ export interface SignUpParams {
   email: string;
   password: string;
   displayName?: string;
+}
+
+export type AuthonEventType = 'signedIn' | 'signedOut' | 'error' | 'tokenRefreshed';
+
+export interface AuthonEvents {
+  signedIn: (user: AuthonUser) => void;
+  signedOut: () => void;
+  error: (error: Error) => void;
+  tokenRefreshed: () => void;
+}
+
+export interface TokenPair {
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: number;
+}
+
+export interface ApiAuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: AuthonUser;
 }
