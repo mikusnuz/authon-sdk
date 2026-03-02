@@ -13,22 +13,17 @@ export interface AuthState {
 
 export interface AuthonUser {
   id: string;
-  email?: string;
+  projectId: string;
+  email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  phone: string | null;
   emailVerified: boolean;
-  phone?: string;
   phoneVerified: boolean;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  avatarUrl?: string;
-  banned: boolean;
-  metadata?: Record<string, unknown>;
-  externalAccounts?: Array<{
-    provider: string;
-    providerId: string;
-    email?: string;
-  }>;
+  isBanned: boolean;
+  publicMetadata: Record<string, unknown> | null;
+  lastSignInAt: string | null;
+  signInCount: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,7 +38,5 @@ export interface SignInParams {
 export interface SignUpParams {
   email: string;
   password: string;
-  firstName?: string;
-  lastName?: string;
-  username?: string;
+  displayName?: string;
 }

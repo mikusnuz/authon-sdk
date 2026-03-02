@@ -8,6 +8,13 @@ interface TokenPair {
   expiresAt: number;
 }
 
+interface ApiAuthResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: AuthonUser;
+}
+
 type TokenStorage = {
   getItem(key: string): Promise<string | null>;
   setItem(key: string, value: string): Promise<void>;
@@ -52,15 +59,15 @@ export class AuthonMobileClient {
   }
 
   async signIn(params: SignInParams): Promise<TokenPair> {
-    const res = await this.request('POST', '/v1/auth/sign-in', params);
-    this.tokens = res as TokenPair;
+    const res = (await this.request('POST', '/v1/auth/signin', params)) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
     await this.persistTokens();
     return this.tokens;
   }
 
   async signUp(params: SignUpParams): Promise<TokenPair> {
-    const res = await this.request('POST', '/v1/auth/sign-up', params);
-    this.tokens = res as TokenPair;
+    const res = (await this.request('POST', '/v1/auth/signup', params)) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
     await this.persistTokens();
     return this.tokens;
   }
@@ -68,7 +75,7 @@ export class AuthonMobileClient {
   async signOut(): Promise<void> {
     if (this.tokens) {
       try {
-        await this.request('POST', '/v1/auth/sign-out', undefined);
+        await this.request('POST', '/v1/auth/signout', undefined);
       } catch {
         // Ignore sign-out errors
       }
@@ -93,11 +100,11 @@ export class AuthonMobileClient {
     if (!token) return null;
 
     try {
-      const res = await fetch(`${this.apiUrl}/v1/auth/refresh`, {
+      const res = await fetch(`${this.apiUrl}/v1/auth/token/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-Publishable-Key': this.publishableKey,
+          'x-api-key': this.publishableKey,
         },
         body: JSON.stringify({ refreshToken: token }),
       });
@@ -108,7 +115,8 @@ export class AuthonMobileClient {
         return null;
       }
 
-      this.tokens = (await res.json()) as TokenPair;
+      const data = (await res.json()) as ApiAuthResponse;
+      this.tokens = this.toTokenPair(data);
       await this.persistTokens();
       return this.tokens;
     } catch {
@@ -130,10 +138,18 @@ export class AuthonMobileClient {
     }
   }
 
+  private toTokenPair(res: ApiAuthResponse): TokenPair {
+    return {
+      accessToken: res.accessToken,
+      refreshToken: res.refreshToken,
+      expiresAt: Date.now() + res.expiresIn * 1000,
+    };
+  }
+
   private async request(method: string, path: string, body?: unknown): Promise<unknown> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'X-Publishable-Key': this.publishableKey,
+      'x-api-key': this.publishableKey,
     };
 
     if (this.tokens?.accessToken) {
