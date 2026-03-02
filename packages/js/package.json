@@ -39,7 +39,7 @@
     "sdk"
   ],
   "dependencies": {
-    "@authon/shared": "^0.1.17"
+    "@authon/shared": "workspace:^"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

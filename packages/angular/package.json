@@ -1,6 +1,6 @@
 {
   "name": "@authon/angular",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "description": "Authon Angular SDK — service, guard, and components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -37,8 +37,8 @@
     "guard"
   ],
   "dependencies": {
-    "@authon/js": "^0.1.17",
-    "@authon/shared": "^0.1.17"
+    "@authon/js": "workspace:^",
+    "@authon/shared": "workspace:^"
   },
   "peerDependencies": {
     "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0"

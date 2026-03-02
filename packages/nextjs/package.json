@@ -1,6 +1,6 @@
 {
   "name": "@authon/nextjs",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "description": "Authon Next.js SDK — middleware, server helpers, and React components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -43,8 +43,8 @@
     "sdk"
   ],
   "dependencies": {
-    "@authon/shared": "^0.1.17",
-    "@authon/react": "^0.1.17"
+    "@authon/shared": "workspace:^",
+    "@authon/react": "workspace:^"
   },
   "peerDependencies": {
     "next": "^14.0.0 || ^15.0.0"

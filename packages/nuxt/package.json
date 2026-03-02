@@ -1,6 +1,6 @@
 {
   "name": "@authon/nuxt",
-  "version": "0.1.17",
+  "version": "0.1.19",
   "description": "Authon Nuxt 3 module — auto-imported composables and middleware",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -37,8 +37,8 @@
     "module"
   ],
   "dependencies": {
-    "@authon/js": "^0.1.17",
-    "@authon/shared": "^0.1.17"
+    "@authon/js": "workspace:^",
+    "@authon/shared": "workspace:^"
   },
   "peerDependencies": {
     "nuxt": "^3.0.0"
