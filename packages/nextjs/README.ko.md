@@ -1,10 +1,10 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/nextjs
 
-Next.js SDK for [Authon](https://authon.dev) — middleware, server helpers, and React components for App Router.
+[Authon](https://authon.dev)용 Next.js SDK — App Router를 위한 middleware, 서버 헬퍼, React 컴포넌트를 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/nextjs
@@ -12,13 +12,13 @@ npm install @authon/nextjs
 pnpm add @authon/nextjs
 ```
 
-Requires `next >= 14.0.0`.
+`next >= 14.0.0`이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
 ### 1. Middleware
 
-Protect routes at the edge:
+엣지에서 라우트를 보호합니다.
 
 ```ts
 // middleware.ts
@@ -36,7 +36,7 @@ export const config = {
 
 ### 2. Provider
 
-Wrap your layout:
+레이아웃을 감쌉니다.
 
 ```tsx
 // app/layout.tsx
@@ -55,9 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-### 3. Client Components
+### 3. 클라이언트 컴포넌트
 
-Use all `@authon/react` hooks and components:
+`@authon/react`의 모든 훅과 컴포넌트를 사용합니다.
 
 ```tsx
 'use client';
@@ -74,46 +74,46 @@ export function Header() {
 }
 ```
 
-### 4. Server-side
+### 4. 서버 사이드
 
 ```ts
 import { currentUser, auth } from '@authon/nextjs/server';
 
-// In a Server Component or Route Handler
+// 서버 컴포넌트 또는 Route Handler에서 사용
 export async function GET() {
   const user = await currentUser();
   if (!user) return new Response('Unauthorized', { status: 401 });
   return Response.json({ user });
 }
 
-// Get the full auth state
+// 전체 인증 상태 가져오기
 const { userId, sessionId, getToken } = await auth();
 ```
 
-## API Reference
+## API 레퍼런스
 
-### Client Exports
+### 클라이언트 익스포트
 
-Re-exports all components and hooks from `@authon/react`:
+`@authon/react`의 모든 컴포넌트와 훅을 재익스포트합니다.
 
 `AuthonProvider`, `useAuthon`, `useUser`, `SignedIn`, `SignedOut`, `UserButton`, `SignIn`, `SignUp`, `Protect`
 
-### Server Exports (`@authon/nextjs/server`)
+### 서버 익스포트 (`@authon/nextjs/server`)
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `currentUser()` | `Promise<AuthonUser \| null>` | Get the current user from cookies |
-| `auth()` | `Promise<AuthState>` | Get full auth state (userId, sessionId, getToken) |
+| 함수 | 반환값 | 설명 |
+|------|--------|------|
+| `currentUser()` | `Promise<AuthonUser \| null>` | 쿠키에서 현재 사용자를 가져옵니다 |
+| `auth()` | `Promise<AuthState>` | 전체 인증 상태(userId, sessionId, getToken)를 가져옵니다 |
 
 ### Middleware
 
-| Function | Description |
-|----------|-------------|
-| `authMiddleware(options)` | Edge middleware that redirects unauthenticated users |
+| 함수 | 설명 |
+|------|------|
+| `authMiddleware(options)` | 미인증 사용자를 리다이렉트하는 엣지 middleware |
 
 ## Multi-Factor Authentication (MFA)
 
-Use the `useAuthonMfa` hook (re-exported from `@authon/react`):
+`useAuthonMfa` 훅을 사용합니다(`@authon/react`에서 재익스포트됨).
 
 ```tsx
 'use client';
@@ -126,8 +126,8 @@ function MfaSettings() {
   const handleEnable = async () => {
     const result = await setupMfa();
     if (result) {
-      // result.qrCodeSvg — SVG string to display QR code
-      // result.backupCodes — one-time recovery codes
+      // result.qrCodeSvg — QR 코드를 표시할 SVG 문자열
+      // result.backupCodes — 일회용 복구 코드
     }
   };
 
@@ -135,12 +135,12 @@ function MfaSettings() {
 }
 ```
 
-See [`@authon/react` MFA docs](../react/README.md#multi-factor-authentication-mfa) for full examples and API reference.
+전체 예시와 API 레퍼런스는 [`@authon/react` MFA 문서](../react/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

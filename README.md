@@ -149,6 +149,37 @@ async def profile(user: AuthonUser = Depends(require_auth(authon))):
     return {"id": user.id, "email": user.email}
 ```
 
+## Multi-Factor Authentication (MFA)
+
+All client SDKs support TOTP-based MFA compatible with Google Authenticator, Authy, and other authenticator apps.
+
+```ts
+import { Authon, AuthonMfaRequiredError } from '@authon/js';
+
+const authon = new Authon('pk_live_...');
+
+// Setup MFA (user must be signed in)
+const setup = await authon.setupMfa();
+// setup.qrCodeSvg — SVG QR code to scan with authenticator app
+// setup.backupCodes — one-time recovery codes
+
+// Complete setup by verifying a TOTP code
+await authon.verifyMfaSetup('123456');
+
+// Sign-in with MFA
+try {
+  await authon.signInWithEmail('user@example.com', 'password');
+} catch (err) {
+  if (err instanceof AuthonMfaRequiredError) {
+    await authon.verifyMfa(err.mfaToken, '123456');
+  }
+}
+```
+
+For framework-specific usage, see each package's README:
+- **React**: [`useAuthonMfa` hook](./packages/react/README.md#multi-factor-authentication-mfa)
+- **Vue / Nuxt / Svelte / Angular**: via client instance — [example](./packages/vue/README.md#multi-factor-authentication-mfa)
+
 ## Documentation
 
 Full documentation is available at [authon.dev/docs](https://authon.dev/docs).

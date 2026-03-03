@@ -1,3 +1,5 @@
+**English** | [한국어](./README.ko.md)
+
 # @authon/js
 
 Core browser SDK for [Authon](https://authon.dev) — ShadowDOM login modal, OAuth flows, and session management.
@@ -89,6 +91,91 @@ const authon = new Authon('pk_live_...', {
 | `signedOut` | none | User signed out |
 | `tokenRefreshed` | `string` | Access token was refreshed |
 | `error` | `Error` | An error occurred |
+| `mfaRequired` | `string` | MFA verification is required (payload is the mfaToken) |
+
+## Multi-Factor Authentication (MFA)
+
+Authon supports TOTP-based MFA compatible with Google Authenticator, Authy, and other authenticator apps.
+
+### MFA Setup
+
+```ts
+import { Authon, generateQrSvg } from '@authon/js';
+
+const authon = new Authon('pk_live_...');
+
+// 1. Start MFA setup (user must be signed in)
+const setup = await authon.setupMfa();
+// setup.secret   — TOTP secret key
+// setup.qrCodeUri — otpauth:// URI for authenticator apps
+// setup.backupCodes — one-time recovery codes
+// setup.qrCodeSvg — ready-to-use SVG string for the QR code
+
+// Display the QR code in your UI
+document.getElementById('qr')!.innerHTML = setup.qrCodeSvg;
+
+// 2. User scans the QR code and enters the 6-digit code
+const verified = await authon.verifyMfaSetup('123456');
+```
+
+### MFA Sign-In Flow
+
+When MFA is enabled, `signInWithEmail` throws `AuthonMfaRequiredError`:
+
+```ts
+import { Authon, AuthonMfaRequiredError } from '@authon/js';
+
+try {
+  await authon.signInWithEmail('user@example.com', 'password');
+} catch (err) {
+  if (err instanceof AuthonMfaRequiredError) {
+    // Prompt user for TOTP code, then verify
+    const user = await authon.verifyMfa(err.mfaToken, '123456');
+  }
+}
+
+// Or use the event listener
+authon.on('mfaRequired', async (mfaToken) => {
+  const code = prompt('Enter your 2FA code');
+  if (code) await authon.verifyMfa(mfaToken, code);
+});
+```
+
+### MFA Management
+
+```ts
+// Check MFA status
+const status = await authon.getMfaStatus();
+// status.enabled, status.backupCodesRemaining
+
+// Disable MFA (requires current TOTP code)
+await authon.disableMfa('123456');
+
+// Regenerate backup codes (requires current TOTP code)
+const newCodes = await authon.regenerateBackupCodes('123456');
+```
+
+### QR Code Generator
+
+The SDK includes a zero-dependency QR code SVG generator:
+
+```ts
+import { generateQrSvg } from '@authon/js';
+
+const svg = generateQrSvg('otpauth://totp/MyApp:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=MyApp');
+document.getElementById('qr')!.innerHTML = svg;
+```
+
+### MFA API Reference
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `setupMfa()` | `Promise<MfaSetupResponse & { qrCodeSvg: string }>` | Start MFA setup, returns secret + QR code |
+| `verifyMfaSetup(code)` | `Promise<void>` | Verify TOTP code to complete setup |
+| `verifyMfa(mfaToken, code)` | `Promise<AuthonUser>` | Verify TOTP during sign-in |
+| `disableMfa(code)` | `Promise<void>` | Disable MFA |
+| `getMfaStatus()` | `Promise<MfaStatus>` | Get current MFA status |
+| `regenerateBackupCodes(code)` | `Promise<string[]>` | Regenerate backup codes |
 
 ## ShadowDOM Modal
 

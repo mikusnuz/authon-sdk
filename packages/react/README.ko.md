@@ -1,20 +1,20 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/react
 
-React SDK for [Authon](https://authon.dev) — Provider, hooks, and pre-built components.
+[Authon](https://authon.dev)용 React SDK — Provider, 훅, 사전 빌드된 컴포넌트를 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/react
-# or
+# 또는
 pnpm add @authon/react
 ```
 
-Requires `react >= 18.0.0`.
+`react >= 18.0.0`이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
 ```tsx
 import {
@@ -61,11 +61,11 @@ function Main() {
 }
 ```
 
-## API Reference
+## API 레퍼런스
 
 ### `<AuthonProvider>`
 
-Wraps your app and provides auth context.
+앱을 감싸며 인증 컨텍스트를 제공합니다.
 
 ```tsx
 <AuthonProvider
@@ -81,11 +81,11 @@ Wraps your app and provides auth context.
 </AuthonProvider>
 ```
 
-### Hooks
+### 훅
 
 #### `useAuthon()`
 
-Returns the full auth context:
+전체 인증 컨텍스트를 반환합니다.
 
 ```ts
 const {
@@ -102,24 +102,24 @@ const {
 
 #### `useUser()`
 
-Shorthand for user data:
+사용자 데이터 간단 접근용 훅입니다.
 
 ```ts
 const { user, isLoading } = useUser();
 ```
 
-### Components
+### 컴포넌트
 
-| Component | Props | Description |
-|-----------|-------|-------------|
-| `<SignedIn>` | `children` | Renders children only when signed in |
-| `<SignedOut>` | `children` | Renders children only when signed out |
-| `<UserButton>` | none | Avatar dropdown with sign-out action |
-| `<SignIn>` | `mode?` | Opens sign-in modal or renders embedded form |
-| `<SignUp>` | `mode?` | Opens sign-up modal or renders embedded form |
-| `<Protect>` | `fallback?`, `condition?` | Guards content, optionally with a custom condition |
+| 컴포넌트 | Props | 설명 |
+|---------|-------|------|
+| `<SignedIn>` | `children` | 로그인 상태일 때만 자식 컴포넌트를 렌더링합니다 |
+| `<SignedOut>` | `children` | 로그아웃 상태일 때만 자식 컴포넌트를 렌더링합니다 |
+| `<UserButton>` | 없음 | 로그아웃 액션이 포함된 아바타 드롭다운입니다 |
+| `<SignIn>` | `mode?` | 로그인 모달을 열거나 인라인 폼을 렌더링합니다 |
+| `<SignUp>` | `mode?` | 회원가입 모달을 열거나 인라인 폼을 렌더링합니다 |
+| `<Protect>` | `fallback?`, `condition?` | 콘텐츠를 보호하며, 선택적으로 커스텀 조건을 지정할 수 있습니다 |
 
-### `<Protect>` Example
+### `<Protect>` 사용 예시
 
 ```tsx
 <Protect
@@ -130,11 +130,11 @@ const { user, isLoading } = useUser();
 </Protect>
 ```
 
-## Multi-Factor Authentication (MFA)
+## 다중 인증 (MFA)
 
-Use the `useAuthonMfa` hook to manage TOTP-based MFA (Google Authenticator, Authy, etc.).
+`useAuthonMfa` 훅을 사용하여 TOTP 기반 MFA(Google Authenticator, Authy 등)를 관리합니다.
 
-### MFA Setup
+### MFA 설정
 
 ```tsx
 import { useAuthonMfa } from '@authon/react';
@@ -175,7 +175,7 @@ function MfaSetup() {
 }
 ```
 
-### MFA Sign-In
+### MFA 로그인
 
 ```tsx
 import { useAuthon } from '@authon/react';
@@ -205,23 +205,23 @@ function SignIn() {
 }
 ```
 
-### `useAuthonMfa()` Reference
+### `useAuthonMfa()` 레퍼런스
 
-| Property / Method | Type | Description |
-|-------------------|------|-------------|
-| `setupMfa()` | `Promise<MfaSetupResponse & { qrCodeSvg: string } \| null>` | Start MFA setup |
-| `verifyMfaSetup(code)` | `Promise<boolean>` | Verify TOTP to complete setup |
-| `verifyMfa(mfaToken, code)` | `Promise<boolean>` | Verify TOTP during sign-in |
-| `disableMfa(code)` | `Promise<boolean>` | Disable MFA |
-| `getMfaStatus()` | `Promise<MfaStatus \| null>` | Get MFA status |
-| `regenerateBackupCodes(code)` | `Promise<string[] \| null>` | Regenerate backup codes |
-| `isLoading` | `boolean` | Loading state |
-| `error` | `Error \| null` | Last error |
+| 프로퍼티 / 메서드 | 타입 | 설명 |
+|-----------------|------|------|
+| `setupMfa()` | `Promise<MfaSetupResponse & { qrCodeSvg: string } \| null>` | MFA 설정을 시작합니다 |
+| `verifyMfaSetup(code)` | `Promise<boolean>` | TOTP 코드를 검증하여 설정을 완료합니다 |
+| `verifyMfa(mfaToken, code)` | `Promise<boolean>` | 로그인 시 TOTP 코드를 검증합니다 |
+| `disableMfa(code)` | `Promise<boolean>` | MFA를 비활성화합니다 |
+| `getMfaStatus()` | `Promise<MfaStatus \| null>` | MFA 상태를 조회합니다 |
+| `regenerateBackupCodes(code)` | `Promise<string[] \| null>` | 백업 코드를 재생성합니다 |
+| `isLoading` | `boolean` | 로딩 상태입니다 |
+| `error` | `Error \| null` | 마지막으로 발생한 오류입니다 |
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

@@ -149,6 +149,37 @@ async def profile(user: AuthonUser = Depends(require_auth(authon))):
     return {"id": user.id, "email": user.email}
 ```
 
+## 다중 인증 (MFA)
+
+모든 클라이언트 SDK는 Google Authenticator, Authy 등과 호환되는 TOTP 기반 MFA를 지원합니다.
+
+```ts
+import { Authon, AuthonMfaRequiredError } from '@authon/js';
+
+const authon = new Authon('pk_live_...');
+
+// MFA 설정 (로그인 상태에서)
+const setup = await authon.setupMfa();
+// setup.qrCodeSvg — 인증 앱으로 스캔할 SVG QR 코드
+// setup.backupCodes — 일회용 복구 코드
+
+// TOTP 코드를 입력하여 설정 완료
+await authon.verifyMfaSetup('123456');
+
+// MFA 로그인
+try {
+  await authon.signInWithEmail('user@example.com', 'password');
+} catch (err) {
+  if (err instanceof AuthonMfaRequiredError) {
+    await authon.verifyMfa(err.mfaToken, '123456');
+  }
+}
+```
+
+프레임워크별 사용법은 각 패키지의 README를 참조하세요:
+- **React**: [`useAuthonMfa` 훅](./packages/react/README.md#multi-factor-authentication-mfa)
+- **Vue / Nuxt / Svelte / Angular**: client 인스턴스를 통해 — [예제](./packages/vue/README.md#multi-factor-authentication-mfa)
+
 ## 문서
 
 전체 문서는 [authon.dev/docs](https://authon.dev/docs)에서 확인할 수 있습니다.

@@ -1,3 +1,5 @@
+**English** | [한국어](./README.ko.md)
+
 # @authon/shared
 
 Shared types and constants for [Authon](https://authon.dev) SDKs.
@@ -46,6 +48,9 @@ import {
 | `WebhookEvent` | Webhook payload: id, type, projectId, timestamp, data |
 | `OAuthProviderType` | Union of supported OAuth providers |
 | `WebhookEventType` | Union of webhook event types |
+| `MfaSetupResponse` | MFA setup result: secret, qrCodeUri, backupCodes |
+| `MfaStatus` | MFA state: enabled, backupCodesRemaining |
+| `MfaVerifyResponse` | MFA verification result: tokens and user |
 
 ### Constants
 

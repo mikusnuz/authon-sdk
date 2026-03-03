@@ -1,22 +1,22 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/angular
 
-Angular SDK for [Authon](https://authon.dev) — service, guard, and interceptor.
+[Authon](https://authon.dev)용 Angular SDK — service, guard, interceptor를 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/angular
-# or
+# 또는
 pnpm add @authon/angular
 ```
 
-Requires `@angular/core >= 16.0.0`.
+`@angular/core >= 16.0.0` 이상이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
-### 1. Import Module
+### 1. 모듈 임포트
 
 ```ts
 // app.config.ts
@@ -31,7 +31,7 @@ export const appConfig = {
 };
 ```
 
-### 2. Use the Service
+### 2. Service 사용
 
 ```ts
 import { Component } from '@angular/core';
@@ -67,7 +67,7 @@ export const routes = [
 
 ### 4. HTTP Interceptor
 
-Automatically attach the access token to outgoing requests:
+발신 요청에 액세스 토큰을 자동으로 첨부합니다:
 
 ```ts
 // app.config.ts
@@ -82,35 +82,35 @@ export const appConfig = {
 };
 ```
 
-## API Reference
+## API 레퍼런스
 
 ### `AuthonService`
 
-| Property / Method | Type | Description |
-|-------------------|------|-------------|
-| `user()` | `Signal<AuthonUser \| null>` | Current user signal |
-| `isSignedIn()` | `Signal<boolean>` | Whether signed in |
-| `isLoading()` | `Signal<boolean>` | Loading state |
-| `openSignIn()` | `Promise<void>` | Open sign-in modal |
-| `openSignUp()` | `Promise<void>` | Open sign-up modal |
-| `signOut()` | `Promise<void>` | Sign out |
-| `getToken()` | `string \| null` | Get current access token |
+| 프로퍼티 / 메서드 | 타입 | 설명 |
+|-------------------|------|------|
+| `user()` | `Signal<AuthonUser \| null>` | 현재 사용자 signal |
+| `isSignedIn()` | `Signal<boolean>` | 로그인 여부 |
+| `isLoading()` | `Signal<boolean>` | 로딩 상태 |
+| `openSignIn()` | `Promise<void>` | 로그인 모달 열기 |
+| `openSignUp()` | `Promise<void>` | 회원가입 모달 열기 |
+| `signOut()` | `Promise<void>` | 로그아웃 |
+| `getToken()` | `string \| null` | 현재 액세스 토큰 반환 |
 
 ### Guard
 
-| Export | Description |
-|--------|-------------|
-| `authGuard` | `CanActivateFn` that redirects unauthenticated users |
+| 익스포트 | 설명 |
+|--------|------|
+| `authGuard` | 미인증 사용자를 리다이렉트하는 `CanActivateFn` |
 
 ### Interceptor
 
-| Export | Description |
-|--------|-------------|
-| `authInterceptor` | `HttpInterceptorFn` that adds Bearer token to requests |
+| 익스포트 | 설명 |
+|--------|------|
+| `authInterceptor` | 요청에 Bearer 토큰을 추가하는 `HttpInterceptorFn` |
 
-## Multi-Factor Authentication (MFA)
+## 다중 인증 (MFA)
 
-Access MFA through the `AuthonService` client:
+`AuthonService` 클라이언트를 통해 MFA에 접근합니다:
 
 ```ts
 import { Component } from '@angular/core';
@@ -135,14 +135,14 @@ export class MfaSetupComponent {
   async enableMfa() {
     const setup = await this.auth.client.setupMfa();
     this.qrSvg = setup.qrCodeSvg;
-    // setup.backupCodes — save these recovery codes
+    // setup.backupCodes — 복구 코드를 반드시 저장해두세요
   }
 
   async verifySetup() {
     await this.auth.client.verifyMfaSetup(this.code);
   }
 
-  // MFA sign-in flow
+  // MFA 로그인 흐름
   async signIn(email: string, password: string) {
     try {
       await this.auth.client.signInWithEmail(email, password);
@@ -156,12 +156,12 @@ export class MfaSetupComponent {
 }
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
+전체 API 레퍼런스는 [`@authon/js` MFA 문서](../js/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

@@ -1,22 +1,22 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/vue
 
-Vue 3 SDK for [Authon](https://authon.dev) — plugin, composables, and components.
+[Authon](https://authon.dev)용 Vue 3 SDK — 플러그인, composable, 컴포넌트를 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/vue
-# or
+# 또는
 pnpm add @authon/vue
 ```
 
-Requires `vue >= 3.3.0`.
+`vue >= 3.3.0`이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
-### 1. Install the Plugin
+### 1. 플러그인 설치
 
 ```ts
 // main.ts
@@ -31,7 +31,7 @@ app.use(AuthonPlugin, {
 app.mount('#app');
 ```
 
-### 2. Use Composables
+### 2. Composable 사용
 
 ```vue
 <script setup lang="ts">
@@ -53,7 +53,7 @@ const { user, isLoading } = useUser();
 </template>
 ```
 
-### 3. Use Components
+### 3. 컴포넌트 사용
 
 ```vue
 <template>
@@ -72,9 +72,9 @@ const { openSignIn } = useAuthon();
 </script>
 ```
 
-## API Reference
+## API 레퍼런스
 
-### Plugin
+### 플러그인
 
 ```ts
 app.use(AuthonPlugin, {
@@ -86,7 +86,7 @@ app.use(AuthonPlugin, {
 });
 ```
 
-### Composables
+### Composable
 
 #### `useAuthon()`
 
@@ -99,7 +99,7 @@ const {
   openSignIn,  // () => Promise<void>
   openSignUp,  // () => Promise<void>
   getToken,    // () => string | null
-  client,      // Authon instance
+  client,      // Authon 인스턴스
 } = useAuthon();
 ```
 
@@ -109,18 +109,18 @@ const {
 const { user, isLoading } = useUser();
 ```
 
-### Components
+### 컴포넌트
 
-| Component | Description |
-|-----------|-------------|
-| `<SignedIn>` | Renders slot only when signed in |
-| `<SignedOut>` | Renders slot only when signed out |
-| `<UserButton>` | Avatar dropdown with sign-out |
-| `<Protect>` | Conditional rendering with fallback slot |
+| 컴포넌트 | 설명 |
+|----------|------|
+| `<SignedIn>` | 로그인 상태일 때만 슬롯을 렌더링 |
+| `<SignedOut>` | 로그아웃 상태일 때만 슬롯을 렌더링 |
+| `<UserButton>` | 로그아웃 기능이 포함된 아바타 드롭다운 |
+| `<Protect>` | fallback 슬롯을 지원하는 조건부 렌더링 |
 
 ## Multi-Factor Authentication (MFA)
 
-Access MFA methods through the `client` instance from `useAuthon()`:
+`useAuthon()`의 `client` 인스턴스를 통해 MFA 메서드에 접근합니다.
 
 ```vue
 <script setup lang="ts">
@@ -132,23 +132,23 @@ const { client } = useAuthon();
 const qrSvg = ref('');
 const mfaToken = ref('');
 
-// Setup MFA
+// MFA 설정
 async function enableMfa() {
   const setup = await client.value!.setupMfa();
-  qrSvg.value = setup.qrCodeSvg;  // Display QR for authenticator app
+  qrSvg.value = setup.qrCodeSvg;  // 인증 앱에 표시할 QR 코드
 }
 
 async function verifySetup(code: string) {
   await client.value!.verifyMfaSetup(code);
 }
 
-// Sign-in with MFA
+// MFA를 사용한 로그인
 async function signIn(email: string, password: string) {
   try {
     await client.value!.signInWithEmail(email, password);
   } catch (err) {
     if (err instanceof AuthonMfaRequiredError) {
-      mfaToken.value = err.mfaToken;  // Show TOTP input
+      mfaToken.value = err.mfaToken;  // TOTP 입력 화면 표시
     }
   }
 }
@@ -159,12 +159,12 @@ async function verifyMfa(code: string) {
 </script>
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
+전체 API 레퍼런스는 [`@authon/js` MFA 문서](../js/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

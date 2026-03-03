@@ -1,20 +1,20 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/node
 
-Node.js server SDK for [Authon](https://authon.dev) — verify tokens, manage users, and validate webhooks.
+[Authon](https://authon.dev)용 Node.js 서버 SDK — 토큰 검증, 사용자 관리, webhook 검증을 지원합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/node
-# or
+# 또는
 pnpm add @authon/node
 ```
 
-## Quick Start
+## 빠른 시작
 
-### Token Verification
+### 토큰 검증
 
 ```ts
 import { AuthonBackend } from '@authon/node';
@@ -38,12 +38,12 @@ app.use('/api', expressMiddleware({
 }));
 
 app.get('/api/profile', (req, res) => {
-  // req.auth is the verified AuthonUser
+  // req.auth는 검증된 AuthonUser입니다
   res.json({ user: req.auth });
 });
 ```
 
-### Fastify Plugin
+### Fastify 플러그인
 
 ```ts
 import Fastify from 'fastify';
@@ -60,39 +60,39 @@ app.get('/api/profile', (request, reply) => {
 });
 ```
 
-### User Management
+### 사용자 관리
 
 ```ts
 const authon = new AuthonBackend('sk_live_...');
 
-// List users
+// 사용자 목록 조회
 const { data, total } = await authon.users.list({ page: 1, limit: 20 });
 
-// Get a user
+// 사용자 조회
 const user = await authon.users.get('user_abc123');
 
-// Create a user
+// 사용자 생성
 const newUser = await authon.users.create({
   email: 'new@example.com',
   password: 'securePassword',
   displayName: 'New User',
 });
 
-// Update a user
+// 사용자 수정
 await authon.users.update('user_abc123', {
   displayName: 'Updated Name',
   publicMetadata: { role: 'admin' },
 });
 
-// Ban / unban
+// 정지 / 정지 해제
 await authon.users.ban('user_abc123', 'Violation of ToS');
 await authon.users.unban('user_abc123');
 
-// Delete a user
+// 사용자 삭제
 await authon.users.delete('user_abc123');
 ```
 
-### Webhook Verification
+### Webhook 검증
 
 ```ts
 import { AuthonBackend } from '@authon/node';
@@ -111,49 +111,49 @@ app.post('/webhooks/authon', express.raw({ type: 'application/json' }), (req, re
 });
 ```
 
-## API Reference
+## API 레퍼런스
 
 ### `AuthonBackend`
 
-| Method | Returns | Description |
+| 메서드 | 반환값 | 설명 |
 |--------|---------|-------------|
-| `verifyToken(token)` | `Promise<AuthonUser>` | Verify an access token |
-| `users.list(options?)` | `Promise<ListResult<AuthonUser>>` | List users with pagination |
-| `users.get(id)` | `Promise<AuthonUser>` | Get a user by ID |
-| `users.create(data)` | `Promise<AuthonUser>` | Create a user |
-| `users.update(id, data)` | `Promise<AuthonUser>` | Update a user |
-| `users.delete(id)` | `Promise<void>` | Delete a user |
-| `users.ban(id, reason?)` | `Promise<AuthonUser>` | Ban a user |
-| `users.unban(id)` | `Promise<AuthonUser>` | Unban a user |
-| `webhooks.verify(payload, signature, secret)` | `Record<string, unknown>` | Verify webhook HMAC-SHA256 signature |
+| `verifyToken(token)` | `Promise<AuthonUser>` | 액세스 토큰 검증 |
+| `users.list(options?)` | `Promise<ListResult<AuthonUser>>` | 페이지네이션을 포함한 사용자 목록 조회 |
+| `users.get(id)` | `Promise<AuthonUser>` | ID로 사용자 조회 |
+| `users.create(data)` | `Promise<AuthonUser>` | 사용자 생성 |
+| `users.update(id, data)` | `Promise<AuthonUser>` | 사용자 수정 |
+| `users.delete(id)` | `Promise<void>` | 사용자 삭제 |
+| `users.ban(id, reason?)` | `Promise<AuthonUser>` | 사용자 정지 |
+| `users.unban(id)` | `Promise<AuthonUser>` | 사용자 정지 해제 |
+| `webhooks.verify(payload, signature, secret)` | `Record<string, unknown>` | webhook HMAC-SHA256 서명 검증 |
 
 ### Middleware
 
-| Export | Description |
+| 내보내기 | 설명 |
 |--------|-------------|
-| `expressMiddleware(options)` | Express/Connect middleware, sets `req.auth` |
-| `fastifyPlugin(options)` | Fastify onRequest hook, sets `request.auth` |
+| `expressMiddleware(options)` | Express/Connect middleware, `req.auth` 설정 |
+| `fastifyPlugin(options)` | Fastify onRequest 훅, `request.auth` 설정 |
 
-## Multi-Factor Authentication (MFA)
+## 다중 인증 (MFA)
 
-MFA (TOTP) setup and verification happens on the client side using `@authon/js` or framework SDKs. The server SDK automatically validates tokens issued after MFA verification — no additional server-side configuration is required.
+MFA (TOTP) 설정 및 검증은 `@authon/js` 또는 프레임워크 SDK를 사용하여 클라이언트 측에서 처리됩니다. 서버 SDK는 MFA 검증 후 발급된 토큰을 자동으로 검증하므로 별도의 서버 측 설정이 필요하지 않습니다.
 
-When MFA is enabled for a user, the standard token verification flow works the same way:
+사용자에게 MFA가 활성화된 경우, 표준 토큰 검증 흐름은 동일하게 작동합니다.
 
 ```ts
 const authon = new AuthonBackend('sk_live_...');
 
-// Tokens issued after MFA verification are valid like any other token
+// MFA 검증 후 발급된 토큰은 일반 토큰과 동일하게 유효합니다
 const user = await authon.verifyToken(accessToken);
-// user.id, user.email — verified user with MFA complete
+// user.id, user.email — MFA가 완료된 검증된 사용자
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for client-side setup and sign-in flow.
+클라이언트 측 설정 및 로그인 흐름은 [`@authon/js` MFA 문서](../js/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

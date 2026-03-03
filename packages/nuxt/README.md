@@ -1,3 +1,5 @@
+**English** | [한국어](./README.ko.md)
+
 # @authon/nuxt
 
 Nuxt 3 module for [Authon](https://authon.dev) — auto-imported composables, components, and server middleware.
@@ -95,6 +97,39 @@ authon: {
 |----------|-------------|
 | `requireAuthonUser(event)` | Get and verify the current user (throws 401 if unauthenticated) |
 | `getAuthonUser(event)` | Get the current user or null |
+
+## Multi-Factor Authentication (MFA)
+
+Access MFA through the `client` from `useAuthon()`:
+
+```vue
+<script setup>
+import { AuthonMfaRequiredError } from '@authon/js';
+
+const { client } = useAuthon();
+
+// Setup MFA
+async function enableMfa() {
+  const setup = await client.value.setupMfa();
+  // setup.qrCodeSvg — SVG QR code for authenticator app
+  // setup.backupCodes — recovery codes
+}
+
+// Sign-in with MFA
+async function signIn(email, password) {
+  try {
+    await client.value.signInWithEmail(email, password);
+  } catch (err) {
+    if (err instanceof AuthonMfaRequiredError) {
+      // Prompt for TOTP code, then:
+      await client.value.verifyMfa(err.mfaToken, code);
+    }
+  }
+}
+</script>
+```
+
+See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
 
 ## Documentation
 

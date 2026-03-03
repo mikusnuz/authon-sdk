@@ -1,10 +1,10 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/react-native
 
-React Native SDK for [Authon](https://authon.dev) — native OAuth, secure token storage, and React hooks.
+[Authon](https://authon.dev)용 React Native SDK — 네이티브 OAuth, 보안 토큰 저장소, React 훅을 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/react-native
@@ -12,9 +12,9 @@ npm install @authon/react-native
 pnpm add @authon/react-native
 ```
 
-Requires `react-native >= 0.72`, `expo-auth-session`, and `expo-secure-store` (or bare RN equivalents).
+`react-native >= 0.72`, `expo-auth-session`, `expo-secure-store`(또는 bare RN 동등 패키지)가 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
 ### 1. Provider
 
@@ -31,7 +31,7 @@ export default function App() {
 }
 ```
 
-### 2. Use Hooks
+### 2. 훅 사용
 
 ```tsx
 import { useAuthon, useUser } from '@authon/react-native';
@@ -65,7 +65,7 @@ function SignInScreen() {
 }
 ```
 
-## API Reference
+## API 레퍼런스
 
 ### `<AuthonProvider>`
 
@@ -74,12 +74,12 @@ function SignInScreen() {
   publishableKey="pk_live_..."
   config={{
     apiUrl: 'https://api.authon.dev',
-    scheme: 'myapp',  // Custom URL scheme for OAuth redirect
+    scheme: 'myapp',  // OAuth 리다이렉트용 커스텀 URL 스킴
   }}
 >
 ```
 
-### Hooks
+### 훅
 
 #### `useAuthon()`
 
@@ -101,13 +101,13 @@ const {
 const { user, isLoading } = useUser();
 ```
 
-### Token Storage
+### 토큰 저장소
 
-Tokens are stored using `expo-secure-store` (Expo) or the platform keychain (bare RN), keeping credentials encrypted at rest.
+토큰은 `expo-secure-store`(Expo) 또는 플랫폼 키체인(bare RN)을 사용하여 저장되며, 자격증명은 저장 시 암호화됩니다.
 
-## Multi-Factor Authentication (MFA)
+## 다단계 인증 (MFA)
 
-Access MFA through the `client` from `useAuthon()`:
+`useAuthon()`에서 반환되는 `client`를 통해 MFA에 접근합니다.
 
 ```tsx
 import { useAuthon } from '@authon/react-native';
@@ -119,22 +119,22 @@ function MfaSetupScreen() {
 
   const enableMfa = async () => {
     const setup = await client!.setupMfa();
-    setQrSvg(setup.qrCodeSvg);  // Render QR as SVG
-    // setup.backupCodes — display to user for safekeeping
+    setQrSvg(setup.qrCodeSvg);  // QR을 SVG로 렌더링
+    // setup.backupCodes — 사용자에게 안전하게 보관하도록 표시
   };
 
   const verifySetup = async (code: string) => {
     await client!.verifyMfaSetup(code);
   };
 
-  // MFA sign-in flow
+  // MFA 로그인 플로우
   const signIn = async (email: string, password: string) => {
     try {
       await client!.signInWithEmail(email, password);
     } catch (err) {
       if (err instanceof AuthonMfaRequiredError) {
-        // Navigate to TOTP input screen
-        // Then: await client!.verifyMfa(err.mfaToken, code);
+        // TOTP 입력 화면으로 이동
+        // 이후: await client!.verifyMfa(err.mfaToken, code);
       }
     }
   };
@@ -143,12 +143,12 @@ function MfaSetupScreen() {
 }
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
+전체 API 레퍼런스는 [`@authon/js` MFA 문서](../js/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)

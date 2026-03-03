@@ -1,22 +1,22 @@
-**English** | [한국어](./README.ko.md)
+[English](./README.md) | **한국어**
 
 # @authon/svelte
 
-Svelte SDK for [Authon](https://authon.dev) — stores, actions, and components.
+[Authon](https://authon.dev)을 위한 Svelte SDK — store, 액션, 컴포넌트를 제공합니다.
 
-## Install
+## 설치
 
 ```bash
 npm install @authon/svelte
-# or
+# 또는
 pnpm add @authon/svelte
 ```
 
-Requires `svelte >= 4.0.0`.
+`svelte >= 4.0.0`이 필요합니다.
 
-## Quick Start
+## 빠른 시작
 
-### 1. Initialize
+### 1. 초기화
 
 ```ts
 // src/lib/authon.ts
@@ -27,7 +27,7 @@ export const authon = initAuthon({
 });
 ```
 
-### 2. Use Stores
+### 2. Store 사용
 
 ```svelte
 <script>
@@ -45,7 +45,7 @@ export const authon = initAuthon({
 {/if}
 ```
 
-### 3. Use Components
+### 3. 컴포넌트 사용
 
 ```svelte
 <script>
@@ -60,36 +60,36 @@ export const authon = initAuthon({
 </SignedOut>
 ```
 
-## API Reference
+## API 레퍼런스
 
-### Stores
+### Store
 
-| Store | Type | Description |
-|-------|------|-------------|
-| `user` | `Readable<AuthonUser \| null>` | Current user |
-| `isSignedIn` | `Readable<boolean>` | Whether the user is signed in |
-| `isLoading` | `Readable<boolean>` | Whether auth state is loading |
+| Store | 타입 | 설명 |
+|-------|------|------|
+| `user` | `Readable<AuthonUser \| null>` | 현재 사용자 |
+| `isSignedIn` | `Readable<boolean>` | 로그인 여부 |
+| `isLoading` | `Readable<boolean>` | 인증 상태 로딩 여부 |
 
-### Actions
+### 액션
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `openSignIn()` | `Promise<void>` | Open sign-in modal |
-| `openSignUp()` | `Promise<void>` | Open sign-up modal |
-| `signOut()` | `Promise<void>` | Sign out |
-| `getToken()` | `string \| null` | Get current access token |
+| 함수 | 반환값 | 설명 |
+|------|--------|------|
+| `openSignIn()` | `Promise<void>` | 로그인 모달 열기 |
+| `openSignUp()` | `Promise<void>` | 회원가입 모달 열기 |
+| `signOut()` | `Promise<void>` | 로그아웃 |
+| `getToken()` | `string \| null` | 현재 액세스 토큰 반환 |
 
-### Components
+### 컴포넌트
 
-| Component | Description |
-|-----------|-------------|
-| `<SignedIn>` | Renders slot only when signed in |
-| `<SignedOut>` | Renders slot only when signed out |
-| `<UserButton>` | Avatar dropdown with sign-out |
+| 컴포넌트 | 설명 |
+|----------|------|
+| `<SignedIn>` | 로그인 상태일 때만 슬롯 렌더링 |
+| `<SignedOut>` | 로그아웃 상태일 때만 슬롯 렌더링 |
+| `<UserButton>` | 로그아웃 기능이 포함된 아바타 드롭다운 |
 
-## Multi-Factor Authentication (MFA)
+## 다중 인증 (MFA)
 
-Access MFA through the Authon client instance:
+Authon 클라이언트 인스턴스를 통해 MFA에 접근합니다.
 
 ```svelte
 <script>
@@ -130,12 +130,12 @@ Access MFA through the Authon client instance:
 {/if}
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
+전체 API 레퍼런스는 [`@authon/js` MFA 문서](../js/README.md#multi-factor-authentication-mfa)를 참고하세요.
 
-## Documentation
+## 문서
 
 [authon.dev/docs](https://authon.dev/docs)
 
-## License
+## 라이선스
 
 [MIT](../../LICENSE)
