@@ -12,3 +12,5 @@ export { SocialButton } from './SocialButton';
 export type { SocialButtonProps } from './SocialButton';
 export { SocialButtons } from './SocialButtons';
 export type { SocialButtonsProps } from './SocialButtons';
+export { useAuthonMfa } from './useAuthonMfa';
+export type { UseAuthonMfaReturn } from './useAuthonMfa';

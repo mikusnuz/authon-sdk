@@ -6,5 +6,7 @@ export type {
   OAuthFlowMode,
   OAuthSignInOptions,
 } from './types';
+export { AuthonMfaRequiredError } from './types';
 export { getProviderButtonConfig } from './providers';
 export type { ProviderButtonConfig } from './providers';
+export { generateQrSvg } from './qrcode';

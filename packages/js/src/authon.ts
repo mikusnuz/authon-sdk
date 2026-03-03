@@ -1,4 +1,4 @@
-import type { AuthonUser, AuthTokens, BrandingConfig, OAuthProviderType } from '@authon/shared';
+import type { AuthonUser, AuthTokens, BrandingConfig, MfaSetupResponse, MfaStatus, OAuthProviderType } from '@authon/shared';
 import type {
   AuthonConfig,
   AuthonEventType,
@@ -6,8 +6,10 @@ import type {
   OAuthFlowMode,
   OAuthSignInOptions,
 } from './types';
+import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
 import { SessionManager } from './session';
+import { generateQrSvg } from './qrcode';
 
 interface ProvidersResponse {
   providers: OAuthProviderType[];
@@ -65,10 +67,17 @@ export class Authon {
   }
 
   async signInWithEmail(email: string, password: string): Promise<AuthonUser> {
-    const tokens = await this.apiPost<AuthTokens>('/v1/auth/signin', { email, password });
-    this.session.setSession(tokens);
-    this.emit('signedIn', tokens.user);
-    return tokens.user;
+    const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string }>(
+      '/v1/auth/signin',
+      { email, password },
+    );
+    if (res.mfaRequired && res.mfaToken) {
+      this.emit('mfaRequired', res.mfaToken);
+      throw new AuthonMfaRequiredError(res.mfaToken);
+    }
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
   }
 
   async signUpWithEmail(
@@ -104,6 +113,59 @@ export class Authon {
     const set = this.listeners.get(event)!;
     set.add(listener as (...args: unknown[]) => void);
     return () => set.delete(listener as (...args: unknown[]) => void);
+  }
+
+  // ── MFA ──
+
+  async setupMfa(): Promise<MfaSetupResponse & { qrCodeSvg: string }> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to setup MFA');
+    const res = await this.apiPostAuth<MfaSetupResponse>('/v1/auth/mfa/totp/setup', undefined, token);
+    return { ...res, qrCodeSvg: generateQrSvg(res.qrCodeUri) };
+  }
+
+  async verifyMfaSetup(code: string): Promise<void> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to verify MFA setup');
+    await this.apiPostAuth<{ success: boolean }>('/v1/auth/mfa/totp/verify-setup', { code }, token);
+  }
+
+  async verifyMfa(mfaToken: string, code: string): Promise<AuthonUser> {
+    const res = await this.apiPost<AuthTokens>('/v1/auth/mfa/verify', { mfaToken, code });
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  async disableMfa(code: string): Promise<void> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to disable MFA');
+    await this.apiPostAuth<{ success: boolean }>('/v1/auth/mfa/disable', { code }, token);
+  }
+
+  async getMfaStatus(): Promise<MfaStatus> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to get MFA status');
+    const res = await fetch(`${this.config.apiUrl}/v1/auth/mfa/status`, {
+      headers: {
+        'x-api-key': this.publishableKey,
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(await this.parseApiError(res, '/v1/auth/mfa/status'));
+    return res.json();
+  }
+
+  async regenerateBackupCodes(code: string): Promise<string[]> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to regenerate backup codes');
+    const res = await this.apiPostAuth<{ backupCodes: string[] }>(
+      '/v1/auth/mfa/backup-codes/regenerate',
+      { code },
+      token,
+    );
+    return res.backupCodes;
   }
 
   destroy(): void {
@@ -434,6 +496,21 @@ export class Authon {
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': this.publishableKey,
+      },
+      credentials: 'include',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
+    return res.json();
+  }
+
+  private async apiPostAuth<T>(path: string, body: unknown, token: string): Promise<T> {
+    const res = await fetch(`${this.config.apiUrl}${path}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.publishableKey,
+        Authorization: `Bearer ${token}`,
       },
       credentials: 'include',
       body: body ? JSON.stringify(body) : undefined,

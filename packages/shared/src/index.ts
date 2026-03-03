@@ -78,6 +78,26 @@ export interface WebhookEvent {
   data: Record<string, unknown>;
 }
 
+// ── MFA Types ──
+
+export interface MfaSetupResponse {
+  secret: string;
+  qrCodeUri: string;
+  backupCodes: string[];
+}
+
+export interface MfaStatus {
+  enabled: boolean;
+  backupCodesRemaining: number;
+}
+
+export interface MfaVerifyResponse {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+  user: AuthonUser;
+}
+
 // ── Constants ──
 
 export const OAUTH_PROVIDERS = [

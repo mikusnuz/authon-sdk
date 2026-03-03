@@ -19,7 +19,17 @@ export interface AuthonEvents {
   signedIn: (user: AuthonUser) => void;
   signedOut: () => void;
   tokenRefreshed: (token: string) => void;
+  mfaRequired: (mfaToken: string) => void;
   error: (error: Error) => void;
 }
 
 export type AuthonEventType = keyof AuthonEvents;
+
+export class AuthonMfaRequiredError extends Error {
+  readonly mfaToken: string;
+  constructor(mfaToken: string) {
+    super('MFA verification required');
+    this.name = 'AuthonMfaRequiredError';
+    this.mfaToken = mfaToken;
+  }
+}
