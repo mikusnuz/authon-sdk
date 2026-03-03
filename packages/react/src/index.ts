@@ -8,3 +8,7 @@ export { UserButton } from './UserButton';
 export { SignedIn } from './SignedIn';
 export { SignedOut } from './SignedOut';
 export { Protect } from './Protect';
+export { SocialButton } from './SocialButton';
+export type { SocialButtonProps } from './SocialButton';
+export { SocialButtons } from './SocialButtons';
+export type { SocialButtonsProps } from './SocialButtons';

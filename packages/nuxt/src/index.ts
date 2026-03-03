@@ -5,3 +5,5 @@ export { createAuthonPlugin } from './plugin';
 export type { AuthonPluginState } from './plugin';
 export { useAuthon, useUser } from './composables';
 export { createAuthMiddleware } from './middleware';
+export { renderSocialButtons } from './SocialButtons';
+export type { SocialButtonsConfig } from './SocialButtons';

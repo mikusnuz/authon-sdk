@@ -8,3 +8,4 @@ export {
   AuthonSignedIn,
   AuthonSignedOut,
 } from './components';
+export { AuthonSocialButton, AuthonSocialButtons } from './SocialButton';

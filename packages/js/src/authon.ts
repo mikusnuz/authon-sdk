@@ -44,6 +44,11 @@ export class Authon {
 
   // ── Public API ──
 
+  async getProviders(): Promise<OAuthProviderType[]> {
+    await this.ensureInitialized();
+    return [...this.providers];
+  }
+
   async openSignIn(): Promise<void> {
     await this.ensureInitialized();
     this.getModal().open('signIn');
