@@ -2,135 +2,458 @@
 
 # @authon/svelte
 
-Svelte SDK for [Authon](https://authon.dev) — stores, actions, and components.
+Svelte integration for [Authon](https://authon.dev) — reactive stores, context-based setup, and social login buttons.
 
 ## Install
 
 ```bash
-npm install @authon/svelte
-# or
-pnpm add @authon/svelte
+npm install @authon/svelte @authon/js
 ```
 
 Requires `svelte >= 4.0.0`.
 
-## Quick Start
+## Setup
 
-### 1. Initialize
-
-```ts
-// src/lib/authon.ts
-import { initAuthon } from '@authon/svelte';
-
-export const authon = initAuthon({
-  publishableKey: 'pk_live_...',
-});
-```
-
-### 2. Use Stores
+Initialize Authon in your root layout component and provide it to the component tree via Svelte context:
 
 ```svelte
-<script>
-  import { user, isSignedIn, isLoading } from '@authon/svelte';
-  import { openSignIn, signOut } from '@authon/svelte';
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import { initAuthon } from '@authon/svelte'
+  import { onDestroy } from 'svelte'
+
+  const authon = initAuthon('pk_live_...', {
+    theme: 'auto',
+    locale: 'en',
+  })
+
+  onDestroy(() => authon.destroy())
+</script>
+
+<slot />
+```
+
+Then access the store in any child component:
+
+```svelte
+<!-- src/routes/+page.svelte -->
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { user, isSignedIn, isLoading, openSignIn, signOut } = getAuthon()
 </script>
 
 {#if $isLoading}
   <p>Loading...</p>
 {:else if $isSignedIn}
   <p>Welcome, {$user?.displayName}</p>
-  <button on:click={signOut}>Sign Out</button>
+  <button on:click={signOut}>Sign out</button>
 {:else}
-  <button on:click={openSignIn}>Sign In</button>
+  <button on:click={openSignIn}>Sign in</button>
 {/if}
-```
-
-### 3. Use Components
-
-```svelte
-<script>
-  import { SignedIn, SignedOut, UserButton } from '@authon/svelte';
-</script>
-
-<SignedIn>
-  <UserButton />
-</SignedIn>
-<SignedOut>
-  <button on:click={openSignIn}>Sign In</button>
-</SignedOut>
 ```
 
 ## API Reference
 
-### Stores
+### `initAuthon(publishableKey, config?)`
 
-| Store | Type | Description |
-|-------|------|-------------|
-| `user` | `Readable<AuthonUser \| null>` | Current user |
-| `isSignedIn` | `Readable<boolean>` | Whether the user is signed in |
-| `isLoading` | `Readable<boolean>` | Whether auth state is loading |
+Creates an `AuthonStore` and registers it in Svelte context. Call this once in your root layout.
 
-### Actions
+```ts
+import { initAuthon } from '@authon/svelte'
 
-| Function | Returns | Description |
-|----------|---------|-------------|
-| `openSignIn()` | `Promise<void>` | Open sign-in modal |
-| `openSignUp()` | `Promise<void>` | Open sign-up modal |
-| `signOut()` | `Promise<void>` | Sign out |
-| `getToken()` | `string \| null` | Get current access token |
+const authon = initAuthon('pk_live_...', {
+  theme: 'auto',
+  locale: 'en',
+})
+```
 
-### Components
+### `getAuthon()`
 
-| Component | Description |
-|-----------|-------------|
-| `<SignedIn>` | Renders slot only when signed in |
-| `<SignedOut>` | Renders slot only when signed out |
-| `<UserButton>` | Avatar dropdown with sign-out |
+Retrieves the `AuthonStore` from Svelte context. Must be called within a component that is a descendant of the component where `initAuthon` was called.
 
-## Multi-Factor Authentication (MFA)
+```ts
+import { getAuthon } from '@authon/svelte'
 
-Access MFA through the Authon client instance:
+const authon = getAuthon()
+```
+
+### `createAuthonStore(publishableKey, config?)`
+
+Low-level store factory. Use `initAuthon` / `getAuthon` for most cases; use this directly if you need a store without Svelte context.
+
+### `AuthonStore`
+
+```ts
+interface AuthonStore {
+  user: Readable<AuthonUser | null>
+  isSignedIn: Readable<boolean>
+  isLoading: Readable<boolean>
+  client: Authon                          // @authon/js Authon instance
+  signOut: () => Promise<void>
+  openSignIn: () => Promise<void>
+  openSignUp: () => Promise<void>
+  getToken: () => string | null
+  destroy: () => void
+}
+```
+
+All store values are Svelte `Readable` stores — subscribe with the `$` prefix in templates.
+
+### `renderSocialButtons(options)`
+
+Renders branded OAuth provider buttons into a DOM element. Returns a cleanup function.
+
+**Options:**
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `client` | `Authon` | required | Authon client instance |
+| `container` | `HTMLElement` | required | Target DOM element |
+| `onSuccess` | `() => void` | — | Called after successful OAuth sign-in |
+| `onError` | `(error: Error) => void` | — | Called on OAuth error |
+| `compact` | `boolean` | `false` | Icon-only square buttons in a row |
+| `gap` | `number` | `10` / `12` | Gap between buttons in px |
+| `labels` | `Record<provider, string>` | — | Override button labels per provider |
+| `borderRadius` | `number` | `10` | Button border radius in px |
+| `height` | `number` | `48` | Button height in px |
+| `size` | `number` | `48` | Icon button size in px (compact mode) |
+
+## Examples
+
+### Basic auth state
 
 ```svelte
-<script>
-  import { getAuthon } from '@authon/svelte';
-  import { AuthonMfaRequiredError } from '@authon/js';
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
 
-  const authon = getAuthon();
-  let qrSvg = '';
-  let mfaToken = '';
+  const { user, isSignedIn, isLoading, openSignIn, signOut } = getAuthon()
+</script>
 
-  async function enableMfa() {
-    const setup = await authon.client.setupMfa();
-    qrSvg = setup.qrCodeSvg;  // Display QR for authenticator app
-  }
+{#if $isLoading}
+  <p>Loading...</p>
+{:else if $isSignedIn}
+  <p>Hello, {$user?.displayName ?? $user?.email}</p>
+  <button on:click={signOut}>Sign out</button>
+{:else}
+  <button on:click={openSignIn}>Sign in</button>
+{/if}
+```
 
-  async function verifySetup(code) {
-    await authon.client.verifyMfaSetup(code);
-  }
+### Email + password sign-in
 
-  async function signIn(email, password) {
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+
+  let email = ''
+  let password = ''
+  let loading = false
+  let error = ''
+
+  async function handleSignIn() {
+    loading = true
+    error = ''
     try {
-      await authon.client.signInWithEmail(email, password);
-    } catch (err) {
-      if (err instanceof AuthonMfaRequiredError) {
-        mfaToken = err.mfaToken;  // Show TOTP input
+      await client.signInWithEmail(email, password)
+    } catch (e: any) {
+      error = e.message
+    } finally {
+      loading = false
+    }
+  }
+</script>
+
+<form on:submit|preventDefault={handleSignIn}>
+  <input bind:value={email} type="email" placeholder="Email" />
+  <input bind:value={password} type="password" placeholder="Password" />
+  <button type="submit" disabled={loading}>Sign in</button>
+  {#if error}<p>{error}</p>{/if}
+</form>
+```
+
+### OAuth sign-in
+
+```svelte
+<script lang="ts">
+  import { getAuthon, renderSocialButtons } from '@authon/svelte'
+  import { onMount, onDestroy } from 'svelte'
+
+  const { client } = getAuthon()
+  let container: HTMLElement
+  let cleanup: (() => void) | undefined
+
+  onMount(() => {
+    cleanup = renderSocialButtons({
+      client,
+      container,
+      onSuccess: () => window.location.href = '/dashboard',
+      onError: (e) => console.error(e),
+    })
+  })
+
+  onDestroy(() => cleanup?.())
+
+  // Or trigger a single provider directly
+  async function signInWithGoogle() {
+    await client.signInWithOAuth('google')
+  }
+</script>
+
+<div bind:this={container} />
+<button on:click={signInWithGoogle}>Sign in with Google</button>
+```
+
+### MFA setup
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+
+  let qrCodeSvg = ''
+  let secret = ''
+  let backupCodes: string[] = []
+  let verifyCode = ''
+
+  async function initMfaSetup() {
+    const res = await client.setupMfa()
+    qrCodeSvg = res.qrCodeSvg   // SVG string for display
+    secret = res.secret
+    backupCodes = res.backupCodes
+  }
+
+  async function confirmSetup() {
+    await client.verifyMfaSetup(verifyCode)
+    alert('MFA enabled')
+  }
+</script>
+
+<button on:click={initMfaSetup}>Enable MFA</button>
+
+{#if qrCodeSvg}
+  {@html qrCodeSvg}
+  <p>Scan with your authenticator app</p>
+  <p>Secret: {secret}</p>
+  <ul>{#each backupCodes as code}<li>{code}</li>{/each}</ul>
+  <input bind:value={verifyCode} placeholder="6-digit code" />
+  <button on:click={confirmSetup}>Verify</button>
+{/if}
+```
+
+### MFA verification on sign-in
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+  import { AuthonMfaRequiredError } from '@authon/js'
+
+  const { client } = getAuthon()
+
+  let mfaToken = ''
+  let totpCode = ''
+
+  async function signIn(email: string, password: string) {
+    try {
+      await client.signInWithEmail(email, password)
+    } catch (e) {
+      if (e instanceof AuthonMfaRequiredError) {
+        mfaToken = e.mfaToken  // show TOTP input
       }
     }
   }
 
-  async function verifyMfa(code) {
-    await authon.client.verifyMfa(mfaToken, code);
+  async function verifyMfa() {
+    await client.verifyMfa(mfaToken, totpCode)
+  }
+</script>
+```
+
+### Passwordless — magic link
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+  let email = ''
+  let sent = false
+
+  async function sendMagicLink() {
+    await client.sendMagicLink(email)
+    sent = true
   }
 </script>
 
-{#if qrSvg}
-  {@html qrSvg}
-  <p>Scan with your authenticator app</p>
+{#if sent}
+  <p>Check your inbox for a sign-in link.</p>
+{:else}
+  <input bind:value={email} type="email" placeholder="Email" />
+  <button on:click={sendMagicLink}>Send magic link</button>
 {/if}
 ```
 
-See [`@authon/js` MFA docs](../js/README.md#multi-factor-authentication-mfa) for the full API reference.
+### Passwordless — email OTP
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+  let email = ''
+  let otp = ''
+  let step: 'email' | 'verify' = 'email'
+
+  async function sendOtp() {
+    await client.sendEmailOtp(email)
+    step = 'verify'
+  }
+
+  async function verifyOtp() {
+    const user = await client.verifyPasswordless({ email, code: otp })
+    console.log('Signed in as:', user.email)
+  }
+</script>
+
+{#if step === 'email'}
+  <input bind:value={email} type="email" placeholder="Email" />
+  <button on:click={sendOtp}>Send code</button>
+{:else}
+  <input bind:value={otp} placeholder="6-digit code" />
+  <button on:click={verifyOtp}>Verify</button>
+{/if}
+```
+
+### Passkeys
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+
+  // Register (user must be signed in)
+  async function registerPasskey() {
+    const credential = await client.registerPasskey('My Device')
+    console.log('Registered:', credential.id)
+  }
+
+  // Authenticate
+  async function loginWithPasskey() {
+    const user = await client.authenticateWithPasskey()
+    console.log('Signed in as:', user.email)
+  }
+
+  // List registered passkeys
+  async function listPasskeys() {
+    const keys = await client.listPasskeys()
+    console.log(keys)
+  }
+</script>
+```
+
+### Web3 wallet authentication
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+
+  async function signInWithWallet() {
+    const address = '0xYourWalletAddress'
+
+    // 1. Get a nonce + signable message from Authon
+    const { nonce, message } = await client.web3GetNonce(address, 'evm', 'metamask')
+
+    // 2. Sign the message with the wallet
+    const signature = await window.ethereum.request({
+      method: 'personal_sign',
+      params: [message, address],
+    })
+
+    // 3. Verify the signature and sign in
+    const user = await client.web3Verify(message, signature, address, 'evm', 'metamask')
+    console.log('Signed in as:', user.email)
+  }
+
+  async function listLinkedWallets() {
+    const wallets = await client.listWallets()
+    console.log(wallets)
+  }
+</script>
+```
+
+### Profile update
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+
+  const { client } = getAuthon()
+
+  async function saveProfile() {
+    const updated = await client.updateProfile({
+      displayName: 'Jane Doe',
+      avatarUrl: 'https://example.com/avatar.png',
+      phone: '+1234567890',
+      publicMetadata: { role: 'admin' },
+    })
+    console.log('Updated user:', updated)
+  }
+</script>
+```
+
+### Session management
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+  import { onMount } from 'svelte'
+  import type { SessionInfo } from '@authon/shared'
+
+  const { client } = getAuthon()
+  let sessions: SessionInfo[] = []
+
+  onMount(async () => {
+    sessions = await client.listSessions()
+  })
+
+  async function revokeSession(sessionId: string) {
+    await client.revokeSession(sessionId)
+    sessions = sessions.filter(s => s.id !== sessionId)
+  }
+</script>
+
+<ul>
+  {#each sessions as session (session.id)}
+    <li>
+      {session.userAgent} — {session.createdAt}
+      <button on:click={() => revokeSession(session.id)}>Revoke</button>
+    </li>
+  {/each}
+</ul>
+```
+
+## Store options
+
+| Option | Type | Default | Description |
+|---|---|---|---|
+| `publishableKey` | `string` | required | Your Authon publishable key |
+| `config.theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | UI theme |
+| `config.locale` | `string` | `'en'` | Language code |
+| `config.apiUrl` | `string` | `'https://api.authon.dev'` | Custom API base URL |
+| `config.appearance` | `Partial<BrandingConfig>` | — | Override branding colors and logo |
+
+## TypeScript
+
+```ts
+import type { AuthonStore, SocialButtonsOptions } from '@authon/svelte'
+import type { AuthonUser, SessionInfo, PasskeyCredential, Web3Wallet } from '@authon/shared'
+```
 
 ## Documentation
 

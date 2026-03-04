@@ -1,31 +1,87 @@
 # Authon SDK
 
-Official SDKs for [Authon](https://authon.dev) — the authentication platform for modern apps.
+Official SDKs for [Authon](https://authon.dev) — a modern authentication platform. Provides drop-in auth for any framework.
 
-![Version](https://img.shields.io/npm/v/@authon/js?label=version)
-![License](https://img.shields.io/badge/license-MIT-blue)
+[![npm version](https://img.shields.io/npm/v/@authon/js?label=%40authon%2Fjs&color=6d28d9)](https://www.npmjs.com/package/@authon/js)
+[![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
 
 ## Packages
 
+### JavaScript / TypeScript
+
+| Package | Version | Description | npm |
+|---------|---------|-------------|-----|
+| [`@authon/shared`](./packages/shared) | 0.2.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
+| [`@authon/js`](./packages/js) | 0.2.1 | Core browser SDK — ShadowDOM modal, OAuth, sessions | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/react`](./packages/react) | 0.2.1 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
+| [`@authon/nextjs`](./packages/nextjs) | 0.2.1 | Middleware, server helpers, and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
+| [`@authon/vue`](./packages/vue) | 0.2.1 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
+| [`@authon/nuxt`](./packages/nuxt) | 0.2.1 | Auto-imported composables and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
+| [`@authon/svelte`](./packages/svelte) | 0.2.1 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
+| [`@authon/angular`](./packages/angular) | 0.2.1 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
+| [`@authon/react-native`](./packages/react-native) | 0.2.2 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
+| [`@authon/node`](./packages/node) | 0.2.0 | Verify tokens, manage users, validate webhooks on Node.js | [npm](https://www.npmjs.com/package/@authon/node) |
+
+### Other Languages
+
 | Package | Registry | Description |
 |---------|----------|-------------|
-| [`@authon/shared`](./packages/shared) | [npm](https://www.npmjs.com/package/@authon/shared) | Shared types and constants |
-| [`@authon/js`](./packages/js) | [npm](https://www.npmjs.com/package/@authon/js) | Core browser SDK — ShadowDOM modal, OAuth, sessions |
-| [`@authon/react`](./packages/react) | [npm](https://www.npmjs.com/package/@authon/react) | React hooks and components |
-| [`@authon/nextjs`](./packages/nextjs) | [npm](https://www.npmjs.com/package/@authon/nextjs) | Next.js middleware and server helpers |
-| [`@authon/vue`](./packages/vue) | [npm](https://www.npmjs.com/package/@authon/vue) | Vue 3 plugin, composables, components |
-| [`@authon/nuxt`](./packages/nuxt) | [npm](https://www.npmjs.com/package/@authon/nuxt) | Nuxt 3 module |
-| [`@authon/svelte`](./packages/svelte) | [npm](https://www.npmjs.com/package/@authon/svelte) | Svelte stores and components |
-| [`@authon/angular`](./packages/angular) | [npm](https://www.npmjs.com/package/@authon/angular) | Angular service and guard |
-| [`@authon/react-native`](./packages/react-native) | [npm](https://www.npmjs.com/package/@authon/react-native) | React Native mobile SDK |
-| [`@authon/node`](./packages/node) | [npm](https://www.npmjs.com/package/@authon/node) | Node.js server SDK |
 | [`authon` (Python)](./python) | [PyPI](https://pypi.org/project/authon/) | Django, Flask, FastAPI |
 | [`authon-go`](./go) | [Go modules](https://pkg.go.dev/github.com/mikusnuz/authon-sdk/go) | Go net/http middleware |
 | [`authon` (Dart)](./dart) | [pub.dev](https://pub.dev/packages/authon) | Flutter SDK |
-| [`Authon` (Swift)](./swift) | SPM | iOS/macOS SDK |
+| [`Authon` (Swift)](./swift) | SPM | iOS / macOS SDK |
 | [`authon-kotlin`](./kotlin) | Maven | Android SDK |
 
+## Features
+
+- **Email / Password** — Sign up, sign in, password reset
+- **OAuth** — Google, Apple, GitHub, Discord, Facebook, Microsoft, Kakao, Naver, LINE, X
+- **Passwordless** — Magic link and email OTP
+- **Passkeys (WebAuthn)** — Register, authenticate, manage credentials
+- **Web3** — EVM wallet (MetaMask, WalletConnect, Coinbase Wallet, Pexus) and Solana (Phantom)
+- **MFA (TOTP)** — Google Authenticator / Authy compatible, backup codes
+- **Session Management** — List and revoke active sessions
+- **User Profile** — Update display name, avatar, phone, and custom metadata
+- **Webhook Verification** — Validate incoming webhook payloads from Authon
+
 ## Quick Start
+
+### Vanilla JavaScript
+
+```bash
+npm install @authon/js
+```
+
+```js
+import { Authon } from '@authon/js';
+
+const authon = new Authon('pk_live_...');
+
+// Open the built-in sign-in modal
+await authon.openSignIn();
+
+// Or sign in programmatically
+const user = await authon.signInWithEmail('user@example.com', 'password');
+console.log(user.displayName);
+
+// Listen for auth state changes
+authon.on('signedIn', (user) => {
+  console.log('Signed in as', user.email);
+});
+
+authon.on('signedOut', () => {
+  console.log('Signed out');
+});
+
+// Get the current user and token
+const currentUser = authon.getUser();
+const token = authon.getToken();
+
+// Sign out
+await authon.signOut();
+```
+
+See the full [@authon/js README](./packages/js/README.md) for all available methods.
 
 ### React
 
@@ -34,7 +90,7 @@ npm install @authon/react
 ```
 
 ```tsx
-import { AuthonProvider, SignedIn, SignedOut, UserButton } from '@authon/react';
+import { AuthonProvider, SignedIn, SignedOut, UserButton, useAuthon } from '@authon/react';
 import { useUser } from '@authon/react';
 
 function App() {
@@ -54,6 +110,11 @@ function App() {
 function Dashboard() {
   const { user } = useUser();
   return <h1>Welcome, {user?.displayName}</h1>;
+}
+
+function LandingPage() {
+  const { openSignIn } = useAuthon();
+  return <button onClick={openSignIn}>Sign in</button>;
 }
 ```
 
@@ -105,7 +166,7 @@ export async function GET() {
 }
 ```
 
-### Node.js
+### Node.js (Server)
 
 ```bash
 npm install @authon/node
@@ -114,7 +175,7 @@ npm install @authon/node
 ```ts
 import { AuthonBackend, expressMiddleware } from '@authon/node';
 
-// Middleware — protects routes automatically
+// Express middleware — protects routes automatically
 app.use('/api', expressMiddleware({
   secretKey: process.env.AUTHON_SECRET_KEY!,
 }));
@@ -131,65 +192,30 @@ const users = await authon.users.list({ page: 1, limit: 10 });
 const event = authon.webhooks.verify(payload, signature, webhookSecret);
 ```
 
-### Python (FastAPI)
+## Package READMEs
 
-```bash
-pip install authon
-```
-
-```python
-from fastapi import FastAPI, Depends
-from authon import AuthonBackend, require_auth, AuthonUser
-
-authon = AuthonBackend(secret_key="sk_live_...")
-app = FastAPI()
-
-@app.get("/api/profile")
-async def profile(user: AuthonUser = Depends(require_auth(authon))):
-    return {"id": user.id, "email": user.email}
-```
-
-## Multi-Factor Authentication (MFA)
-
-All client SDKs support TOTP-based MFA compatible with Google Authenticator, Authy, and other authenticator apps.
-
-```ts
-import { Authon, AuthonMfaRequiredError } from '@authon/js';
-
-const authon = new Authon('pk_live_...');
-
-// Setup MFA (user must be signed in)
-const setup = await authon.setupMfa();
-// setup.qrCodeSvg — SVG QR code to scan with authenticator app
-// setup.backupCodes — one-time recovery codes
-
-// Complete setup by verifying a TOTP code
-await authon.verifyMfaSetup('123456');
-
-// Sign-in with MFA
-try {
-  await authon.signInWithEmail('user@example.com', 'password');
-} catch (err) {
-  if (err instanceof AuthonMfaRequiredError) {
-    await authon.verifyMfa(err.mfaToken, '123456');
-  }
-}
-```
-
-For framework-specific usage, see each package's README:
-- **React**: [`useAuthonMfa` hook](./packages/react/README.md#multi-factor-authentication-mfa)
-- **Vue / Nuxt / Svelte / Angular**: via client instance — [example](./packages/vue/README.md#multi-factor-authentication-mfa)
+- [@authon/js](./packages/js/README.md) — Core browser SDK (full API reference)
+- [@authon/react](./packages/react/README.md)
+- [@authon/nextjs](./packages/nextjs/README.md)
+- [@authon/vue](./packages/vue/README.md)
+- [@authon/nuxt](./packages/nuxt/README.md)
+- [@authon/svelte](./packages/svelte/README.md)
+- [@authon/angular](./packages/angular/README.md)
+- [@authon/react-native](./packages/react-native/README.md)
+- [@authon/node](./packages/node/README.md)
+- [@authon/shared](./packages/shared/README.md) — Types and constants reference
 
 ## Documentation
 
-Full documentation is available at [authon.dev/docs](https://authon.dev/docs).
+Full documentation: [docs.authon.dev](https://docs.authon.dev)
+
+Website: [authon.dev](https://authon.dev)
 
 ## Contributing
 
 We welcome contributions. Please open an issue first to discuss any changes you'd like to make.
 
 ```bash
-# Clone and install
 git clone https://github.com/mikusnuz/authon-sdk.git
 cd authon-sdk
 pnpm install
@@ -197,7 +223,7 @@ pnpm install
 # Build all packages
 pnpm build
 
-# Development mode
+# Development mode (watch)
 pnpm dev
 ```
 
