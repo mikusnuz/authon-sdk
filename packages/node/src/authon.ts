@@ -1,4 +1,4 @@
-import type { AuthonUser } from '@authon/shared';
+import type { AuthonUser, SessionInfo } from '@authon/shared';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 interface AuthonBackendConfig {
@@ -91,6 +91,16 @@ export class AuthonBackend {
 
     unban: (userId: string): Promise<AuthonUser> => {
       return this.request('POST', `/v1/backend/users/${userId}/unban`);
+    },
+  };
+
+  sessions = {
+    list: (userId: string): Promise<SessionInfo[]> => {
+      return this.request('GET', `/v1/backend/users/${userId}/sessions`);
+    },
+
+    revoke: (userId: string, sessionId: string): Promise<void> => {
+      return this.request('DELETE', `/v1/backend/users/${userId}/sessions/${sessionId}`);
     },
   };
 

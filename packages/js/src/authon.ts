@@ -1,4 +1,17 @@
-import type { AuthonUser, AuthTokens, BrandingConfig, MfaSetupResponse, MfaStatus, OAuthProviderType } from '@authon/shared';
+import type {
+  AuthonUser,
+  AuthTokens,
+  BrandingConfig,
+  MfaSetupResponse,
+  MfaStatus,
+  OAuthProviderType,
+  PasskeyCredential,
+  SessionInfo,
+  Web3Chain,
+  Web3NonceResponse,
+  Web3Wallet,
+  Web3WalletType,
+} from '@authon/shared';
 import type {
   AuthonConfig,
   AuthonEventType,
@@ -166,6 +179,199 @@ export class Authon {
       token,
     );
     return res.backupCodes;
+  }
+
+  // ── Passwordless ──
+
+  async sendMagicLink(email: string): Promise<void> {
+    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', { email });
+  }
+
+  async sendEmailOtp(email: string): Promise<void> {
+    await this.apiPost<{ message: string }>('/v1/auth/passwordless/email-otp', { email });
+  }
+
+  async verifyPasswordless(options: {
+    token?: string;
+    email?: string;
+    code?: string;
+  }): Promise<AuthonUser> {
+    const res = await this.apiPost<AuthTokens>('/v1/auth/passwordless/verify', options);
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  // ── Passkeys ──
+
+  async registerPasskey(name?: string): Promise<PasskeyCredential> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to register a passkey');
+
+    const options = await this.apiPostAuth<{ options: Record<string, unknown> }>(
+      '/v1/auth/passkeys/register/options',
+      name ? { name } : undefined,
+      token,
+    );
+
+    const credential = await navigator.credentials.create({
+      publicKey: this.deserializeCreationOptions(options.options),
+    }) as PublicKeyCredential;
+
+    const attestation = credential.response as AuthenticatorAttestationResponse;
+    const result = await this.apiPostAuth<PasskeyCredential>(
+      '/v1/auth/passkeys/register/verify',
+      {
+        id: credential.id,
+        rawId: this.bufferToBase64url(credential.rawId),
+        type: credential.type,
+        response: {
+          attestationObject: this.bufferToBase64url(attestation.attestationObject),
+          clientDataJSON: this.bufferToBase64url(attestation.clientDataJSON),
+        },
+      },
+      token,
+    );
+
+    this.emit('passkeyRegistered', result);
+    return result;
+  }
+
+  async authenticateWithPasskey(email?: string): Promise<AuthonUser> {
+    const options = await this.apiPost<{ options: Record<string, unknown> }>(
+      '/v1/auth/passkeys/authenticate/options',
+      email ? { email } : undefined,
+    );
+
+    const credential = await navigator.credentials.get({
+      publicKey: this.deserializeRequestOptions(options.options),
+    }) as PublicKeyCredential;
+
+    const assertion = credential.response as AuthenticatorAssertionResponse;
+    const res = await this.apiPost<AuthTokens>('/v1/auth/passkeys/authenticate/verify', {
+      id: credential.id,
+      rawId: this.bufferToBase64url(credential.rawId),
+      type: credential.type,
+      response: {
+        authenticatorData: this.bufferToBase64url(assertion.authenticatorData),
+        clientDataJSON: this.bufferToBase64url(assertion.clientDataJSON),
+        signature: this.bufferToBase64url(assertion.signature),
+        userHandle: assertion.userHandle ? this.bufferToBase64url(assertion.userHandle) : undefined,
+      },
+    });
+
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  async listPasskeys(): Promise<PasskeyCredential[]> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to list passkeys');
+    return this.apiGetAuth<PasskeyCredential[]>('/v1/auth/passkeys', token);
+  }
+
+  async renamePasskey(passkeyId: string, name: string): Promise<PasskeyCredential> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to rename a passkey');
+    return this.apiPatchAuth<PasskeyCredential>(`/v1/auth/passkeys/${passkeyId}`, { name }, token);
+  }
+
+  async revokePasskey(passkeyId: string): Promise<void> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to revoke a passkey');
+    await this.apiDeleteAuth(`/v1/auth/passkeys/${passkeyId}`, token);
+  }
+
+  // ── Web3 ──
+
+  async web3GetNonce(
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+    chainId?: number,
+  ): Promise<Web3NonceResponse> {
+    return this.apiPost<Web3NonceResponse>('/v1/auth/web3/nonce', {
+      address,
+      chain,
+      walletType,
+      ...(chainId != null ? { chainId } : {}),
+    });
+  }
+
+  async web3Verify(
+    message: string,
+    signature: string,
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+  ): Promise<AuthonUser> {
+    const res = await this.apiPost<AuthTokens>('/v1/auth/web3/verify', {
+      message,
+      signature,
+      address,
+      chain,
+      walletType,
+    });
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  async listWallets(): Promise<Web3Wallet[]> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to list wallets');
+    return this.apiGetAuth<Web3Wallet[]>('/v1/auth/web3/wallets', token);
+  }
+
+  async linkWallet(params: {
+    address: string;
+    chain: Web3Chain;
+    walletType: Web3WalletType;
+    chainId?: number;
+    message: string;
+    signature: string;
+  }): Promise<Web3Wallet> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to link a wallet');
+    const wallet = await this.apiPostAuth<Web3Wallet>('/v1/auth/web3/wallets/link', params, token);
+    this.emit('web3Connected', wallet);
+    return wallet;
+  }
+
+  async unlinkWallet(walletId: string): Promise<void> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to unlink a wallet');
+    await this.apiDeleteAuth(`/v1/auth/web3/wallets/${walletId}`, token);
+  }
+
+  // ── User Profile ──
+
+  async updateProfile(data: {
+    displayName?: string;
+    avatarUrl?: string;
+    phone?: string;
+    publicMetadata?: Record<string, unknown>;
+  }): Promise<AuthonUser> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to update profile');
+    const user = await this.apiPatchAuth<AuthonUser>('/v1/auth/me', data, token);
+    this.session.updateUser(user);
+    return user;
+  }
+
+  // ── Session Management ──
+
+  async listSessions(): Promise<SessionInfo[]> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to list sessions');
+    return this.apiGetAuth<SessionInfo[]>('/v1/auth/me/sessions', token);
+  }
+
+  async revokeSession(sessionId: string): Promise<void> {
+    const token = this.session.getToken();
+    if (!token) throw new Error('Must be signed in to revoke a session');
+    await this.apiDeleteAuth(`/v1/auth/me/sessions/${sessionId}`, token);
   }
 
   destroy(): void {
@@ -517,6 +723,104 @@ export class Authon {
     });
     if (!res.ok) throw new Error(await this.parseApiError(res, path));
     return res.json();
+  }
+
+  private async apiGetAuth<T>(path: string, token: string): Promise<T> {
+    const res = await fetch(`${this.config.apiUrl}${path}`, {
+      headers: {
+        'x-api-key': this.publishableKey,
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
+    return res.json();
+  }
+
+  private async apiPatchAuth<T>(path: string, body: unknown, token: string): Promise<T> {
+    const res = await fetch(`${this.config.apiUrl}${path}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': this.publishableKey,
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
+    return res.json();
+  }
+
+  private async apiDeleteAuth(path: string, token: string): Promise<void> {
+    const res = await fetch(`${this.config.apiUrl}${path}`, {
+      method: 'DELETE',
+      headers: {
+        'x-api-key': this.publishableKey,
+        Authorization: `Bearer ${token}`,
+      },
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error(await this.parseApiError(res, path));
+  }
+
+  // ── WebAuthn helpers ──
+
+  private bufferToBase64url(buffer: ArrayBuffer): string {
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  }
+
+  private base64urlToBuffer(base64url: string): ArrayBuffer {
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
+    const binary = atob(padded);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private deserializeCreationOptions(
+    options: Record<string, unknown>,
+  ): PublicKeyCredentialCreationOptions {
+    const opts = { ...options } as Record<string, unknown>;
+    if (typeof opts.challenge === 'string') {
+      opts.challenge = this.base64urlToBuffer(opts.challenge);
+    }
+    if (opts.user && typeof (opts.user as Record<string, unknown>).id === 'string') {
+      (opts.user as Record<string, unknown>).id = this.base64urlToBuffer(
+        (opts.user as Record<string, unknown>).id as string,
+      );
+    }
+    if (Array.isArray(opts.excludeCredentials)) {
+      opts.excludeCredentials = (opts.excludeCredentials as Record<string, unknown>[]).map((c) => ({
+        ...c,
+        id: typeof c.id === 'string' ? this.base64urlToBuffer(c.id) : c.id,
+      }));
+    }
+    return opts as unknown as PublicKeyCredentialCreationOptions;
+  }
+
+  private deserializeRequestOptions(
+    options: Record<string, unknown>,
+  ): PublicKeyCredentialRequestOptions {
+    const opts = { ...options } as Record<string, unknown>;
+    if (typeof opts.challenge === 'string') {
+      opts.challenge = this.base64urlToBuffer(opts.challenge);
+    }
+    if (Array.isArray(opts.allowCredentials)) {
+      opts.allowCredentials = (opts.allowCredentials as Record<string, unknown>[]).map((c) => ({
+        ...c,
+        id: typeof c.id === 'string' ? this.base64urlToBuffer(c.id) : c.id,
+      }));
+    }
+    return opts as unknown as PublicKeyCredentialRequestOptions;
   }
 
   private async parseApiError(res: Response, path: string): Promise<string> {

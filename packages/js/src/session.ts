@@ -30,6 +30,10 @@ export class SessionManager {
     }
   }
 
+  updateUser(user: AuthonUser): void {
+    this.user = user;
+  }
+
   clearSession(): void {
     this.accessToken = null;
     this.refreshToken = null;

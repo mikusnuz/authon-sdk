@@ -98,6 +98,57 @@ export interface MfaVerifyResponse {
   user: AuthonUser;
 }
 
+// ── Passwordless Types ──
+
+export interface PasswordlessResult {
+  message: string;
+}
+
+// ── Passkey Types ──
+
+export interface PasskeyCredential {
+  id: string;
+  name: string | null;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+// ── Web3 Types ──
+
+export type Web3Chain = 'evm' | 'solana';
+export type Web3WalletType =
+  | 'metamask'
+  | 'pexus'
+  | 'walletconnect'
+  | 'coinbase'
+  | 'phantom'
+  | 'trust'
+  | 'other';
+
+export interface Web3Wallet {
+  id: string;
+  address: string;
+  chain: Web3Chain;
+  walletType: Web3WalletType;
+  chainId: number | null;
+  createdAt: string;
+}
+
+export interface Web3NonceResponse {
+  message: string;
+  nonce: string;
+}
+
+// ── Session Types ──
+
+export interface SessionInfo {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  lastActiveAt: string | null;
+}
+
 // ── Constants ──
 
 export const OAUTH_PROVIDERS = [
