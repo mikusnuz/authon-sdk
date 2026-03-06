@@ -1,6 +1,13 @@
 import { Authon } from '@authon/js';
 import type { AuthonConfig } from '@authon/js';
-import type { AuthonUser } from '@authon/shared';
+import type {
+  AuthonUser,
+  PasskeyCredential,
+  Web3Chain,
+  Web3NonceResponse,
+  Web3Wallet,
+  Web3WalletType,
+} from '@authon/shared';
 
 /**
  * Injection token key for Authon configuration.
@@ -102,6 +109,77 @@ export class AuthonService {
 
   getClient(): Authon {
     return this.client;
+  }
+
+  // ── Web3 ──
+
+  web3GetNonce(
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+    chainId?: number,
+  ): Promise<Web3NonceResponse> {
+    return this.client.web3GetNonce(address, chain, walletType, chainId);
+  }
+
+  web3Verify(
+    message: string,
+    signature: string,
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+  ): Promise<AuthonUser> {
+    return this.client.web3Verify(message, signature, address, chain, walletType);
+  }
+
+  web3LinkWallet(params: {
+    address: string;
+    chain: Web3Chain;
+    walletType: Web3WalletType;
+    chainId?: number;
+    message: string;
+    signature: string;
+  }): Promise<Web3Wallet> {
+    return this.client.linkWallet(params);
+  }
+
+  web3UnlinkWallet(walletId: string): Promise<void> {
+    return this.client.unlinkWallet(walletId);
+  }
+
+  web3GetWallets(): Promise<Web3Wallet[]> {
+    return this.client.listWallets();
+  }
+
+  // ── Passwordless ──
+
+  passwordlessSendCode(email: string, type: 'magic-link' | 'otp' = 'otp'): Promise<void> {
+    if (type === 'magic-link') {
+      return this.client.sendMagicLink(email);
+    }
+    return this.client.sendEmailOtp(email);
+  }
+
+  passwordlessVerifyCode(email: string, code: string): Promise<AuthonUser> {
+    return this.client.verifyPasswordless({ email, code });
+  }
+
+  // ── Passkeys ──
+
+  passkeyRegister(name?: string): Promise<PasskeyCredential> {
+    return this.client.registerPasskey(name);
+  }
+
+  passkeyAuthenticate(email?: string): Promise<AuthonUser> {
+    return this.client.authenticateWithPasskey(email);
+  }
+
+  passkeyList(): Promise<PasskeyCredential[]> {
+    return this.client.listPasskeys();
+  }
+
+  passkeyDelete(credentialId: string): Promise<void> {
+    return this.client.revokePasskey(credentialId);
   }
 
   /**

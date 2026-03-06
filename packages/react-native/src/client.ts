@@ -1,4 +1,12 @@
-import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
+import type {
+  BrandingConfig,
+  OAuthProviderType,
+  PasskeyCredential,
+  Web3Chain,
+  Web3NonceResponse,
+  Web3Wallet,
+  Web3WalletType,
+} from '@authon/shared';
 import type {
   AuthonReactNativeConfig,
   AuthonUser,
@@ -241,6 +249,139 @@ export class AuthonMobileClient {
     return this.apiUrl;
   }
 
+  // ── Web3 ──
+
+  async web3GetNonce(
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+    chainId?: number,
+  ): Promise<Web3NonceResponse> {
+    return this.request('POST', '/v1/auth/web3/nonce', {
+      address,
+      chain,
+      walletType,
+      ...(chainId != null ? { chainId } : {}),
+    }) as Promise<Web3NonceResponse>;
+  }
+
+  async web3Verify(
+    message: string,
+    signature: string,
+    address: string,
+    chain: Web3Chain,
+    walletType: Web3WalletType,
+  ): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const res = (await this.request('POST', '/v1/auth/web3/verify', {
+      message,
+      signature,
+      address,
+      chain,
+      walletType,
+    })) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
+    this.user = res.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', res.user);
+    return { tokens: this.tokens, user: res.user };
+  }
+
+  async web3GetWallets(): Promise<Web3Wallet[]> {
+    return this.request('GET', '/v1/auth/web3/wallets') as Promise<Web3Wallet[]>;
+  }
+
+  async web3LinkWallet(params: {
+    address: string;
+    chain: Web3Chain;
+    walletType: Web3WalletType;
+    chainId?: number;
+    message: string;
+    signature: string;
+  }): Promise<Web3Wallet> {
+    return this.request('POST', '/v1/auth/web3/wallets/link', params) as Promise<Web3Wallet>;
+  }
+
+  async web3UnlinkWallet(walletId: string): Promise<void> {
+    await this.requestAuth('DELETE', `/v1/auth/web3/wallets/${walletId}`);
+  }
+
+  // ── Passwordless ──
+
+  async passwordlessSendCode(identifier: string, type: 'email' | 'sms' = 'email'): Promise<void> {
+    if (type === 'sms') {
+      await this.request('POST', '/v1/auth/passwordless/sms-otp', { phone: identifier });
+    } else {
+      await this.request('POST', '/v1/auth/passwordless/email-otp', { email: identifier });
+    }
+  }
+
+  async passwordlessVerifyCode(
+    identifier: string,
+    code: string,
+  ): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const res = (await this.request('POST', '/v1/auth/passwordless/verify', {
+      email: identifier,
+      code,
+    })) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
+    this.user = res.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', res.user);
+    return { tokens: this.tokens, user: res.user };
+  }
+
+  // ── Passkeys ──
+
+  async passkeyStartRegister(name?: string): Promise<{ options: Record<string, unknown> }> {
+    return this.requestAuth(
+      'POST',
+      '/v1/auth/passkeys/register/options',
+      name ? { name } : undefined,
+    ) as Promise<{ options: Record<string, unknown> }>;
+  }
+
+  async passkeyCompleteRegister(credential: Record<string, unknown>): Promise<PasskeyCredential> {
+    return this.requestAuth(
+      'POST',
+      '/v1/auth/passkeys/register/verify',
+      credential,
+    ) as Promise<PasskeyCredential>;
+  }
+
+  async passkeyStartAuth(email?: string): Promise<{ options: Record<string, unknown> }> {
+    return this.request(
+      'POST',
+      '/v1/auth/passkeys/authenticate/options',
+      email ? { email } : undefined,
+    ) as Promise<{ options: Record<string, unknown> }>;
+  }
+
+  async passkeyCompleteAuth(
+    credential: Record<string, unknown>,
+  ): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const res = (await this.request(
+      'POST',
+      '/v1/auth/passkeys/authenticate/verify',
+      credential,
+    )) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
+    this.user = res.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', res.user);
+    return { tokens: this.tokens, user: res.user };
+  }
+
+  async passkeyList(): Promise<PasskeyCredential[]> {
+    return this.requestAuth('GET', '/v1/auth/passkeys') as Promise<PasskeyCredential[]>;
+  }
+
+  async passkeyDelete(credentialId: string): Promise<void> {
+    await this.requestAuth('DELETE', `/v1/auth/passkeys/${credentialId}`);
+  }
+
   // ── Event system ──
 
   on<K extends AuthonEventType>(event: K, listener: AuthonEvents[K]): () => void {
@@ -300,6 +441,11 @@ export class AuthonMobileClient {
       refreshToken: res.refreshToken,
       expiresAt: Date.now() + res.expiresIn * 1000,
     };
+  }
+
+  private async requestAuth(method: string, path: string, body?: unknown): Promise<unknown> {
+    if (!this.tokens?.accessToken) throw new Error('Must be signed in');
+    return this.request(method, path, body);
   }
 
   private async request(method: string, path: string, body?: unknown): Promise<unknown> {

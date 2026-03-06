@@ -1,4 +1,11 @@
-import type { AuthonUser, SessionInfo } from '@authon/shared';
+import type {
+  AuthonUser,
+  SessionInfo,
+  Web3Chain,
+  Web3Wallet,
+  PasskeyCredential,
+  PasswordlessResult,
+} from '@authon/shared';
 import { createHmac, timingSafeEqual } from 'crypto';
 
 interface AuthonBackendConfig {
@@ -91,6 +98,49 @@ export class AuthonBackend {
 
     unban: (userId: string): Promise<AuthonUser> => {
       return this.request('POST', `/v1/backend/users/${userId}/unban`);
+    },
+  };
+
+  web3 = {
+    verifySignature: (
+      message: string,
+      signature: string,
+      address: string,
+      chain: Web3Chain,
+    ): Promise<{ valid: boolean; address: string }> => {
+      return this.request('POST', '/v1/backend/web3/verify-signature', {
+        message,
+        signature,
+        address,
+        chain,
+      });
+    },
+
+    getWallets: (userId: string): Promise<Web3Wallet[]> => {
+      return this.request('GET', `/v1/backend/users/${userId}/web3-wallets`);
+    },
+  };
+
+  passwordless = {
+    sendCode: (email: string, type?: 'sign-in' | 'sign-up'): Promise<PasswordlessResult> => {
+      return this.request('POST', '/v1/backend/passwordless/send', { email, type });
+    },
+
+    verifyCode: (
+      email: string,
+      code: string,
+    ): Promise<{ valid: boolean; userId?: string }> => {
+      return this.request('POST', '/v1/backend/passwordless/verify', { email, code });
+    },
+  };
+
+  passkeys = {
+    list: (userId: string): Promise<PasskeyCredential[]> => {
+      return this.request('GET', `/v1/backend/users/${userId}/passkeys`);
+    },
+
+    delete: (userId: string, credentialId: string): Promise<void> => {
+      return this.request('DELETE', `/v1/backend/users/${userId}/passkeys/${credentialId}`);
     },
   };
 

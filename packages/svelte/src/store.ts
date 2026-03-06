@@ -1,7 +1,14 @@
 import { writable, derived, type Readable } from 'svelte/store';
 import { Authon } from '@authon/js';
 import type { AuthonConfig } from '@authon/js';
-import type { AuthonUser } from '@authon/shared';
+import type {
+  AuthonUser,
+  PasskeyCredential,
+  Web3Chain,
+  Web3NonceResponse,
+  Web3Wallet,
+  Web3WalletType,
+} from '@authon/shared';
 
 export interface AuthonStore {
   user: Readable<AuthonUser | null>;
@@ -13,6 +20,20 @@ export interface AuthonStore {
   getToken: () => string | null;
   destroy: () => void;
   client: Authon;
+  // Web3
+  web3GetNonce: (address: string, chain: Web3Chain, walletType: Web3WalletType, chainId?: number) => Promise<Web3NonceResponse>;
+  web3Verify: (message: string, signature: string, address: string, chain: Web3Chain, walletType: Web3WalletType) => Promise<AuthonUser>;
+  web3LinkWallet: (params: { address: string; chain: Web3Chain; walletType: Web3WalletType; chainId?: number; message: string; signature: string }) => Promise<Web3Wallet>;
+  web3UnlinkWallet: (walletId: string) => Promise<void>;
+  web3GetWallets: () => Promise<Web3Wallet[]>;
+  // Passwordless
+  passwordlessSendCode: (email: string, type?: 'magic-link' | 'otp') => Promise<void>;
+  passwordlessVerifyCode: (email: string, code: string) => Promise<AuthonUser>;
+  // Passkeys
+  passkeyRegister: (name?: string) => Promise<PasskeyCredential>;
+  passkeyAuthenticate: (email?: string) => Promise<AuthonUser>;
+  passkeyList: () => Promise<PasskeyCredential[]>;
+  passkeyDelete: (credentialId: string) => Promise<void>;
 }
 
 /**
@@ -71,5 +92,22 @@ export function createAuthonStore(
     getToken: () => client.getToken(),
     destroy: () => client.destroy(),
     client,
+    // Web3
+    web3GetNonce: (address, chain, walletType, chainId?) =>
+      client.web3GetNonce(address, chain, walletType, chainId),
+    web3Verify: (message, signature, address, chain, walletType) =>
+      client.web3Verify(message, signature, address, chain, walletType),
+    web3LinkWallet: (params) => client.linkWallet(params),
+    web3UnlinkWallet: (walletId) => client.unlinkWallet(walletId),
+    web3GetWallets: () => client.listWallets(),
+    // Passwordless
+    passwordlessSendCode: (email, type = 'otp') =>
+      type === 'magic-link' ? client.sendMagicLink(email) : client.sendEmailOtp(email),
+    passwordlessVerifyCode: (email, code) => client.verifyPasswordless({ email, code }),
+    // Passkeys
+    passkeyRegister: (name?) => client.registerPasskey(name),
+    passkeyAuthenticate: (email?) => client.authenticateWithPasskey(email),
+    passkeyList: () => client.listPasskeys(),
+    passkeyDelete: (credentialId) => client.revokePasskey(credentialId),
   };
 }
