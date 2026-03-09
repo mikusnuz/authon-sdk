@@ -8,4 +8,14 @@ export type {
   Web3NonceResponse,
   PasskeyCredential,
   PasswordlessResult,
+  AuditLogEntry,
+  AuditLogQueryParams,
+  AuditLogListResponse,
+  AuditLogStats,
+  JwtClaimMapping,
+  JwtTemplate,
+  CreateJwtTemplateParams,
+  UpdateJwtTemplateParams,
+  JwtPreviewResponse,
 } from '@authon/shared';
+export { AUDIT_EVENTS } from '@authon/shared';

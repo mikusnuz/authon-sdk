@@ -149,6 +149,79 @@ export interface SessionInfo {
   lastActiveAt: string | null;
 }
 
+// ── Audit Log Types ──
+
+export interface AuditLogEntry {
+  id: string;
+  projectId: string;
+  actorType: 'user' | 'admin' | 'system' | 'api_key';
+  actorId: string | null;
+  event: string;
+  targetType: string | null;
+  targetId: string | null;
+  metadata: Record<string, any> | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+}
+
+export interface AuditLogQueryParams {
+  event?: string;
+  actorId?: string;
+  targetId?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface AuditLogListResponse {
+  data: AuditLogEntry[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface AuditLogStats {
+  [eventType: string]: number;
+}
+
+// ── JWT Template Types ──
+
+export interface JwtClaimMapping {
+  key: string;
+  source?: string;
+  value?: string;
+}
+
+export interface JwtTemplate {
+  id: string;
+  projectId: string;
+  name: string;
+  isDefault: boolean;
+  claims: JwtClaimMapping[];
+  allowedLifetime: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateJwtTemplateParams {
+  name: string;
+  claims: JwtClaimMapping[];
+  allowedLifetime?: number;
+}
+
+export interface UpdateJwtTemplateParams {
+  name?: string;
+  claims?: JwtClaimMapping[];
+  allowedLifetime?: number | null;
+}
+
+export interface JwtPreviewResponse {
+  token: string;
+  decoded: Record<string, any>;
+}
+
 // ── Constants ──
 
 export const OAUTH_PROVIDERS = [
@@ -234,3 +307,18 @@ export const DEFAULT_SESSION_CONFIG: SessionConfig = {
   maxSessions: 5,
   singleSession: false,
 };
+
+export const AUDIT_EVENTS = {
+  AUTH_SIGNUP: 'auth.signup',
+  AUTH_SIGNIN: 'auth.signin',
+  AUTH_SIGNIN_FAILED: 'auth.signin.failed',
+  AUTH_SIGNOUT: 'auth.signout',
+  AUTH_TOKEN_REFRESH: 'auth.token.refresh',
+  AUTH_MFA_SETUP: 'auth.mfa.setup',
+  AUTH_MFA_VERIFY: 'auth.mfa.verify',
+  AUTH_PASSKEY_REGISTER: 'auth.passkey.register',
+  AUTH_WEB3_VERIFY: 'auth.web3.verify',
+  ADMIN_USER_BANNED: 'admin.user.banned',
+  ADMIN_USER_UNBANNED: 'admin.user.unbanned',
+  ADMIN_USER_DELETED: 'admin.user.deleted',
+} as const;

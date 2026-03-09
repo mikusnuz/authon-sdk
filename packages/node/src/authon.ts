@@ -5,6 +5,11 @@ import type {
   Web3Wallet,
   PasskeyCredential,
   PasswordlessResult,
+  AuditLogQueryParams,
+  AuditLogListResponse,
+  JwtTemplate,
+  CreateJwtTemplateParams,
+  UpdateJwtTemplateParams,
 } from '@authon/shared';
 import { createHmac, timingSafeEqual } from 'crypto';
 
@@ -151,6 +156,43 @@ export class AuthonBackend {
 
     revoke: (userId: string, sessionId: string): Promise<void> => {
       return this.request('DELETE', `/v1/backend/users/${userId}/sessions/${sessionId}`);
+    },
+  };
+
+  auditLogs = {
+    list: (params?: AuditLogQueryParams): Promise<AuditLogListResponse> => {
+      const qs = new URLSearchParams();
+      if (params?.event) qs.set('event', params.event);
+      if (params?.actorId) qs.set('actorId', params.actorId);
+      if (params?.targetId) qs.set('targetId', params.targetId);
+      if (params?.dateFrom) qs.set('dateFrom', params.dateFrom);
+      if (params?.dateTo) qs.set('dateTo', params.dateTo);
+      if (params?.page) qs.set('page', String(params.page));
+      if (params?.limit) qs.set('limit', String(params.limit));
+      const query = qs.toString();
+      return this.request('GET', `/v1/backend/audit-logs${query ? `?${query}` : ''}`);
+    },
+  };
+
+  jwtTemplates = {
+    list: (): Promise<JwtTemplate[]> => {
+      return this.request('GET', '/v1/backend/jwt-templates');
+    },
+
+    get: (templateId: string): Promise<JwtTemplate> => {
+      return this.request('GET', `/v1/backend/jwt-templates/${templateId}`);
+    },
+
+    create: (params: CreateJwtTemplateParams): Promise<JwtTemplate> => {
+      return this.request('POST', '/v1/backend/jwt-templates', params);
+    },
+
+    update: (templateId: string, params: UpdateJwtTemplateParams): Promise<JwtTemplate> => {
+      return this.request('PUT', `/v1/backend/jwt-templates/${templateId}`, params);
+    },
+
+    delete: (templateId: string): Promise<void> => {
+      return this.request('DELETE', `/v1/backend/jwt-templates/${templateId}`);
     },
   };
 
