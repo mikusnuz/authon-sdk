@@ -1,5 +1,9 @@
 import type {
   AuthonUser,
+  AuthonOrganization,
+  OrganizationMember,
+  CreateOrganizationParams,
+  OrganizationListResponse,
   SessionInfo,
   Web3Chain,
   Web3Wallet,
@@ -193,6 +197,40 @@ export class AuthonBackend {
 
     delete: (templateId: string): Promise<void> => {
       return this.request('DELETE', `/v1/backend/jwt-templates/${templateId}`);
+    },
+  };
+
+  organizations = {
+    list: (options?: { page?: number; limit?: number }): Promise<OrganizationListResponse> => {
+      const params = new URLSearchParams();
+      if (options?.page) params.set('page', String(options.page));
+      if (options?.limit) params.set('limit', String(options.limit));
+      const qs = params.toString();
+      return this.request('GET', `/v1/backend/organizations${qs ? `?${qs}` : ''}`);
+    },
+
+    get: (orgId: string): Promise<AuthonOrganization> => {
+      return this.request('GET', `/v1/backend/organizations/${orgId}`);
+    },
+
+    create: (params: CreateOrganizationParams & { createdBy: string }): Promise<AuthonOrganization> => {
+      return this.request('POST', '/v1/backend/organizations', params);
+    },
+
+    delete: (orgId: string): Promise<void> => {
+      return this.request('DELETE', `/v1/backend/organizations/${orgId}`);
+    },
+
+    getMembers: (orgId: string): Promise<OrganizationMember[]> => {
+      return this.request('GET', `/v1/backend/organizations/${orgId}/members`);
+    },
+
+    addMember: (orgId: string, params: { userId: string; role?: 'admin' | 'member' }): Promise<OrganizationMember> => {
+      return this.request('POST', `/v1/backend/organizations/${orgId}/members`, params);
+    },
+
+    removeMember: (orgId: string, userId: string): Promise<void> => {
+      return this.request('DELETE', `/v1/backend/organizations/${orgId}/members/${userId}`);
     },
   };
 

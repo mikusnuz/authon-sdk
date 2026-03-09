@@ -1,5 +1,12 @@
 import type {
   AuthonUser,
+  AuthonOrganization,
+  OrganizationMember,
+  OrganizationInvitation,
+  OrganizationListResponse,
+  CreateOrganizationParams,
+  UpdateOrganizationParams,
+  InviteMemberParams,
   AuthTokens,
   BrandingConfig,
   MfaSetupResponse,
@@ -373,6 +380,88 @@ export class Authon {
     if (!token) throw new Error('Must be signed in to revoke a session');
     await this.apiDeleteAuth(`/v1/auth/me/sessions/${sessionId}`, token);
   }
+
+  // ── Organizations ──
+
+  organizations = {
+    list: async (): Promise<OrganizationListResponse> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to list organizations');
+      return this.apiGetAuth<OrganizationListResponse>('/v1/auth/organizations', token);
+    },
+
+    create: async (params: CreateOrganizationParams): Promise<AuthonOrganization> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to create an organization');
+      return this.apiPostAuth<AuthonOrganization>('/v1/auth/organizations', params, token);
+    },
+
+    get: async (orgId: string): Promise<AuthonOrganization> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to get organization');
+      return this.apiGetAuth<AuthonOrganization>(`/v1/auth/organizations/${orgId}`, token);
+    },
+
+    update: async (orgId: string, params: UpdateOrganizationParams): Promise<AuthonOrganization> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to update organization');
+      return this.apiPatchAuth<AuthonOrganization>(`/v1/auth/organizations/${orgId}`, params, token);
+    },
+
+    delete: async (orgId: string): Promise<void> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to delete organization');
+      await this.apiDeleteAuth(`/v1/auth/organizations/${orgId}`, token);
+    },
+
+    getMembers: async (orgId: string): Promise<OrganizationMember[]> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to get organization members');
+      return this.apiGetAuth<OrganizationMember[]>(`/v1/auth/organizations/${orgId}/members`, token);
+    },
+
+    invite: async (orgId: string, params: InviteMemberParams): Promise<OrganizationInvitation> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to invite a member');
+      return this.apiPostAuth<OrganizationInvitation>(`/v1/auth/organizations/${orgId}/invitations`, params, token);
+    },
+
+    getInvitations: async (orgId: string): Promise<OrganizationInvitation[]> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to get invitations');
+      return this.apiGetAuth<OrganizationInvitation[]>(`/v1/auth/organizations/${orgId}/invitations`, token);
+    },
+
+    acceptInvitation: async (token: string): Promise<OrganizationMember> => {
+      const authToken = this.session.getToken();
+      if (!authToken) throw new Error('Must be signed in to accept an invitation');
+      return this.apiPostAuth<OrganizationMember>(`/v1/auth/organizations/invitations/${token}/accept`, undefined, authToken);
+    },
+
+    rejectInvitation: async (token: string): Promise<void> => {
+      const authToken = this.session.getToken();
+      if (!authToken) throw new Error('Must be signed in to reject an invitation');
+      await this.apiPostAuth<void>(`/v1/auth/organizations/invitations/${token}/reject`, undefined, authToken);
+    },
+
+    removeMember: async (orgId: string, memberId: string): Promise<void> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to remove a member');
+      await this.apiDeleteAuth(`/v1/auth/organizations/${orgId}/members/${memberId}`, token);
+    },
+
+    updateMemberRole: async (orgId: string, memberId: string, role: string): Promise<OrganizationMember> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to update member role');
+      return this.apiPatchAuth<OrganizationMember>(`/v1/auth/organizations/${orgId}/members/${memberId}`, { role }, token);
+    },
+
+    leave: async (orgId: string): Promise<void> => {
+      const token = this.session.getToken();
+      if (!token) throw new Error('Must be signed in to leave organization');
+      await this.apiPostAuth<void>(`/v1/auth/organizations/${orgId}/leave`, undefined, token);
+    },
+  };
 
   destroy(): void {
     this.modal?.close();

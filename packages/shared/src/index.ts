@@ -149,6 +149,69 @@ export interface SessionInfo {
   lastActiveAt: string | null;
 }
 
+// ── Organization Types ──
+
+export interface AuthonOrganization {
+  id: string;
+  projectId: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  metadata: Record<string, any> | null;
+  maxMembers: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface OrganizationMember {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  createdAt: string;
+}
+
+export interface OrganizationInvitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  invitedBy: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+export interface CreateOrganizationParams {
+  name: string;
+  slug?: string;
+  logoUrl?: string;
+  metadata?: Record<string, any>;
+  maxMembers?: number;
+}
+
+export interface UpdateOrganizationParams {
+  name?: string;
+  slug?: string;
+  logoUrl?: string;
+  metadata?: Record<string, any>;
+  maxMembers?: number;
+}
+
+export interface InviteMemberParams {
+  email: string;
+  role?: 'admin' | 'member';
+}
+
+export interface OrganizationListResponse {
+  data: AuthonOrganization[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 // ── Audit Log Types ──
 
 export interface AuditLogEntry {
@@ -321,4 +384,11 @@ export const AUDIT_EVENTS = {
   ADMIN_USER_BANNED: 'admin.user.banned',
   ADMIN_USER_UNBANNED: 'admin.user.unbanned',
   ADMIN_USER_DELETED: 'admin.user.deleted',
+  ORG_CREATED: 'org.created',
+  ORG_DELETED: 'org.deleted',
+  ORG_MEMBER_ADDED: 'org.member.added',
+  ORG_MEMBER_REMOVED: 'org.member.removed',
+  ORG_MEMBER_ROLE_CHANGED: 'org.member.role_changed',
+  ORG_INVITATION_SENT: 'org.invitation.sent',
+  ORG_INVITATION_ACCEPTED: 'org.invitation.accepted',
 } as const;

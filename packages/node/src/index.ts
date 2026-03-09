@@ -17,5 +17,12 @@ export type {
   CreateJwtTemplateParams,
   UpdateJwtTemplateParams,
   JwtPreviewResponse,
+  AuthonOrganization,
+  OrganizationMember,
+  OrganizationInvitation,
+  CreateOrganizationParams,
+  UpdateOrganizationParams,
+  InviteMemberParams,
+  OrganizationListResponse,
 } from '@authon/shared';
 export { AUDIT_EVENTS } from '@authon/shared';

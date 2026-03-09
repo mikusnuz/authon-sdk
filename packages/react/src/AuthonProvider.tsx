@@ -2,12 +2,14 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState } from
 import type { ReactNode } from 'react';
 import { Authon } from '@authon/js';
 import type { AuthonConfig } from '@authon/js';
-import type { AuthonUser } from '@authon/shared';
+import type { AuthonUser, AuthonOrganization } from '@authon/shared';
 
 export interface AuthonContextValue {
   isSignedIn: boolean;
   isLoading: boolean;
   user: AuthonUser | null;
+  activeOrganization: AuthonOrganization | null;
+  setActiveOrganization: (org: AuthonOrganization | null) => void;
   signOut: () => Promise<void>;
   openSignIn: () => Promise<void>;
   openSignUp: () => Promise<void>;
@@ -26,6 +28,7 @@ interface AuthonProviderProps {
 export function AuthonProvider({ publishableKey, children, config }: AuthonProviderProps) {
   const [user, setUser] = useState<AuthonUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeOrganization, setActiveOrganization] = useState<AuthonOrganization | null>(null);
   const clientRef = useRef<Authon | null>(null);
 
   useEffect(() => {
@@ -60,6 +63,7 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
   const signOut = useCallback(async () => {
     await clientRef.current?.signOut();
     setUser(null);
+    setActiveOrganization(null);
   }, []);
 
   const openSignIn = useCallback(async () => {
@@ -79,13 +83,15 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
       isSignedIn: !!user,
       isLoading,
       user,
+      activeOrganization,
+      setActiveOrganization,
       signOut,
       openSignIn,
       openSignUp,
       getToken,
       client: clientRef.current,
     }),
-    [user, isLoading, signOut, openSignIn, openSignUp, getToken],
+    [user, isLoading, activeOrganization, signOut, openSignIn, openSignUp, getToken],
   );
 
   return <AuthonContext.Provider value={value}>{children}</AuthonContext.Provider>;
