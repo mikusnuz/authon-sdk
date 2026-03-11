@@ -20,6 +20,8 @@ export type {
   AuthonUser,
   SignInParams,
   SignUpParams,
+  StartOAuthOptions,
+  OAuthFlowMode,
   AuthonEventType,
   AuthonEvents,
   BrandingConfig,

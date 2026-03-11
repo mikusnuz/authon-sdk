@@ -12,6 +12,7 @@ import type {
   AuthonUser,
   SignInParams,
   SignUpParams,
+  StartOAuthOptions,
   TokenPair,
   ApiAuthResponse,
   AuthonEventType,
@@ -26,11 +27,9 @@ type TokenStorage = {
   removeItem(key: string): Promise<void>;
 };
 
-type OAuthFlowMode = 'popup' | 'redirect' | 'auto';
-
 interface ProvidersResponse {
   providers: OAuthProviderType[];
-  providerConfigs?: Partial<Record<OAuthProviderType, { oauthFlow?: OAuthFlowMode }>>;
+  providerConfigs?: Partial<Record<OAuthProviderType, { oauthFlow?: StartOAuthOptions['flow'] }>>;
 }
 
 const STORAGE_KEY = 'authon-tokens';
@@ -201,9 +200,18 @@ export class AuthonMobileClient {
 
   async getOAuthUrl(
     provider: string,
-    redirectUri: string,
+    options?: string | StartOAuthOptions,
   ): Promise<{ url: string; state: string }> {
-    const params = new URLSearchParams({ redirectUri, flow: 'redirect' });
+    const normalized =
+      typeof options === 'string'
+        ? { redirectUri: options }
+        : (options ?? {});
+    const redirectUri = normalized.redirectUri || `${this.apiUrl}/v1/auth/oauth/redirect`;
+    const flow = normalized.flow || 'redirect';
+    const params = new URLSearchParams({ redirectUri, flow });
+    if (normalized.returnTo) {
+      params.set('returnTo', normalized.returnTo);
+    }
     return (await this.request(
       'GET',
       `/v1/auth/oauth/${provider}/url?${params.toString()}`,

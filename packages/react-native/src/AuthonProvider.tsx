@@ -7,6 +7,7 @@ import type {
   AuthonUser,
   SignInParams,
   SignUpParams,
+  StartOAuthOptions,
   AuthonEventType,
   AuthonEvents,
 } from './types';
@@ -22,7 +23,10 @@ export interface AuthonContextValue extends AuthState {
   /** Branding config (fetched from API) */
   branding: BrandingConfig | null;
   /** Start OAuth flow — returns { url, state }. Open url in browser, then call completeOAuth(state) */
-  startOAuth: (provider: OAuthProviderType, redirectUri?: string) => Promise<{ url: string; state: string }>;
+  startOAuth: (
+    provider: OAuthProviderType,
+    options?: string | StartOAuthOptions,
+  ) => Promise<{ url: string; state: string }>;
   /** Poll for OAuth result after user completes browser flow */
   completeOAuth: (state: string) => Promise<void>;
   /** Subscribe to auth events */
@@ -154,9 +158,8 @@ export function AuthonProvider({ children, storage, ...config }: AuthonProviderP
   }, [client]);
 
   const startOAuth = useCallback(
-    async (provider: OAuthProviderType, redirectUri?: string) => {
-      const uri = redirectUri || `${client.getApiUrl()}/v1/auth/oauth/redirect`;
-      return client.getOAuthUrl(provider, uri);
+    async (provider: OAuthProviderType, options?: string | StartOAuthOptions) => {
+      return client.getOAuthUrl(provider, options);
     },
     [client],
   );

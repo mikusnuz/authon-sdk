@@ -34,6 +34,14 @@ export interface SignUpParams {
   displayName?: string;
 }
 
+export type OAuthFlowMode = 'popup' | 'redirect' | 'auto';
+
+export interface StartOAuthOptions {
+  redirectUri?: string;
+  returnTo?: string;
+  flow?: OAuthFlowMode;
+}
+
 export type AuthonEventType = 'signedIn' | 'signedOut' | 'error' | 'tokenRefreshed';
 
 export interface AuthonEvents {
