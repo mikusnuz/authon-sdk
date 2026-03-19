@@ -1,6 +1,9 @@
-# authon (Python)
+# authon
 
-Official Python SDK for [Authon](https://authon.dev) — verify tokens, manage users, and integrate with Django, Flask, and FastAPI.
+> Python server SDK for token verification, user management, and webhooks — self-hosted Clerk alternative, Auth0 alternative
+
+[![PyPI version](https://img.shields.io/pypi/v/authon?color=6d28d9)](https://pypi.org/project/authon/)
+[![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 ## Install
 
@@ -8,19 +11,16 @@ Official Python SDK for [Authon](https://authon.dev) — verify tokens, manage u
 pip install authon
 ```
 
-Requires Python >= 3.8. Uses `httpx` for HTTP requests.
-
 ## Quick Start
 
-### Basic Client
-
 ```python
+# app.py — complete working example
 from authon import AuthonBackend
 
-authon = AuthonBackend("sk_live_...")
+authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
 
 # Verify a token
-user = authon.verify_token("eyJ...")
+user = authon.verify_token("eyJhbGci...")
 print(user.id, user.email)
 
 # List users
@@ -30,34 +30,25 @@ for u in result.data:
 
 # Create a user
 new_user = authon.users.create(
-    email="user@example.com",
+    email="alice@example.com",
     password="securePassword",
-    display_name="New User",
+    display_name="Alice",
 )
-
-# Update a user
-authon.users.update("user_abc123", display_name="Updated Name")
-
-# Ban / unban
-authon.users.ban("user_abc123", reason="Spam")
-authon.users.unban("user_abc123")
-
-# Delete a user
-authon.users.delete("user_abc123")
 ```
 
-### Async Client
+## Common Tasks
+
+### Verify a Token
 
 ```python
-from authon import AsyncAuthonBackend
+from authon import AuthonBackend
 
-authon = AsyncAuthonBackend("sk_live_...")
-
-user = await authon.verify_token("eyJ...")
-result = await authon.users.list(page=1, limit=10)
+authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
+user = authon.verify_token(access_token)
+# user.id, user.email, user.display_name, user.avatar_url, ...
 ```
 
-### FastAPI
+### Protect a FastAPI Route
 
 ```python
 from fastapi import FastAPI, Depends, Header
@@ -65,7 +56,7 @@ from authon.middleware.fastapi import AuthonDependency
 from authon.types import AuthonUser
 
 app = FastAPI()
-authon_dep = AuthonDependency("sk_live_...")
+authon_dep = AuthonDependency("sk_live_YOUR_SECRET_KEY")
 
 @app.get("/api/profile")
 async def profile(
@@ -75,14 +66,14 @@ async def profile(
     return {"id": user.id, "email": user.email}
 ```
 
-### Django
+### Protect a Django View
 
 ```python
 from django.http import JsonResponse
 from authon import AuthonBackend
 from authon.middleware.django import authon_login_required
 
-authon = AuthonBackend("sk_live_...")
+authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
 
 @authon_login_required(authon)
 def profile(request):
@@ -90,7 +81,7 @@ def profile(request):
     return JsonResponse({"id": user.id, "email": user.email})
 ```
 
-### Flask
+### Protect a Flask Route
 
 ```python
 from flask import Flask, g, jsonify
@@ -98,7 +89,7 @@ from authon import AuthonBackend
 from authon.middleware.flask import flask_authon_required
 
 app = Flask(__name__)
-authon = AuthonBackend("sk_live_...")
+authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
 
 @app.route("/api/profile")
 @flask_authon_required(authon)
@@ -107,7 +98,26 @@ def profile():
     return jsonify({"id": user.id, "email": user.email})
 ```
 
-### Webhook Verification
+### Manage Users
+
+```python
+authon = AuthonBackend("sk_live_...")
+
+# Create
+user = authon.users.create(email="user@example.com", password="pass123")
+
+# Update
+user = authon.users.update("usr_abc", display_name="New Name")
+
+# Ban / Unban
+authon.users.ban("usr_abc", reason="Spam")
+authon.users.unban("usr_abc")
+
+# Delete
+authon.users.delete("usr_abc")
+```
+
+### Verify Webhooks
 
 ```python
 from authon import verify_webhook
@@ -115,44 +125,64 @@ from authon import verify_webhook
 event = verify_webhook(
     payload=request_body,
     signature=request.headers["x-authon-signature"],
-    secret="whsec_...",
+    secret="whsec_YOUR_WEBHOOK_SECRET",
 )
 print(event.type)  # "user.created"
 ```
 
+### Async Client
+
+```python
+from authon import AsyncAuthonBackend
+
+authon = AsyncAuthonBackend("sk_live_...")
+user = await authon.verify_token("eyJ...")
+result = await authon.users.list(page=1, limit=10)
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
+| `AUTHON_WEBHOOK_SECRET` | For webhooks | Webhook signing secret |
+
 ## API Reference
 
-### `AuthonBackend(secret_key, api_url?)`
+### AuthonBackend / AsyncAuthonBackend
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `verify_token(token)` | `AuthonUser` | Verify an access token |
-| `users.list(page?, limit?, search?)` | `ListResult` | List users |
-| `users.get(user_id)` | `AuthonUser` | Get a user |
-| `users.create(email, password?, display_name?)` | `AuthonUser` | Create a user |
-| `users.update(user_id, **kwargs)` | `AuthonUser` | Update a user |
-| `users.delete(user_id)` | `None` | Delete a user |
-| `users.ban(user_id, reason?)` | `AuthonUser` | Ban a user |
-| `users.unban(user_id)` | `AuthonUser` | Unban a user |
-| `webhooks.verify(payload, signature, secret)` | `WebhookEvent` | Verify webhook signature |
+| Method | Returns |
+|--------|---------|
+| `verify_token(token)` | `AuthonUser` |
+| `users.list(page?, limit?, search?)` | `ListResult` |
+| `users.get(user_id)` | `AuthonUser` |
+| `users.create(email, password?, display_name?)` | `AuthonUser` |
+| `users.update(user_id, **kwargs)` | `AuthonUser` |
+| `users.delete(user_id)` | `None` |
+| `users.ban(user_id, reason?)` | `AuthonUser` |
+| `users.unban(user_id)` | `AuthonUser` |
+| `webhooks.verify(payload, signature, secret)` | `WebhookEvent` |
 
-### `AsyncAuthonBackend`
+### Middleware
 
-Same API as `AuthonBackend`, but all methods are `async`.
+| Module | Usage |
+|--------|-------|
+| `authon.middleware.fastapi` | `AuthonDependency` -- FastAPI `Depends()` |
+| `authon.middleware.django` | `@authon_login_required(authon)` decorator |
+| `authon.middleware.flask` | `@flask_authon_required(authon)` decorator |
 
-### Types
+## Comparison
 
-| Type | Fields |
-|------|--------|
-| `AuthonUser` | `id`, `email`, `display_name`, `avatar_url`, `email_verified`, `banned`, `created_at` |
-| `AuthonSession` | `id`, `user_id`, `ip_address`, `expires_at` |
-| `WebhookEvent` | `id`, `type`, `project_id`, `timestamp`, `data` |
-| `ListResult` | `data`, `total`, `page`, `limit` |
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Auth0 |
+|---------|--------|-------|-------|
+| Self-hosted | Yes | No | No |
+| Pricing | Free | $25/mo+ | $23/mo+ |
+| Python SDK | Yes | Yes | Yes |
+| Django/Flask/FastAPI | Yes | No | Partial |
+| Async support | Yes | No | Yes |
+| Webhook verification | Yes | Yes | Yes |
 
 ## License
 
-[MIT](../LICENSE)
+MIT

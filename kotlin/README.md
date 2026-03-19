@@ -1,10 +1,10 @@
 # authon-kotlin
 
-Official Kotlin/Android SDK for [Authon](https://authon.dev) — authenticate users in Android apps.
+> Kotlin/JVM server SDK for token verification and user management — self-hosted Clerk alternative, Auth0 alternative
+
+[![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 ## Install
-
-### Gradle
 
 ```kotlin
 // build.gradle.kts
@@ -24,131 +24,138 @@ dependencyResolutionManagement {
 
 ## Quick Start
 
-### Initialize
+```kotlin
+// Main.kt — complete working example
+import dev.authon.sdk.AuthonBackend
+import dev.authon.sdk.CreateUserParams
+
+fun main() {
+    val authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
+
+    // Verify a token
+    val user = authon.verifyToken("eyJhbGci...")
+    println("${user.id} ${user.email}")
+
+    // List users
+    val result = authon.users.list()
+    result.data.forEach { println(it.email) }
+
+    // Create a user
+    val newUser = authon.users.create(CreateUserParams(
+        email = "alice@example.com",
+        password = "securePassword",
+    ))
+}
+```
+
+## Common Tasks
+
+### Verify a Token
 
 ```kotlin
-import dev.authon.sdk.AuthonClient
+val authon = AuthonBackend("sk_live_YOUR_SECRET_KEY")
+val user = authon.verifyToken(accessToken)
+// user.id, user.email, user.displayName, ...
+```
 
-val authon = AuthonClient(
-    publishableKey = "pk_live_...",
-    context = applicationContext,
+### Protect a Spring Boot Route
+
+```kotlin
+import dev.authon.sdk.AuthonBackend
+import org.springframework.web.bind.annotation.*
+import jakarta.servlet.http.HttpServletRequest
+
+val authon = AuthonBackend("sk_live_...")
+
+@RestController
+class ProfileController {
+    @GetMapping("/api/profile")
+    fun profile(request: HttpServletRequest): Map<String, Any?> {
+        val token = request.getHeader("Authorization")?.removePrefix("Bearer ")
+            ?: throw RuntimeException("Missing token")
+        val user = authon.verifyToken(token)
+        return mapOf("id" to user.id, "email" to user.email)
+    }
+}
+```
+
+### Manage Users
+
+```kotlin
+val authon = AuthonBackend("sk_live_...")
+
+// List
+val result = authon.users.list(ListOptions(page = 1, perPage = 20))
+
+// Get
+val user = authon.users.get("user_abc123")
+
+// Create
+val user = authon.users.create(CreateUserParams(
+    email = "user@example.com",
+    password = "password123",
+))
+
+// Update
+val updated = authon.users.update("user_abc123", UpdateUserParams(
+    firstName = "Alice",
+))
+
+// Ban / Unban / Delete
+authon.users.ban("user_abc123")
+authon.users.unban("user_abc123")
+authon.users.delete("user_abc123")
+```
+
+### Verify Webhooks
+
+```kotlin
+val data = authon.webhooks.verify(
+    payload = requestBody,
+    signature = request.getHeader("X-Authon-Signature"),
+    secret = "whsec_YOUR_WEBHOOK_SECRET",
 )
+println(data["type"]) // "user.created"
 ```
 
-### Sign In
+### Custom API URL
 
 ```kotlin
-// OAuth (opens Custom Tab)
-val user = authon.signInWithOAuth(OAuthProvider.GOOGLE, activity)
-Log.d("Authon", "Signed in: ${user.email}")
-
-// Email/password
-val user = authon.signInWithEmail("user@example.com", "password")
-
-// Google One Tap
-val user = authon.signInWithGoogleOneTap(activity)
+val authon = AuthonBackend("sk_live_...", apiUrl = "https://custom.api.url")
 ```
 
-### Auth State
+## Environment Variables
 
-```kotlin
-// Check current user
-val user = authon.currentUser
-if (user != null) {
-    Log.d("Authon", "Signed in as ${user.displayName}")
-}
-
-// Observe state (Flow)
-lifecycleScope.launch {
-    authon.authState.collect { state ->
-        when {
-            state.isLoading -> showLoading()
-            state.user != null -> showProfile(state.user)
-            else -> showSignIn()
-        }
-    }
-}
-
-// Get access token
-val token = authon.getToken()
-
-// Sign out
-authon.signOut()
-```
-
-### Jetpack Compose
-
-```kotlin
-import dev.authon.sdk.compose.rememberAuthonState
-
-@Composable
-fun App() {
-    val auth = rememberAuthonState(publishableKey = "pk_live_...")
-
-    when {
-        auth.isLoading -> CircularProgressIndicator()
-        auth.isSignedIn -> {
-            Column {
-                Text("Welcome, ${auth.user?.displayName}")
-                Button(onClick = { auth.signOut() }) {
-                    Text("Sign Out")
-                }
-            }
-        }
-        else -> {
-            Column {
-                Button(onClick = { auth.signInWithOAuth(OAuthProvider.GOOGLE) }) {
-                    Text("Sign in with Google")
-                }
-            }
-        }
-    }
-}
-```
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
 
 ## API Reference
 
-### `AuthonClient`
+| Method | Returns |
+|--------|---------|
+| `AuthonBackend(secretKey, apiUrl?)` | Constructor |
+| `verifyToken(token)` | `User` |
+| `users.list(options?)` | `ListResult<User>` |
+| `users.get(userId)` | `User` |
+| `users.create(params)` | `User` |
+| `users.update(userId, params)` | `User` |
+| `users.delete(userId)` | `Unit` |
+| `users.ban(userId)` | `User` |
+| `users.unban(userId)` | `User` |
+| `webhooks.verify(payload, signature, secret)` | `Map<String, Any>` |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `signInWithOAuth(provider, activity)` | `suspend AuthonUser` | OAuth sign-in via Custom Tab |
-| `signInWithEmail(email, password)` | `suspend AuthonUser` | Email sign-in |
-| `signInWithGoogleOneTap(activity)` | `suspend AuthonUser` | Google One Tap sign-in |
-| `signOut()` | `suspend Unit` | Sign out |
-| `getToken()` | `suspend String?` | Get current access token |
-| `currentUser` | `AuthonUser?` | Current user (synchronous) |
-| `authState` | `StateFlow<AuthState>` | Observable auth state |
+## Comparison
 
-### `AuthonUser`
-
-| Property | Type |
-|----------|------|
-| `id` | `String` |
-| `email` | `String?` |
-| `displayName` | `String?` |
-| `avatarUrl` | `String?` |
-| `emailVerified` | `Boolean` |
-| `createdAt` | `Instant` |
-
-### `OAuthProvider`
-
-`GOOGLE`, `APPLE`, `KAKAO`, `NAVER`, `GITHUB`, `DISCORD`, `FACEBOOK`, `X`, `LINE`, `MICROSOFT`
-
-## Token Storage
-
-Tokens are stored using Android `EncryptedSharedPreferences` (AndroidX Security), encrypted with AES256-GCM.
-
-## Native App Notes
-
-- The native Kotlin SDK manages Chrome Custom Tabs internally. You do not need the Expo / React Native `returnTo` bridge flow when you use this SDK directly.
-- If your app also maintains its own backend session, exchange `authon.getToken()` with your backend immediately after sign-in.
-- If you are building an Expo or React Native app, follow the React Native SDK guide instead of the Kotlin flow.
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Firebase Auth |
+|---------|--------|-------|---------------|
+| Self-hosted | Yes | No | No |
+| Pricing | Free | $25/mo+ | Free tier |
+| Kotlin SDK | Yes | No | Yes |
+| Spring Boot support | Yes | No | Community |
+| Webhook verification | Yes | Yes | Via Cloud Functions |
 
 ## License
 
-[MIT](../LICENSE)
+MIT

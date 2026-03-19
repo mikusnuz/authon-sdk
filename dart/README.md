@@ -1,6 +1,9 @@
-# authon (Dart/Flutter)
+# authon
 
-Official Dart SDK for [Authon](https://authon.dev) — authenticate users in Flutter apps with OAuth, email/password, and session management.
+> Dart/Flutter server SDK for token verification and user management — self-hosted Clerk alternative, Auth0 alternative
+
+[![pub version](https://img.shields.io/pub/v/authon?color=6d28d9)](https://pub.dev/packages/authon)
+[![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 ## Install
 
@@ -16,128 +19,124 @@ dart pub get
 
 ## Quick Start
 
-### Flutter Setup
-
 ```dart
-import 'package:authon/authon.dart';
-import 'package:flutter/material.dart';
-
-void main() {
-  runApp(
-    AuthonProvider(
-      publishableKey: 'pk_live_...',
-      child: const MyApp(),
-    ),
-  );
-}
-```
-
-### Sign In
-
-```dart
+// main.dart — complete working example
 import 'package:authon/authon.dart';
 
-class SignInScreen extends StatelessWidget {
-  const SignInScreen({super.key});
+void main() async {
+  final authon = AuthonBackend(secretKey: 'sk_live_YOUR_SECRET_KEY');
 
-  @override
-  Widget build(BuildContext context) {
-    final authon = Authon.of(context);
+  // Verify a token
+  final user = await authon.verifyToken('eyJhbGci...');
+  print('${user.id} ${user.email}');
 
-    return Column(
-      children: [
-        ElevatedButton(
-          onPressed: () => authon.signInWithOAuth(OAuthProvider.google),
-          child: const Text('Sign in with Google'),
-        ),
-        ElevatedButton(
-          onPressed: () => authon.signInWithOAuth(OAuthProvider.apple),
-          child: const Text('Sign in with Apple'),
-        ),
-        ElevatedButton(
-          onPressed: () async {
-            final user = await authon.signInWithEmail(
-              'user@example.com',
-              'password',
-            );
-            print(user.displayName);
-          },
-          child: const Text('Sign in with Email'),
-        ),
-      ],
-    );
+  // List users
+  final result = await authon.users.list();
+  for (final u in result.data) {
+    print(u.email);
   }
+
+  // Create a user
+  final newUser = await authon.users.create(CreateUserParams(
+    email: 'alice@example.com',
+    password: 'securePassword',
+  ));
+
+  authon.close();
 }
 ```
 
-### Watch Auth State
+## Common Tasks
+
+### Verify a Token
 
 ```dart
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return AuthonBuilder(
-      builder: (context, state) {
-        if (state.isLoading) return const CircularProgressIndicator();
-        if (!state.isSignedIn) return const SignInScreen();
-
-        return Column(
-          children: [
-            Text('Welcome, ${state.user!.displayName}'),
-            ElevatedButton(
-              onPressed: () => Authon.of(context).signOut(),
-              child: const Text('Sign Out'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
+final authon = AuthonBackend(secretKey: 'sk_live_...');
+final user = await authon.verifyToken(accessToken);
+// user.id, user.email, user.displayName, ...
 ```
+
+### Manage Users
+
+```dart
+final authon = AuthonBackend(secretKey: 'sk_live_...');
+
+// List
+final result = await authon.users.list(options: ListOptions(page: 1, perPage: 20));
+
+// Get
+final user = await authon.users.get('user_abc123');
+
+// Create
+final user = await authon.users.create(CreateUserParams(
+  email: 'user@example.com',
+  password: 'password123',
+));
+
+// Update
+final updated = await authon.users.update('user_abc123', UpdateUserParams(
+  firstName: 'Alice',
+));
+
+// Ban / Unban / Delete
+await authon.users.ban('user_abc123');
+await authon.users.unban('user_abc123');
+await authon.users.delete('user_abc123');
+```
+
+### Verify Webhooks
+
+```dart
+final event = authon.webhooks.verify(
+  requestBody,
+  request.headers['x-authon-signature']!,
+  'whsec_YOUR_WEBHOOK_SECRET',
+);
+print(event['type']); // "user.created"
+```
+
+### Custom API URL
+
+```dart
+final authon = AuthonBackend(
+  secretKey: 'sk_live_...',
+  apiUrl: 'https://custom.api.url',
+);
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
 
 ## API Reference
 
-### `AuthonProvider`
+| Method | Returns |
+|--------|---------|
+| `AuthonBackend(secretKey:, apiUrl?)` | Constructor |
+| `verifyToken(token)` | `Future<User>` |
+| `users.list(options?)` | `Future<ListResult<User>>` |
+| `users.get(userId)` | `Future<User>` |
+| `users.create(params)` | `Future<User>` |
+| `users.update(userId, params)` | `Future<User>` |
+| `users.delete(userId)` | `Future<void>` |
+| `users.ban(userId)` | `Future<User>` |
+| `users.unban(userId)` | `Future<User>` |
+| `webhooks.verify(payload, signature, secret)` | `Map<String, dynamic>` |
+| `close()` | Closes HTTP client |
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `publishableKey` | `String` | Your publishable API key |
-| `apiUrl` | `String?` | Custom API URL |
-| `child` | `Widget` | Child widget tree |
+## Comparison
 
-### `Authon.of(context)`
-
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `signInWithOAuth(provider)` | `Future<AuthonUser>` | OAuth sign-in |
-| `signInWithEmail(email, password)` | `Future<AuthonUser>` | Email sign-in |
-| `signOut()` | `Future<void>` | Sign out |
-| `user` | `AuthonUser?` | Current user |
-| `isSignedIn` | `bool` | Whether signed in |
-| `getToken()` | `Future<String?>` | Get current access token |
-
-### `AuthonBuilder`
-
-Reactive widget that rebuilds when auth state changes.
-
-### `AuthonUser`
-
-| Property | Type |
-|----------|------|
-| `id` | `String` |
-| `email` | `String?` |
-| `displayName` | `String?` |
-| `avatarUrl` | `String?` |
-| `emailVerified` | `bool` |
-| `createdAt` | `DateTime` |
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Firebase Auth |
+|---------|--------|-------|---------------|
+| Self-hosted | Yes | No | No |
+| Pricing | Free | $25/mo+ | Free tier |
+| Dart SDK | Yes | No | Yes |
+| Server-side verification | Yes | Yes | Yes |
+| Webhook verification | Yes | Yes | Via Cloud Functions |
 
 ## License
 
-[MIT](../LICENSE)
+MIT

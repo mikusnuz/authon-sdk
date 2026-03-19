@@ -2,41 +2,33 @@
 
 # @authon/shared
 
+> Shared types and constants for all Authon SDKs — self-hosted Clerk alternative
+
 [![npm version](https://img.shields.io/npm/v/@authon/shared?color=6d28d9)](https://www.npmjs.com/package/@authon/shared)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
-Shared types and constants for [Authon](https://authon.dev) SDK packages. This package is consumed internally by `@authon/js`, `@authon/react`, `@authon/node`, and all other Authon SDKs.
+Internal package consumed by `@authon/js`, `@authon/react`, `@authon/node`, and all other Authon SDKs. Not intended for direct application use -- install the appropriate framework SDK instead.
 
-> **Note:** This package is not intended for direct use in application code. Install the appropriate framework SDK instead (e.g., `@authon/js`, `@authon/react`, `@authon/node`).
-
-## Installation
+## Install
 
 ```bash
 npm install @authon/shared
-# or
-pnpm add @authon/shared
 ```
 
-## Usage
+## Quick Start
 
 ```ts
 import type {
   AuthonUser,
-  AuthonSession,
   AuthTokens,
-  BrandingConfig,
-  SessionConfig,
-  WebhookEvent,
-  MfaSetupResponse,
-  MfaStatus,
+  OAuthProviderType,
   PasskeyCredential,
   Web3Wallet,
-  Web3NonceResponse,
+  MfaSetupResponse,
   SessionInfo,
-  Web3Chain,
-  Web3WalletType,
-  OAuthProviderType,
-  WebhookEventType,
+  BrandingConfig,
+  WebhookEvent,
+  AuthonOrganization,
 } from '@authon/shared';
 
 import {
@@ -47,331 +39,88 @@ import {
   API_KEY_PREFIXES,
   DEFAULT_BRANDING,
   DEFAULT_SESSION_CONFIG,
+  AUDIT_EVENTS,
 } from '@authon/shared';
 ```
 
-## Exported Types
+## Common Tasks
 
-### Core
-
-#### `AuthonUser`
-
-The authenticated user object.
+### Import User Type
 
 ```ts
-interface AuthonUser {
-  id: string;
-  projectId: string;
-  email: string | null;
-  displayName: string | null;
-  avatarUrl: string | null;
-  phone: string | null;
-  emailVerified: boolean;
-  phoneVerified: boolean;
-  isBanned: boolean;
-  publicMetadata: Record<string, unknown> | null;
-  lastSignInAt: string | null;
-  signInCount: number;
-  createdAt: string;
-  updatedAt: string;
+import type { AuthonUser } from '@authon/shared';
+
+function greet(user: AuthonUser) {
+  return `Hello, ${user.displayName ?? user.email}`;
 }
 ```
 
-#### `AuthonSession`
-
-An active user session record (from the server SDK).
+### Get Provider Colors for Custom Buttons
 
 ```ts
-interface AuthonSession {
-  id: string;
-  userId: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  deviceName: string | null;
-  lastActiveAt: string | null;
-  createdAt: string;
-  expiresAt: string;
+import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES } from '@authon/shared';
+
+const google = PROVIDER_COLORS.google;
+// { bg: '#ffffff', text: '#1f1f1f' }
+
+const label = PROVIDER_DISPLAY_NAMES.google;
+// 'Google'
+```
+
+### Check API Key Type
+
+```ts
+import { API_KEY_PREFIXES } from '@authon/shared';
+
+function isSecretKey(key: string) {
+  return key.startsWith(API_KEY_PREFIXES.SECRET_LIVE) || key.startsWith(API_KEY_PREFIXES.SECRET_TEST);
 }
 ```
 
-#### `AuthTokens`
-
-Token pair returned after a successful sign-in.
-
-```ts
-interface AuthTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number; // seconds
-  user: AuthonUser;
-}
-```
-
-#### `SessionInfo`
-
-Simplified session info returned to clients (used in `listSessions()`).
-
-```ts
-interface SessionInfo {
-  id: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  createdAt: string;
-  lastActiveAt: string | null;
-}
-```
-
-### Branding & Config
-
-#### `BrandingConfig`
-
-Visual customization options for the Authon modal.
-
-```ts
-interface BrandingConfig {
-  logoDataUrl?: string;
-  brandName?: string;
-  primaryColorStart?: string;
-  primaryColorEnd?: string;
-  lightBg?: string;
-  lightText?: string;
-  darkBg?: string;
-  darkText?: string;
-  borderRadius?: number;
-  providerOrder?: string[];
-  hiddenProviders?: string[];
-  showEmailPassword?: boolean;
-  showDivider?: boolean;
-  termsUrl?: string;
-  privacyUrl?: string;
-  customCss?: string;
-  locale?: string;
-  showSecuredBy?: boolean;
-}
-```
-
-#### `SessionConfig`
-
-Session lifetime and concurrency settings.
-
-```ts
-interface SessionConfig {
-  accessTokenTtl?: number;   // seconds, default 900 (15 min)
-  refreshTokenTtl?: number;  // seconds, default 604800 (7 days)
-  maxSessions?: number;      // default 5
-  singleSession?: boolean;   // default false
-}
-```
-
-### MFA
-
-#### `MfaSetupResponse`
-
-Returned by `setupMfa()`.
-
-```ts
-interface MfaSetupResponse {
-  secret: string;      // TOTP secret
-  qrCodeUri: string;   // otpauth:// URI
-  backupCodes: string[]; // one-time recovery codes
-}
-```
-
-#### `MfaStatus`
-
-Returned by `getMfaStatus()`.
-
-```ts
-interface MfaStatus {
-  enabled: boolean;
-  backupCodesRemaining: number;
-}
-```
-
-### Passkeys
-
-#### `PasskeyCredential`
-
-A registered WebAuthn passkey.
-
-```ts
-interface PasskeyCredential {
-  id: string;
-  name: string | null;
-  createdAt: string;
-  lastUsedAt: string | null;
-}
-```
-
-### Web3
-
-#### `Web3Chain`
-
-```ts
-type Web3Chain = 'evm' | 'solana';
-```
-
-#### `Web3WalletType`
-
-```ts
-type Web3WalletType =
-  | 'metamask'
-  | 'pexus'
-  | 'walletconnect'
-  | 'coinbase'
-  | 'phantom'
-  | 'trust'
-  | 'other';
-```
-
-#### `Web3Wallet`
-
-A linked Web3 wallet.
-
-```ts
-interface Web3Wallet {
-  id: string;
-  address: string;
-  chain: Web3Chain;
-  walletType: Web3WalletType;
-  chainId: number | null;
-  createdAt: string;
-}
-```
-
-#### `Web3NonceResponse`
-
-Returned by `web3GetNonce()`.
-
-```ts
-interface Web3NonceResponse {
-  message: string; // full message to sign
-  nonce: string;   // raw nonce embedded in message
-}
-```
-
-### Webhooks
-
-#### `WebhookEvent`
-
-Incoming webhook payload from Authon.
-
-```ts
-interface WebhookEvent {
-  id: string;
-  type: string;
-  projectId: string;
-  timestamp: string;
-  data: Record<string, unknown>;
-}
-```
-
-#### `WebhookEventType`
-
-```ts
-type WebhookEventType =
-  | 'user.created'
-  | 'user.updated'
-  | 'user.deleted'
-  | 'user.banned'
-  | 'user.unbanned'
-  | 'session.created'
-  | 'session.ended'
-  | 'session.revoked'
-  | 'provider.linked'
-  | 'provider.unlinked';
-```
-
-### OAuth
-
-#### `OAuthProviderType`
-
-```ts
-type OAuthProviderType =
-  | 'google'
-  | 'apple'
-  | 'kakao'
-  | 'naver'
-  | 'facebook'
-  | 'github'
-  | 'discord'
-  | 'x'
-  | 'line'
-  | 'microsoft';
-```
-
-## Exported Constants
-
-### `OAUTH_PROVIDERS`
-
-Readonly array of all supported OAuth provider identifiers.
-
-```ts
-const OAUTH_PROVIDERS: readonly OAuthProviderType[];
-// ['google', 'apple', 'kakao', 'naver', 'facebook', 'github', 'discord', 'x', 'line', 'microsoft']
-```
-
-### `PROVIDER_DISPLAY_NAMES`
-
-Human-readable names for each provider.
-
-```ts
-const PROVIDER_DISPLAY_NAMES: Record<OAuthProviderType, string>;
-// { google: 'Google', apple: 'Apple', github: 'GitHub', discord: 'Discord', ... }
-```
-
-### `PROVIDER_COLORS`
-
-Official brand colors (background and text) for each provider button.
-
-```ts
-const PROVIDER_COLORS: Record<OAuthProviderType, { bg: string; text: string }>;
-// { google: { bg: '#ffffff', text: '#1f1f1f' }, kakao: { bg: '#FEE500', text: '#191919' }, ... }
-```
-
-### `WEBHOOK_EVENTS`
-
-Readonly array of all webhook event type strings.
-
-```ts
-const WEBHOOK_EVENTS: readonly WebhookEventType[];
-```
-
-### `API_KEY_PREFIXES`
-
-Prefix strings for Authon API keys.
-
-```ts
-const API_KEY_PREFIXES: {
-  PUBLISHABLE_LIVE: 'pk_live_';
-  PUBLISHABLE_TEST: 'pk_test_';
-  SECRET_LIVE: 'sk_live_';
-  SECRET_TEST: 'sk_test_';
-};
-```
-
-### `DEFAULT_BRANDING`
-
-Default branding values applied when no project customization is set.
-
-```ts
-const DEFAULT_BRANDING: BrandingConfig;
-// { primaryColorStart: '#7c3aed', primaryColorEnd: '#4f46e5', borderRadius: 12, ... }
-```
-
-### `DEFAULT_SESSION_CONFIG`
-
-Default session lifetime and concurrency settings.
-
-```ts
-const DEFAULT_SESSION_CONFIG: SessionConfig;
-// { accessTokenTtl: 900, refreshTokenTtl: 604800, maxSessions: 5, singleSession: false }
-```
-
-## Documentation
-
-Full documentation: [docs.authon.dev](https://docs.authon.dev)
+## Environment Variables
+
+Not applicable -- this is a types-only package. See the framework-specific SDK for environment variable setup.
+
+## API Reference
+
+### Types
+
+| Type | Description |
+|------|-------------|
+| `AuthonUser` | User object (id, email, displayName, avatarUrl, metadata, etc.) |
+| `AuthTokens` | `{ accessToken, refreshToken, expiresIn, user }` |
+| `OAuthProviderType` | `'google' \| 'apple' \| 'github' \| 'discord' \| ... (10 providers)` |
+| `PasskeyCredential` | `{ id, name, createdAt, lastUsedAt }` |
+| `Web3Wallet` | `{ id, address, chain, walletType, chainId }` |
+| `Web3Chain` | `'evm' \| 'solana'` |
+| `Web3WalletType` | `'metamask' \| 'phantom' \| 'walletconnect' \| ...` |
+| `MfaSetupResponse` | `{ secret, qrCodeUri, backupCodes }` |
+| `MfaStatus` | `{ enabled, backupCodesRemaining }` |
+| `SessionInfo` | `{ id, ipAddress, userAgent, createdAt, lastActiveAt }` |
+| `BrandingConfig` | Visual customization for the auth modal |
+| `WebhookEvent` | `{ id, type, projectId, timestamp, data }` |
+| `AuthonOrganization` | Organization with id, name, slug, members |
+
+### Constants
+
+| Constant | Value |
+|----------|-------|
+| `OAUTH_PROVIDERS` | `['google', 'apple', 'kakao', 'naver', 'facebook', 'github', 'discord', 'x', 'line', 'microsoft']` |
+| `WEBHOOK_EVENTS` | `['user.created', 'user.updated', 'user.deleted', ...]` |
+| `API_KEY_PREFIXES` | `{ PUBLISHABLE_LIVE: 'pk_live_', SECRET_LIVE: 'sk_live_', ... }` |
+| `DEFAULT_BRANDING` | Default modal theme colors and settings |
+| `DEFAULT_SESSION_CONFIG` | `{ accessTokenTtl: 900, refreshTokenTtl: 604800, maxSessions: 5 }` |
+| `AUDIT_EVENTS` | Audit log event type constants |
+
+## Comparison
+
+| Feature | Authon | Clerk | Auth.js |
+|---------|--------|-------|---------|
+| Self-hosted | Yes | No | Partial |
+| Pricing | Free | $25/mo+ | Free |
+| Shared types package | Yes | Yes | No |
+| OAuth providers | 10+ | 20+ | 80+ |
 
 ## License
 
-[MIT](../../LICENSE)
+MIT

@@ -1,6 +1,9 @@
 # authon-go
 
-Official Go SDK for [Authon](https://authon.dev) — token verification, user management, and net/http middleware.
+> Go server SDK for token verification, user management, and net/http middleware — self-hosted Clerk alternative, Auth0 alternative
+
+[![Go Reference](https://pkg.go.dev/badge/github.com/mikusnuz/authon-sdk/go.svg)](https://pkg.go.dev/github.com/mikusnuz/authon-sdk/go)
+[![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 ## Install
 
@@ -8,146 +11,144 @@ Official Go SDK for [Authon](https://authon.dev) — token verification, user ma
 go get github.com/mikusnuz/authon-sdk/go
 ```
 
-Requires Go >= 1.21.
-
 ## Quick Start
 
-### Token Verification
-
 ```go
+// main.go — complete working server
 package main
 
 import (
-	"fmt"
+	"encoding/json"
 	"log"
-
-	authon "github.com/mikusnuz/authon-sdk/go"
-)
-
-func main() {
-	client := authon.NewBackend("sk_live_...")
-
-	user, err := client.VerifyToken("eyJ...")
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(user.ID, user.Email)
-}
-```
-
-### HTTP Middleware
-
-```go
-package main
-
-import (
 	"net/http"
 
 	authon "github.com/mikusnuz/authon-sdk/go"
 )
 
 func main() {
-	client := authon.NewBackend("sk_live_...")
+	client := authon.NewAuthonBackend("sk_live_YOUR_SECRET_KEY")
 	mux := http.NewServeMux()
 
 	// Protected route
-	mux.Handle("/api/profile", client.Middleware(http.HandlerFunc(profileHandler)))
+	mux.Handle("/api/profile", authon.AuthMiddleware(client)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := authon.UserFromContext(r.Context())
+		json.NewEncoder(w).Encode(user)
+	})))
 
-	// Public route
-	mux.HandleFunc("/health", healthHandler)
-
+	log.Println("Listening on :8080")
 	http.ListenAndServe(":8080", mux)
 }
-
-func profileHandler(w http.ResponseWriter, r *http.Request) {
-	user := authon.UserFromContext(r.Context())
-	// user.ID, user.Email, user.DisplayName, ...
-	w.Write([]byte("Hello, " + user.DisplayName))
-}
-
-func healthHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("ok"))
-}
 ```
 
-### User Management
+## Common Tasks
+
+### Verify a Token
 
 ```go
-client := authon.NewBackend("sk_live_...")
+import authon "github.com/mikusnuz/authon-sdk/go"
 
-// List users
-result, err := client.Users.List(authon.ListOptions{Page: 1, PerPage: 20})
-
-// Get a user
-user, err := client.Users.Get("user_abc123")
-
-// Create a user
-user, err := client.Users.Create(authon.CreateUserParams{
-	Email:    "user@example.com",
-	Password: "securePassword",
-})
-
-// Update a user
-user, err := client.Users.Update("user_abc123", authon.UpdateUserParams{
-	DisplayName: authon.String("Updated Name"),
-})
-
-// Delete a user
-err := client.Users.Delete("user_abc123")
-```
-
-### Webhook Verification
-
-```go
-client := authon.NewBackend("sk_live_...")
-
-data, err := client.Webhooks.Verify(
-	[]byte(requestBody),
-	r.Header.Get("X-Authon-Signature"),
-	"whsec_...",
-)
+client := authon.NewAuthonBackend("sk_live_YOUR_SECRET_KEY")
+user, err := client.VerifyToken(ctx, accessToken)
 if err != nil {
-	http.Error(w, "Invalid signature", 400)
-	return
+    log.Fatal(err)
 }
+fmt.Println(user.ID, user.Email)
+```
+
+### Protect HTTP Routes (Middleware)
+
+```go
+client := authon.NewAuthonBackend("sk_live_...")
+mux := http.NewServeMux()
+
+mux.Handle("/api/", authon.AuthMiddleware(client)(apiHandler))
+// Unauthenticated requests get 401
+
+func handler(w http.ResponseWriter, r *http.Request) {
+    user := authon.UserFromContext(r.Context())
+    // user.ID, user.Email, user.DisplayName, ...
+}
+```
+
+### Manage Users
+
+```go
+client := authon.NewAuthonBackend("sk_live_...")
+
+// List
+result, _ := client.Users.List(ctx, &authon.ListOptions{Page: 1, PerPage: 20})
+
+// Get
+user, _ := client.Users.Get(ctx, "user_abc123")
+
+// Create
+user, _ := client.Users.Create(ctx, authon.CreateUserParams{
+    Email:    "user@example.com",
+    Password: "securePassword",
+})
+
+// Update
+user, _ := client.Users.Update(ctx, "user_abc123", authon.UpdateUserParams{
+    DisplayName: authon.String("New Name"),
+})
+
+// Ban / Unban / Delete
+client.Users.Ban(ctx, "user_abc123")
+client.Users.Unban(ctx, "user_abc123")
+client.Users.Delete(ctx, "user_abc123")
+```
+
+### Verify Webhooks
+
+```go
+data, err := client.Webhooks.Verify(
+    []byte(requestBody),
+    r.Header.Get("X-Authon-Signature"),
+    "whsec_YOUR_WEBHOOK_SECRET",
+)
 fmt.Println(data["type"]) // "user.created"
 ```
 
 ### Custom API URL
 
 ```go
-client := authon.NewBackend("sk_live_...", authon.WithAPIURL("https://custom.api.url"))
+client := authon.NewAuthonBackend("sk_live_...", authon.WithAPIURL("https://custom.api.url"))
 ```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
 
 ## API Reference
 
-### `NewBackend(secretKey string, opts ...Option) *AuthonBackend`
+| Function / Method | Returns |
+|-------------------|---------|
+| `NewAuthonBackend(key, opts...)` | `*AuthonBackend` |
+| `client.VerifyToken(ctx, token)` | `(*User, error)` |
+| `AuthMiddleware(client)` | `func(http.Handler) http.Handler` |
+| `UserFromContext(ctx)` | `*User` |
+| `client.Users.List(ctx, opts)` | `(*ListResult[User], error)` |
+| `client.Users.Get(ctx, id)` | `(*User, error)` |
+| `client.Users.Create(ctx, params)` | `(*User, error)` |
+| `client.Users.Update(ctx, id, params)` | `(*User, error)` |
+| `client.Users.Delete(ctx, id)` | `error` |
+| `client.Users.Ban(ctx, id)` | `(*User, error)` |
+| `client.Users.Unban(ctx, id)` | `(*User, error)` |
+| `client.Webhooks.Verify(payload, sig, secret)` | `(map[string]any, error)` |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `VerifyToken(token)` | `(*User, error)` | Verify an access token |
-| `Middleware(next)` | `http.Handler` | net/http middleware |
-| `Users.List(opts)` | `(*ListResult[User], error)` | List users |
-| `Users.Get(id)` | `(*User, error)` | Get a user |
-| `Users.Create(params)` | `(*User, error)` | Create a user |
-| `Users.Update(id, params)` | `(*User, error)` | Update a user |
-| `Users.Delete(id)` | `error` | Delete a user |
-| `Webhooks.Verify(payload, sig, secret)` | `(map[string]any, error)` | Verify HMAC-SHA256 signature |
+## Comparison
 
-### Types
-
-| Type | Description |
-|------|-------------|
-| `User` | User with ID, Email, DisplayName, AvatarURL, Banned, etc. |
-| `Session` | Active session with UserID, Status, ExpireAt |
-| `WebhookEvent` | Webhook payload with ID, Type, Data, Timestamp |
-| `ListResult[T]` | Paginated list: Data, TotalCount, Page, PerPage |
-| `AuthonError` | API error with StatusCode, Message, Code |
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Auth0 |
+|---------|--------|-------|-------|
+| Self-hosted | Yes | No | No |
+| Pricing | Free | $25/mo+ | $23/mo+ |
+| Go SDK | Yes | Yes | Community |
+| net/http middleware | Yes | No | No |
+| Webhook verification | Yes | Yes | Yes |
 
 ## License
 
-[MIT](../LICENSE)
+MIT

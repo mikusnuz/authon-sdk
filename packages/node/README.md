@@ -2,7 +2,10 @@
 
 # @authon/node
 
-Server-side SDK for [Authon](https://authon.dev). Token verification, user management, session management, and webhook verification.
+> Node.js server SDK for token verification, user management, and webhooks — self-hosted Clerk alternative, Auth0 alternative
+
+[![npm version](https://img.shields.io/npm/v/@authon/node?color=6d28d9)](https://www.npmjs.com/package/@authon/node)
+[![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
 ## Install
 
@@ -10,401 +13,158 @@ Server-side SDK for [Authon](https://authon.dev). Token verification, user manag
 npm install @authon/node
 ```
 
-## Initialize
+## Quick Start
 
-```typescript
+```ts
+// server.ts — complete working Express server
+import express from 'express';
+import { AuthonBackend, expressMiddleware } from '@authon/node';
+
+const app = express();
+const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
+
+// Protect all /api routes
+app.use('/api', expressMiddleware({ secretKey: process.env.AUTHON_SECRET_KEY! }));
+
+app.get('/api/profile', (req, res) => {
+  res.json({ user: req.auth });
+});
+
+app.get('/api/users', async (req, res) => {
+  const result = await authon.users.list({ page: 1, limit: 20 });
+  res.json(result);
+});
+
+app.listen(3000);
+```
+
+## Common Tasks
+
+### Verify a Token
+
+```ts
 import { AuthonBackend } from '@authon/node';
 
-const authon = new AuthonBackend('sk_live_...');
-```
-
-### Configuration options
-
-```typescript
-const authon = new AuthonBackend('sk_live_...', {
-  apiUrl: 'https://api.authon.dev', // optional, defaults to https://api.authon.dev
-});
-```
-
----
-
-## Token Verification
-
-Verify an access token issued by Authon and retrieve the authenticated user.
-
-```typescript
+const authon = new AuthonBackend('sk_live_YOUR_SECRET_KEY');
 const user = await authon.verifyToken(accessToken);
-// Returns AuthonUser:
-// {
-//   id: string
-//   projectId: string
-//   email: string | null
-//   displayName: string | null
-//   avatarUrl: string | null
-//   phone: string | null
-//   emailVerified: boolean
-//   phoneVerified: boolean
-//   isBanned: boolean
-//   publicMetadata: Record<string, unknown> | null
-//   lastSignInAt: string | null
-//   signInCount: number
-//   createdAt: string
-//   updatedAt: string
-// }
+// { id, email, displayName, avatarUrl, emailVerified, ... }
 ```
 
----
+### Protect Express Routes
 
-## Users
+```ts
+import { expressMiddleware } from '@authon/node';
 
-### List users
+app.use('/api', expressMiddleware({
+  secretKey: process.env.AUTHON_SECRET_KEY!,
+  onError: (err) => console.error(err),
+}));
 
-```typescript
+// req.auth is now the verified AuthonUser
+app.get('/api/me', (req, res) => res.json(req.auth));
+```
+
+### Protect Fastify Routes
+
+```ts
+import { fastifyPlugin } from '@authon/node';
+
+app.addHook('onRequest', fastifyPlugin({
+  secretKey: process.env.AUTHON_SECRET_KEY!,
+}));
+```
+
+### Manage Users
+
+```ts
+const authon = new AuthonBackend('sk_live_...');
+
+// List
 const result = await authon.users.list({ page: 1, limit: 20, search: 'alice' });
-// Returns: { data: AuthonUser[], total: number, page: number, limit: number }
 
-for (const user of result.data) {
-  console.log(user.id, user.email);
-}
-```
-
-| Option   | Type     | Description                          |
-| -------- | -------- | ------------------------------------ |
-| `page`   | `number` | Page number (1-based)                |
-| `limit`  | `number` | Results per page                     |
-| `search` | `string` | Filter by email or display name      |
-
-### Get a user
-
-```typescript
-const user = await authon.users.get('usr_...');
-```
-
-### Get user by external ID
-
-```typescript
-const user = await authon.users.getByExternalId('your-db-id-123');
-```
-
-### Create a user
-
-```typescript
+// Create
 const user = await authon.users.create({
   email: 'alice@example.com',
-  password: 'secret1234',           // optional — omit for OAuth-only users
-  displayName: 'Alice',             // optional
-  externalId: 'your-db-id-123',    // optional — link to your own record
-  provider: 'google',               // optional
-  avatarUrl: 'https://cdn.example.com/avatar.png', // optional
-  phone: '+821012345678',           // optional
-  emailVerified: true,              // optional, default false
-  publicMetadata: { role: 'admin' },    // optional — visible to clients
-  privateMetadata: { plan: 'pro' },     // optional — server-only
+  password: 'secret1234',
+  displayName: 'Alice',
 });
-```
 
-### Update a user
+// Update
+await authon.users.update('usr_...', { displayName: 'Alice Smith' });
 
-```typescript
-const user = await authon.users.update('usr_...', {
-  displayName: 'Alice Smith',
-  externalId: 'new-external-id',
-  avatarUrl: 'https://cdn.example.com/new-avatar.png',
-  phone: '+821098765432',
-  emailVerified: true,
-  publicMetadata: { role: 'moderator' },
-  privateMetadata: { notes: 'VIP customer' },
-});
-```
+// Ban / Unban
+await authon.users.ban('usr_...', 'Spam');
+await authon.users.unban('usr_...');
 
-### Delete a user
-
-```typescript
+// Delete
 await authon.users.delete('usr_...');
 ```
 
-### Ban a user
+### Verify Webhooks
 
-```typescript
-const user = await authon.users.ban('usr_...', 'Violated terms of service');
-// reason is optional
-```
-
-### Unban a user
-
-```typescript
-const user = await authon.users.unban('usr_...');
-```
-
----
-
-## Sessions
-
-### List user sessions
-
-```typescript
-const sessions = await authon.sessions.list('usr_...');
-// Returns SessionInfo[]:
-// [{
-//   id: string
-//   ipAddress: string | null
-//   userAgent: string | null
-//   createdAt: string
-//   lastActiveAt: string | null
-// }]
-```
-
-### Revoke a session
-
-```typescript
-await authon.sessions.revoke('usr_...', 'sess_...');
-```
-
----
-
-## Webhooks
-
-Authon sends signed webhook events to your endpoint. Verify the signature with `webhooks.verify` before processing the event.
-
-The method uses HMAC-SHA256 with timing-safe comparison. It throws an error if the signature is invalid, and returns the parsed payload on success.
-
-```typescript
-const event = authon.webhooks.verify(
-  rawBody,        // string | Buffer — raw request body (do not parse JSON first)
-  signature,      // value of the X-Authon-Signature header, format: "v1=<hex>"
-  timestamp,      // value of the X-Authon-Timestamp header (ISO 8601)
-  webhookSecret,  // your webhook signing secret from the Authon dashboard
-);
-
-console.log(event.type); // e.g. "user.created"
-```
-
-### Express.js webhook handler
-
-```typescript
-import express from 'express';
-import { AuthonBackend } from '@authon/node';
-
-const app = express();
-const authon = new AuthonBackend('sk_live_...');
-
-// Use express.raw() — JSON must not be pre-parsed for signature verification
+```ts
 app.post('/webhooks/authon', express.raw({ type: 'application/json' }), (req, res) => {
-  const signature = req.headers['x-authon-signature'] as string;
-  const timestamp = req.headers['x-authon-timestamp'] as string;
-
-  try {
-    const event = authon.webhooks.verify(
-      req.body,
-      signature,
-      timestamp,
-      process.env.AUTHON_WEBHOOK_SECRET!,
-    );
-
-    switch (event.type) {
-      case 'user.created':
-        console.log('New user:', event.data);
-        break;
-      case 'user.updated':
-        console.log('User updated:', event.data);
-        break;
-      case 'user.deleted':
-        console.log('User deleted:', event.data);
-        break;
-      case 'user.banned':
-        console.log('User banned:', event.data);
-        break;
-      case 'session.created':
-        console.log('Session created:', event.data);
-        break;
-      case 'session.revoked':
-        console.log('Session revoked:', event.data);
-        break;
-    }
-
-    res.json({ received: true });
-  } catch (err) {
-    console.error('Webhook verification failed:', err);
-    res.status(400).json({ error: 'Invalid signature' });
-  }
+  const event = authon.webhooks.verify(
+    req.body,
+    req.headers['x-authon-signature'] as string,
+    req.headers['x-authon-timestamp'] as string,
+    process.env.AUTHON_WEBHOOK_SECRET!,
+  );
+  console.log(event.type); // "user.created", "session.revoked", etc.
+  res.json({ received: true });
 });
 ```
 
----
+## Environment Variables
 
-## Framework Examples
-
-### Express.js auth middleware
-
-Build a custom middleware that verifies the token and attaches the user to `req.auth`.
-
-```typescript
-import express from 'express';
-import { AuthonBackend } from '@authon/node';
-import type { AuthonUser } from '@authon/node';
-
-const authon = new AuthonBackend('sk_live_...');
-
-declare global {
-  namespace Express {
-    interface Request {
-      auth?: AuthonUser;
-    }
-  }
-}
-
-async function requireAuth(
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction,
-) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-
-  if (!token) {
-    res.status(401).json({ error: 'Missing authorization header' });
-    return;
-  }
-
-  try {
-    req.auth = await authon.verifyToken(token);
-    next();
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-}
-
-const app = express();
-app.use(express.json());
-
-app.get('/api/profile', requireAuth, (req, res) => {
-  res.json({ user: req.auth });
-});
-```
-
-Or use the built-in `expressMiddleware` helper:
-
-```typescript
-import { expressMiddleware } from '@authon/node';
-
-app.use(
-  '/api',
-  expressMiddleware({
-    secretKey: process.env.AUTHON_SECRET_KEY!,
-    onError: (err) => console.error(err),
-  }),
-);
-```
-
-### Next.js API route
-
-```typescript
-// app/api/profile/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-export async function GET(request: NextRequest) {
-  const token = request.headers.get('authorization')?.replace('Bearer ', '');
-
-  if (!token) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  try {
-    const user = await authon.verifyToken(token);
-    return NextResponse.json({ user });
-  } catch {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
-  }
-}
-```
-
-```typescript
-// app/api/users/route.ts (admin endpoint)
-import { NextRequest, NextResponse } from 'next/server';
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const page = Number(searchParams.get('page') || 1);
-  const search = searchParams.get('search') || undefined;
-
-  const result = await authon.users.list({ page, limit: 20, search });
-  return NextResponse.json(result);
-}
-
-export async function POST(request: NextRequest) {
-  const body = await request.json();
-  const user = await authon.users.create(body);
-  return NextResponse.json(user, { status: 201 });
-}
-```
-
-### Fastify plugin
-
-```typescript
-import Fastify from 'fastify';
-import { fastifyPlugin } from '@authon/node';
-
-const app = Fastify();
-
-const authHook = fastifyPlugin({
-  secretKey: process.env.AUTHON_SECRET_KEY!,
-  onError: (err) => app.log.error(err),
-});
-
-app.addHook('onRequest', authHook);
-
-app.get('/api/profile', async (request) => {
-  return { user: request.auth };
-});
-```
-
----
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...` or `sk_test_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
+| `AUTHON_WEBHOOK_SECRET` | For webhooks | Webhook signing secret |
 
 ## API Reference
 
-### `AuthonBackend`
+### AuthonBackend
 
-| Method | Returns | Description |
-|---|---|---|
-| `verifyToken(token)` | `Promise<AuthonUser>` | Verify an access token |
-| `users.list(options?)` | `Promise<ListResult<AuthonUser>>` | Paginated user list |
-| `users.get(userId)` | `Promise<AuthonUser>` | Get user by ID |
-| `users.getByExternalId(externalId)` | `Promise<AuthonUser>` | Get user by external ID |
-| `users.create(data)` | `Promise<AuthonUser>` | Create a user |
-| `users.update(userId, data)` | `Promise<AuthonUser>` | Update a user |
-| `users.delete(userId)` | `Promise<void>` | Delete a user |
-| `users.ban(userId, reason?)` | `Promise<AuthonUser>` | Ban a user |
-| `users.unban(userId)` | `Promise<AuthonUser>` | Unban a user |
-| `sessions.list(userId)` | `Promise<SessionInfo[]>` | List sessions for a user |
-| `sessions.revoke(userId, sessionId)` | `Promise<void>` | Revoke a specific session |
-| `webhooks.verify(payload, signature, timestamp, secret)` | `Record<string, unknown>` | Verify webhook HMAC-SHA256 signature |
+| Method | Returns |
+|--------|---------|
+| `verifyToken(token)` | `Promise<AuthonUser>` |
+| `users.list(options?)` | `Promise<ListResult<AuthonUser>>` |
+| `users.get(userId)` | `Promise<AuthonUser>` |
+| `users.getByExternalId(externalId)` | `Promise<AuthonUser>` |
+| `users.create(data)` | `Promise<AuthonUser>` |
+| `users.update(userId, data)` | `Promise<AuthonUser>` |
+| `users.delete(userId)` | `Promise<void>` |
+| `users.ban(userId, reason?)` | `Promise<AuthonUser>` |
+| `users.unban(userId)` | `Promise<AuthonUser>` |
+| `sessions.list(userId)` | `Promise<SessionInfo[]>` |
+| `sessions.revoke(userId, sessionId)` | `Promise<void>` |
+| `webhooks.verify(payload, signature, timestamp, secret)` | `Record<string, unknown>` |
+| `organizations.list()` | `Promise<OrganizationListResponse>` |
+| `organizations.create(params)` | `Promise<AuthonOrganization>` |
+| `auditLogs.list(params?)` | `Promise<AuditLogListResponse>` |
+| `jwtTemplates.list()` | `Promise<JwtTemplate[]>` |
 
-### Middleware helpers
+### Middleware
 
 | Export | Description |
-|---|---|
-| `expressMiddleware(options)` | Express/Connect middleware — sets `req.auth` to the verified user |
-| `fastifyPlugin(options)` | Fastify `onRequest` hook — sets `request.auth` to the verified user |
+|--------|-------------|
+| `expressMiddleware(options)` | Express middleware, sets `req.auth` |
+| `fastifyPlugin(options)` | Fastify hook, sets `request.auth` |
 
-### `AuthonMiddlewareOptions`
+## Comparison
 
-| Field | Type | Description |
-|---|---|---|
-| `secretKey` | `string` | Your Authon secret key (`sk_live_...`) |
-| `apiUrl` | `string` | Optional custom API base URL |
-| `onError` | `(err: Error) => void` | Optional error callback |
-
----
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Auth.js |
+|---------|--------|-------|---------|
+| Self-hosted | Yes | No | Partial |
+| Pricing | Free | $25/mo+ | Free |
+| Server SDK | Yes | Yes | Partial |
+| User management API | Yes | Yes | No |
+| Webhook verification | Yes | Yes | No |
+| Audit logs | Yes | Enterprise | No |
+| Organizations | Yes | Yes | No |
 
 ## License
 
-[MIT](../../LICENSE)
+MIT

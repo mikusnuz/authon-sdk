@@ -1,6 +1,8 @@
 # Authon (Swift)
 
-Official Swift SDK for [Authon](https://authon.dev) — authenticate users in iOS and macOS apps.
+> Swift server SDK for iOS/macOS token verification and user management — self-hosted Clerk alternative, Auth0 alternative
+
+[![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
 
 ## Install
 
@@ -13,143 +15,115 @@ dependencies: [
 ]
 ```
 
-Or add via Xcode: File > Add Package Dependencies > `https://github.com/mikusnuz/authon-sdk.git`
+Or in Xcode: File > Add Package Dependencies > `https://github.com/mikusnuz/authon-sdk.git`
 
 ## Quick Start
 
-### Initialize
-
 ```swift
+// main.swift — complete working example
 import Authon
 
-let authon = AuthonClient(publishableKey: "pk_live_...")
-```
+let authon = AuthonBackend(secretKey: "sk_live_YOUR_SECRET_KEY")
 
-### Sign In
+// Verify a token
+let user = try await authon.verifyToken("eyJhbGci...")
+print("\(user.id) \(user.email ?? "no email")")
 
-```swift
-// OAuth (opens ASWebAuthenticationSession)
-let user = try await authon.signIn(with: .google)
-print(user.email ?? "No email")
-
-// Email/password
-let user = try await authon.signIn(email: "user@example.com", password: "password")
-
-// Apple Sign In (native)
-let user = try await authon.signIn(with: .apple)
-```
-
-### Auth State
-
-```swift
-// Check current user
-if let user = authon.currentUser {
-    print("Signed in as \(user.displayName ?? user.email ?? "unknown")")
+// List users
+let result = try await authon.users.list()
+for u in result.data {
+    print(u.email ?? "no email")
 }
 
-// Listen for changes
-authon.onAuthStateChanged { user in
-    if let user {
-        print("Signed in: \(user.id)")
-    } else {
-        print("Signed out")
-    }
-}
-
-// Get access token
-let token = try await authon.getToken()
-
-// Sign out
-try await authon.signOut()
+// Create a user
+let newUser = try await authon.users.create(CreateUserParams(
+    email: "alice@example.com",
+    password: "securePassword"
+))
 ```
 
-### SwiftUI
+## Common Tasks
+
+### Verify a Token
 
 ```swift
-import SwiftUI
-import Authon
-
-struct ContentView: View {
-    @StateObject private var auth = AuthonObservable(publishableKey: "pk_live_...")
-
-    var body: some View {
-        Group {
-            if auth.isLoading {
-                ProgressView()
-            } else if let user = auth.user {
-                VStack {
-                    Text("Welcome, \(user.displayName ?? "User")")
-                    Button("Sign Out") {
-                        Task { try await auth.signOut() }
-                    }
-                }
-            } else {
-                VStack {
-                    Button("Sign in with Google") {
-                        Task { try await auth.signIn(with: .google) }
-                    }
-                    Button("Sign in with Apple") {
-                        Task { try await auth.signIn(with: .apple) }
-                    }
-                }
-            }
-        }
-    }
-}
+let authon = AuthonBackend(secretKey: "sk_live_...")
+let user = try await authon.verifyToken(accessToken)
+// user.id, user.email, user.displayName, ...
 ```
+
+### Manage Users
+
+```swift
+let authon = AuthonBackend(secretKey: "sk_live_...")
+
+// List
+let result = try await authon.users.list(options: ListOptions(page: 1, perPage: 20))
+
+// Get
+let user = try await authon.users.get("user_abc123")
+
+// Create
+let user = try await authon.users.create(CreateUserParams(email: "user@example.com", password: "pass123"))
+
+// Update
+let updated = try await authon.users.update("user_abc123", params: UpdateUserParams(firstName: "Alice"))
+
+// Ban / Unban / Delete
+try await authon.users.ban("user_abc123")
+try await authon.users.unban("user_abc123")
+try await authon.users.delete("user_abc123")
+```
+
+### Verify Webhooks
+
+```swift
+let event = try authon.webhooks.verify(
+    payload: requestBodyData,
+    signature: request.headers["x-authon-signature"]!,
+    secret: "whsec_YOUR_WEBHOOK_SECRET"
+)
+// event["type"] == "user.created"
+```
+
+### Custom API URL
+
+```swift
+let authon = AuthonBackend(secretKey: "sk_live_...", apiURL: "https://custom.api.url")
+```
+
+## Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
+| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
 
 ## API Reference
 
-### `AuthonClient`
+| Method | Returns |
+|--------|---------|
+| `AuthonBackend(secretKey:, apiURL?)` | Constructor |
+| `verifyToken(_:)` | `async throws -> User` |
+| `users.list(options?)` | `async throws -> ListResult<User>` |
+| `users.get(_:)` | `async throws -> User` |
+| `users.create(_:)` | `async throws -> User` |
+| `users.update(_:, params:)` | `async throws -> User` |
+| `users.delete(_:)` | `async throws` |
+| `users.ban(_:)` | `async throws -> User` |
+| `users.unban(_:)` | `async throws -> User` |
+| `webhooks.verify(payload:, signature:, secret:)` | `throws -> [String: Any]` |
 
-| Method | Returns | Description |
-|--------|---------|-------------|
-| `signIn(with: OAuthProvider)` | `async throws -> AuthonUser` | OAuth sign-in |
-| `signIn(email:password:)` | `async throws -> AuthonUser` | Email sign-in |
-| `signOut()` | `async throws` | Sign out |
-| `getToken()` | `async throws -> String` | Get current access token |
-| `currentUser` | `AuthonUser?` | Current user (synchronous) |
-| `onAuthStateChanged(_:)` | `() -> Void` | Listen for auth changes (returns unsubscribe) |
+## Comparison
 
-### `AuthonObservable` (SwiftUI)
-
-ObservableObject with `@Published` properties:
-
-| Property | Type | Description |
-|----------|------|-------------|
-| `user` | `AuthonUser?` | Current user |
-| `isSignedIn` | `Bool` | Whether signed in |
-| `isLoading` | `Bool` | Loading state |
-
-### `AuthonUser`
-
-| Property | Type |
-|----------|------|
-| `id` | `String` |
-| `email` | `String?` |
-| `displayName` | `String?` |
-| `avatarUrl` | `String?` |
-| `emailVerified` | `Bool` |
-| `createdAt` | `Date` |
-
-### `OAuthProvider`
-
-`.google`, `.apple`, `.kakao`, `.naver`, `.github`, `.discord`, `.facebook`, `.x`, `.line`, `.microsoft`
-
-## Token Storage
-
-Tokens are stored in the iOS/macOS Keychain using `kSecClassGenericPassword`, encrypted at rest.
-
-## Native App Notes
-
-- The native Swift SDK manages `ASWebAuthenticationSession` internally. You do not need the Expo / React Native `returnTo` bridge flow when you use this SDK directly.
-- If your app also maintains its own backend session, exchange `try await authon.getToken()` with your backend immediately after sign-in.
-- If you are building an Expo or React Native app, follow the React Native SDK guide instead of the Swift flow.
-
-## Documentation
-
-[authon.dev/docs](https://authon.dev/docs)
+| Feature | Authon | Clerk | Firebase Auth |
+|---------|--------|-------|---------------|
+| Self-hosted | Yes | No | No |
+| Pricing | Free | $25/mo+ | Free tier |
+| Swift SDK | Yes | No | Yes |
+| async/await | Yes | N/A | Yes |
+| Server-side verification | Yes | Yes | Yes |
 
 ## License
 
-[MIT](../LICENSE)
+MIT
