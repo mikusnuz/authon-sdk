@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Delete Account — Authon Flask Example{% endblock %}
+
+{% block content %}
+<div style="max-width: 500px;">
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 26px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Delete Account</h1>
+    <p style="color: var(--text-secondary); font-size: 14px;">This action is permanent and cannot be undone</p>
+  </div>
+
+  <div class="alert alert-warning" style="margin-bottom: 20px;">
+    Warning: deleting your account will permanently remove all your data, sessions, and associated information.
+  </div>
+
+  {% if error %}
+    <div class="alert alert-error" style="margin-bottom: 20px;">{{ error }}</div>
+  {% endif %}
+
+  <div class="card">
+    <div class="section-title">Confirm Deletion</div>
+    <div class="code-tag">authon.users.delete(user_id) — server-side SDK call</div>
+
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+      Type <strong style="color: var(--text-primary);">DELETE</strong> in the field below to confirm you want to permanently delete your account.
+    </p>
+
+    <form method="POST" action="/delete-account" style="display: flex; flex-direction: column; gap: 16px;">
+      <div class="form-group">
+        <label class="form-label" for="confirm">Confirmation</label>
+        <input id="confirm" class="form-input" type="text" name="confirm"
+          placeholder="Type DELETE to confirm"
+          style="border-color: rgba(239, 68, 68, 0.5);"
+          required />
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <a href="/profile" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-danger">Delete my account</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

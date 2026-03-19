@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Sessions — Authon Flask Example{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 24px;">
+  <h1 style="font-size: 26px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Active Sessions</h1>
+  <p style="color: var(--text-secondary); font-size: 14px;">View and revoke your active sessions</p>
+</div>
+
+{% if error %}
+  <div class="alert alert-error" style="margin-bottom: 20px;">{{ error }}</div>
+{% endif %}
+{% if success %}
+  <div class="alert alert-success" style="margin-bottom: 20px;">{{ success }}</div>
+{% endif %}
+
+<div class="card" style="padding: 0; overflow: hidden;">
+  <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+    <div>
+      <div class="code-tag" style="margin-bottom: 0;">GET /v1/auth/me/sessions</div>
+    </div>
+    <span style="font-size: 13px; color: var(--text-tertiary);">
+      {{ sessions | length }} session{{ 's' if sessions | length != 1 else '' }}
+    </span>
+  </div>
+
+  {% if not sessions %}
+    <div style="padding: 40px; text-align: center; color: var(--text-tertiary); font-size: 14px;">
+      No sessions found.
+    </div>
+  {% else %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Session ID</th>
+          <th>IP Address</th>
+          <th>Device / User Agent</th>
+          <th>Last Active</th>
+          <th>Created</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for session in sessions %}
+          <tr>
+            <td style="font-family: monospace; font-size: 12px; color: var(--text-tertiary);">
+              {{ session.id[:12] }}...
+            </td>
+            <td>{{ session.ipAddress or '—' }}</td>
+            <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              {% if session.userAgent %}
+                {{ session.userAgent[:50] }}{{ '...' if session.userAgent | length > 50 else '' }}
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>{{ session.lastActiveAt or '—' }}</td>
+            <td>{{ session.createdAt }}</td>
+            <td>
+              <form method="POST" action="/sessions/revoke" style="margin: 0;">
+                <input type="hidden" name="sessionId" value="{{ session.id }}" />
+                <button type="submit" class="btn btn-danger btn-sm"
+                  onclick="return confirm('Revoke this session?')">
+                  Revoke
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}
