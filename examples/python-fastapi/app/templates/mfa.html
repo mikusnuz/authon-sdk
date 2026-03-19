@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% set current_user = user %}
+{% block title %}Two-Factor Authentication{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px;">
+  <div style="margin-bottom: 24px;">
+    <h1 style="font-size: 26px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">Two-Factor Authentication</h1>
+    <p style="color: var(--text-secondary); font-size: 14px;">Secure your account with TOTP</p>
+  </div>
+
+  {% if success %}
+    <div class="alert alert-success" style="margin-bottom: 20px;">{{ success }}</div>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-error" style="margin-bottom: 20px;">{{ error }}</div>
+  {% endif %}
+
+  <div class="card" style="margin-bottom: 16px;">
+    <div class="section-title">Status</div>
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        {% if mfa_status.enabled %}
+          <span class="badge badge-success" style="font-size: 14px; padding: 6px 14px;">Enabled</span>
+        {% else %}
+          <span class="badge badge-muted" style="font-size: 14px; padding: 6px 14px;">Disabled</span>
+        {% endif %}
+        {% if mfa_status.enabled and mfa_status.backupCodesRemaining > 0 %}
+          <span style="margin-left: 12px; font-size: 13px; color: var(--text-tertiary);">
+            {{ mfa_status.backupCodesRemaining }} backup codes remaining
+          </span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  {% if not mfa_status.enabled and not setup_data %}
+    <div class="card">
+      <div class="section-title">Enable 2FA</div>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 20px;">
+        Use an authenticator app like Google Authenticator, Authy, or 1Password to generate time-based codes.
+      </p>
+      <div class="code-tag">POST /v1/auth/mfa/totp/setup</div>
+      <form method="POST" action="/mfa/setup">
+        <button type="submit" class="btn btn-primary">Set up authenticator app</button>
+      </form>
+    </div>
+  {% endif %}
+
+  {% if setup_data %}
+    <div class="card">
+      <div class="section-title">Scan QR Code</div>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+        Scan this QR code with your authenticator app, then enter the 6-digit code to verify.
+      </p>
+
+      <div id="qr-container" class="qr-container">
+        <div id="qr-svg"></div>
+      </div>
+
+      <details style="margin: 12px 0;">
+        <summary style="font-size: 13px; color: var(--text-tertiary); cursor: pointer;">Can't scan? Enter manually</summary>
+        <div style="margin-top: 8px; padding: 10px; background: var(--surface-2); border-radius: 6px; font-family: monospace; font-size: 13px; word-break: break-all; color: var(--text-primary);">
+          {{ setup_data.secret }}
+        </div>
+      </details>
+
+      {% if setup_data.backupCodes %}
+        <div style="margin: 20px 0;">
+          <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Backup Codes</p>
+          <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Save these backup codes in a safe place. Each can only be used once.</p>
+          <div class="backup-codes">
+            {% for code in setup_data.backupCodes %}
+              <div class="backup-code">{{ code }}</div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="divider" style="margin: 20px 0;"></div>
+      <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px;">Verify setup</p>
+      <div class="code-tag">POST /v1/auth/mfa/totp/verify-setup</div>
+
+      <form method="POST" action="/mfa/verify" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label" for="code">6-digit code</label>
+          <input id="code" class="form-input code-input" type="text" name="code"
+            inputmode="numeric" maxlength="6" placeholder="000000" required autofocus />
+        </div>
+        <button type="submit" class="btn btn-primary">Verify and enable</button>
+      </form>
+    </div>
+
+    <script>
+    (function() {
+      const qrUri = {{ setup_data.qrCodeUri | tojson }};
+      const API_URL = '{{ api_url }}';
+
+      async function renderQr() {
+        try {
+          const mod = await import(`${API_URL}/sdk/js/index.js`).catch(() => null);
+          if (mod && mod.generateQrSvg) {
+            document.getElementById('qr-svg').innerHTML = mod.generateQrSvg(qrUri);
+            return;
+          }
+        } catch(e) {}
+        const img = document.createElement('img');
+        img.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrUri)}`;
+        img.alt = 'QR Code';
+        img.style.width = '200px';
+        img.style.height = '200px';
+        document.getElementById('qr-svg').appendChild(img);
+      }
+
+      renderQr();
+    })();
+    </script>
+  {% endif %}
+
+  {% if mfa_status.enabled %}
+    <div class="card">
+      <div class="section-title">Disable 2FA</div>
+      <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+        Enter your current authenticator code to disable two-factor authentication.
+      </p>
+      <div class="code-tag">POST /v1/auth/mfa/disable</div>
+      <form method="POST" action="/mfa/disable" style="display: flex; flex-direction: column; gap: 14px;">
+        <div class="form-group">
+          <label class="form-label" for="disable-code">Authenticator code</label>
+          <input id="disable-code" class="form-input code-input" type="text" name="code"
+            inputmode="numeric" maxlength="6" placeholder="000000" required />
+        </div>
+        <button type="submit" class="btn btn-danger" style="align-self: flex-start;">Disable 2FA</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
