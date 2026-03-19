@@ -16,8 +16,10 @@ RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
+COPY --from=build /app/packages/ ./packages/
 COPY --from=build /app/examples/node-express/dist ./dist
 COPY --from=build /app/examples/node-express/package*.json ./
-RUN npm ci --production
+COPY --from=build /app/examples/node-express/src/views ./src/views
+RUN npm install --omit=dev
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
