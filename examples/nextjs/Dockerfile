@@ -1,9 +1,15 @@
+FROM node:20-alpine AS sdk-build
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@latest --activate
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY packages/ ./packages/
+RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
+RUN pnpm -r build
+
 FROM node:20-alpine AS build
 WORKDIR /app
-
-COPY packages/ ./packages/
+COPY --from=sdk-build /app/packages/ ./packages/
 COPY examples/nextjs/ ./examples/nextjs/
-
 WORKDIR /app/examples/nextjs
 RUN npm install
 ARG NEXT_PUBLIC_AUTHON_PROJECT_ID
