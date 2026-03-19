@@ -1,0 +1,16 @@
+.env
+node_modules/
+dist/
+.next/
+.nuxt/
+.output/
+.angular/
+.svelte-kit/
+build/
+__pycache__/
+*.pyc
+.venv/
+target/
+*.class
+.gradle/
+.build/
