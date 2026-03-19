@@ -33,7 +33,7 @@
     {% endif %}
   </div>
   <script type="module">
-    import { Authon } from 'https://unpkg.com/@authon/js@0.3.0/dist/index.js'
+    import { Authon } from '/static/authon.js'
 
     const authon = new Authon('{{ project_id }}', { apiUrl: '{{ api_url }}' })
 

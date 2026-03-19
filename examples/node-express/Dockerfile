@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/ ./packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
-RUN pnpm --filter '@authon/node' --filter '@authon/shared' build
+RUN pnpm --filter '@authon/js' --filter '@authon/node' --filter '@authon/shared' build
 
 FROM node:20-alpine AS build
 WORKDIR /app
@@ -18,5 +18,6 @@ RUN pnpm run build
 
 FROM build
 WORKDIR /app/examples/node-express
+COPY --from=sdk-build /app/packages/js/dist/index.js ./public/authon.js
 EXPOSE 3000
 CMD ["node", "dist/server.js"]

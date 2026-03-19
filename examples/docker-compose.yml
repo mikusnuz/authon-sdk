@@ -22,6 +22,9 @@ services:
     build:
       context: ..
       dockerfile: examples/nextjs/Dockerfile
+      args:
+        NEXT_PUBLIC_AUTHON_PROJECT_ID: ${NEXT_PUBLIC_AUTHON_PROJECT_ID}
+        NEXT_PUBLIC_AUTHON_API_URL: ${NEXT_PUBLIC_AUTHON_API_URL}
     ports:
       - "15587:3000"
     env_file: .env

@@ -43,6 +43,8 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
 		var user *authon.User
 		cookie, err := r.Cookie("authon_token")
