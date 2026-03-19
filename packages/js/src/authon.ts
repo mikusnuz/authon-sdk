@@ -519,6 +519,52 @@ export class Authon {
             });
         },
         onClose: () => this.modal?.close(),
+        onWeb3WalletSelect: async (walletId: string) => {
+          const chain = walletId === 'phantom' ? 'solana' as const : 'evm' as const;
+          try {
+            this.modal?.showOverlay?.('web3-connecting');
+            const address = await this.getWalletAddress(walletId);
+            const { message } = await this.web3GetNonce(address, chain, walletId as any);
+            const signature = await this.requestWalletSignature(walletId, message);
+            await this.web3Verify(message, signature, address, chain, walletId as any);
+            this.modal?.showWeb3Success(walletId, address);
+            setTimeout(() => this.modal?.close(), 2500);
+          } catch (err) {
+            this.modal?.showOverlayError(err instanceof Error ? err.message : String(err));
+          }
+        },
+        onPasswordlessSubmit: async (email: string) => {
+          try {
+            const method = this.branding?.passwordlessMethod ?? 'magic_link';
+            if (method === 'email_otp' || method === 'both') {
+              await this.sendEmailOtp(email);
+              this.modal?.showOtpInput(email);
+            } else {
+              await this.sendMagicLink(email);
+              this.modal?.showPasswordlessSent();
+            }
+          } catch (err) {
+            this.modal?.showOverlayError(err instanceof Error ? err.message : String(err));
+          }
+        },
+        onOtpVerify: async (email: string, code: string) => {
+          try {
+            await this.verifyPasswordless({ email, code });
+            this.modal?.close();
+          } catch (err) {
+            this.modal?.showOverlayError(err instanceof Error ? err.message : String(err));
+          }
+        },
+        onPasskeyClick: async () => {
+          try {
+            this.modal?.showOverlay?.('passkey-verifying');
+            await this.authenticateWithPasskey();
+            this.modal?.showPasskeySuccess();
+            setTimeout(() => this.modal?.close(), 2500);
+          } catch (err) {
+            this.modal?.showOverlayError(err instanceof Error ? err.message : String(err));
+          }
+        },
       });
     }
     if (this.branding) this.modal.setBranding(this.branding);
@@ -851,6 +897,37 @@ export class Authon {
       credentials: 'include',
     });
     if (!res.ok) throw new Error(await this.parseApiError(res, path));
+  }
+
+  // ── Wallet helpers ──
+
+  private async getWalletAddress(walletId: string): Promise<string> {
+    if (walletId === 'phantom') {
+      const provider = (window as any).solana;
+      if (!provider?.isPhantom) throw new Error('Phantom wallet not detected. Please install it from phantom.app');
+      const resp = await provider.connect();
+      return resp.publicKey.toString();
+    }
+    // EVM wallets (MetaMask, Pexus, etc.)
+    const provider = (window as any).ethereum;
+    if (!provider) throw new Error(`${walletId} wallet not detected. Please install it.`);
+    const accounts: string[] = await provider.request({ method: 'eth_requestAccounts' });
+    return accounts[0];
+  }
+
+  private async requestWalletSignature(walletId: string, message: string): Promise<string> {
+    if (walletId === 'phantom') {
+      const provider = (window as any).solana;
+      const encoded = new TextEncoder().encode(message);
+      const signed = await provider.signMessage(encoded, 'utf8');
+      return Array.from(new Uint8Array(signed.signature))
+        .map((b: number) => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+    // EVM wallets
+    const provider = (window as any).ethereum;
+    const accounts: string[] = await provider.request({ method: 'eth_requestAccounts' });
+    return provider.request({ method: 'personal_sign', params: [message, accounts[0]] });
   }
 
   // ── WebAuthn helpers ──
