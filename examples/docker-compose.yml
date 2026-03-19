@@ -24,7 +24,7 @@ services:
       dockerfile: examples/nextjs/Dockerfile
     ports:
       - "15587:3000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   vue:
@@ -44,7 +44,7 @@ services:
       dockerfile: examples/nuxt/Dockerfile
     ports:
       - "15589:3000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   angular:
@@ -64,7 +64,7 @@ services:
       dockerfile: examples/svelte/Dockerfile
     ports:
       - "15596:3000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   vanilla-js:
@@ -84,7 +84,7 @@ services:
       dockerfile: examples/node-express/Dockerfile
     ports:
       - "15598:3000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   go:
@@ -93,7 +93,7 @@ services:
       dockerfile: examples/go/Dockerfile
     ports:
       - "15599:8080"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   python-fastapi:
@@ -102,7 +102,7 @@ services:
       dockerfile: examples/python-fastapi/Dockerfile
     ports:
       - "15600:8000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   python-flask:
@@ -111,7 +111,7 @@ services:
       dockerfile: examples/python-flask/Dockerfile
     ports:
       - "15601:5000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
 
   python-django:
@@ -120,5 +120,5 @@ services:
       dockerfile: examples/python-django/Dockerfile
     ports:
       - "15602:8000"
-    env_file: examples/.env
+    env_file: .env
     restart: unless-stopped
