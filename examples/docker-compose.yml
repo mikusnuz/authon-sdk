@@ -1,0 +1,102 @@
+services:
+  portal:
+    build: ./portal
+    ports:
+      - "15585:80"
+    restart: unless-stopped
+
+  react:
+    build:
+      context: ./react
+      args:
+        VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
+        VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
+    ports:
+      - "15586:80"
+    restart: unless-stopped
+
+  nextjs:
+    build: ./nextjs
+    ports:
+      - "15587:3000"
+    env_file: .env
+    restart: unless-stopped
+
+  vue:
+    build:
+      context: ./vue
+      args:
+        VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
+        VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
+    ports:
+      - "15588:80"
+    restart: unless-stopped
+
+  nuxt:
+    build: ./nuxt
+    ports:
+      - "15589:3000"
+    env_file: .env
+    restart: unless-stopped
+
+  angular:
+    build:
+      context: ./angular
+      args:
+        AUTHON_PROJECT_ID: ${AUTHON_PROJECT_ID}
+        AUTHON_API_URL: ${AUTHON_API_URL}
+    ports:
+      - "15595:80"
+    restart: unless-stopped
+
+  svelte:
+    build: ./svelte
+    ports:
+      - "15596:3000"
+    env_file: .env
+    restart: unless-stopped
+
+  vanilla-js:
+    build:
+      context: ./vanilla-js
+      args:
+        VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
+        VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
+    ports:
+      - "15597:80"
+    restart: unless-stopped
+
+  node-express:
+    build: ./node-express
+    ports:
+      - "15598:3000"
+    env_file: .env
+    restart: unless-stopped
+
+  go:
+    build: ./go
+    ports:
+      - "15599:8080"
+    env_file: .env
+    restart: unless-stopped
+
+  python-fastapi:
+    build: ./python-fastapi
+    ports:
+      - "15600:8000"
+    env_file: .env
+    restart: unless-stopped
+
+  python-flask:
+    build: ./python-flask
+    ports:
+      - "15601:5000"
+    env_file: .env
+    restart: unless-stopped
+
+  python-django:
+    build: ./python-django
+    ports:
+      - "15602:8000"
+    env_file: .env
+    restart: unless-stopped
