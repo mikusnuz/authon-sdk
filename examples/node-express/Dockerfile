@@ -9,6 +9,8 @@ RUN pnpm --filter '@authon/*' --filter '!@authon/react-native' build
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=sdk-build /app/packages/ ./packages/
+# Replace workspace: protocol refs in SDK packages so npm can resolve them
+RUN find packages -name package.json -exec sed -i 's/"workspace:\^"/"*"/g' {} +
 COPY examples/node-express/package.json ./examples/node-express/package.json
 COPY examples/node-express/tsconfig.json ./examples/node-express/tsconfig.json
 COPY examples/node-express/src/ ./examples/node-express/src/
