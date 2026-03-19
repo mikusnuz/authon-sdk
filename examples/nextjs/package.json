@@ -1,0 +1,25 @@
+{
+  "name": "authon-nextjs-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev -p 15587",
+    "build": "next build",
+    "start": "next start -p 3000"
+  },
+  "dependencies": {
+    "@authon/nextjs": "file:../../packages/nextjs",
+    "@authon/react": "file:../../packages/react",
+    "@authon/js": "file:../../packages/js",
+    "@authon/shared": "file:../../packages/shared",
+    "next": "^15",
+    "react": "^19",
+    "react-dom": "^19"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}
