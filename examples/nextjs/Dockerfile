@@ -20,7 +20,8 @@ RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/examples/nextjs/.next/standalone ./
-COPY --from=build /app/examples/nextjs/.next/static ./.next/static
+COPY --from=build /app/examples/nextjs/.next ./.next
+COPY --from=build /app/examples/nextjs/node_modules ./node_modules
+COPY --from=build /app/examples/nextjs/package.json ./
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["npx", "next", "start", "-p", "3000"]
