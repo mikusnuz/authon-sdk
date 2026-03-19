@@ -54,6 +54,10 @@ export interface BrandingConfig {
   customCss?: string;
   locale?: string;
   showSecuredBy?: boolean;
+  showWeb3?: boolean;
+  showPasswordless?: boolean;
+  showPasskey?: boolean;
+  passwordlessMethod?: 'magic_link' | 'email_otp' | 'both';
 }
 
 export interface SessionConfig {
