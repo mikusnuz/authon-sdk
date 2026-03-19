@@ -9,7 +9,7 @@ RUN pnpm --filter '@authon/node' --filter '@authon/shared' build
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=sdk-build /app/packages/ ./packages/
-RUN find /app/packages -name "package.json" -exec sed -i 's/"workspace:\^"/"*"/g' {} \;
+RUN find /app/packages -name "package.json" -exec sed -i 's/workspace:^/*/g' {} \;
 COPY examples/node-express/ ./examples/node-express/
 WORKDIR /app/examples/node-express
 RUN npm install --install-links
