@@ -4,7 +4,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY packages/ ./packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
-RUN pnpm -r build
+RUN pnpm -r build --filter '!@authon/react-native'
 
 FROM node:20-alpine AS build
 WORKDIR /app
