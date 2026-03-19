@@ -65,6 +65,10 @@ services:
     ports:
       - "15596:3000"
     env_file: .env
+    environment:
+      - ORIGIN=${SVELTE_ORIGIN:-http://192.168.0.200:15596}
+      - PROTOCOL_HEADER=x-forwarded-proto
+      - HOST_HEADER=x-forwarded-host
     restart: unless-stopped
 
   vanilla-js:
