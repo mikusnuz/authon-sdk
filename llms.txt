@@ -1,0 +1,119 @@
+# Authon
+
+> Self-hosted authentication platform — a modern Clerk alternative with 15 SDKs across JavaScript/TypeScript, Python, Go, Dart, Swift, and Kotlin.
+
+Authon provides drop-in auth for any framework: OAuth (10 providers), email/password, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet login (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal.
+
+Website: https://authon.dev
+Docs: https://docs.authon.dev
+Dashboard: https://authon.dev/dashboard
+GitHub: https://github.com/mikusnuz/authon-sdk
+
+## Docs
+
+- [Quick Start](https://docs.authon.dev/quickstart)
+- [API Reference](https://docs.authon.dev/api)
+- [OAuth Setup](https://docs.authon.dev/oauth)
+- [Webhooks](https://docs.authon.dev/webhooks)
+- [Organizations](https://docs.authon.dev/organizations)
+
+## SDKs
+
+### JavaScript / TypeScript
+
+| Package | Registry | Description |
+|---------|----------|-------------|
+| @authon/js | npm | Core browser SDK — ShadowDOM modal, OAuth, sessions |
+| @authon/react | npm | Provider, hooks, and components for React |
+| @authon/nextjs | npm | Middleware, server helpers, and React components for Next.js |
+| @authon/vue | npm | Plugin, composables, and components for Vue 3 |
+| @authon/nuxt | npm | Auto-imported composables and middleware for Nuxt 3 |
+| @authon/svelte | npm | Stores and components for Svelte |
+| @authon/angular | npm | Service, guard, and components for Angular |
+| @authon/react-native | npm | Mobile authentication for React Native / Expo |
+| @authon/node | npm | Server-side token verification, user management, webhooks |
+| @authon/shared | npm | Shared types and constants (internal, consumed by other SDKs) |
+
+### Other Languages
+
+| Package | Registry | Description |
+|---------|----------|-------------|
+| authon (Python) | PyPI | Django, Flask, FastAPI middleware + async support |
+| authon-go | Go modules | net/http middleware, token verification, user management |
+| authon (Dart) | pub.dev | Flutter SDK with AuthonProvider and AuthonBuilder |
+| Authon (Swift) | SPM | iOS/macOS SDK with SwiftUI support |
+| authon-kotlin | Maven | Android SDK with Jetpack Compose support |
+
+## Quick Install
+
+```bash
+# React
+npm install @authon/react @authon/js
+
+# Next.js
+npm install @authon/nextjs @authon/js
+
+# Vue 3
+npm install @authon/vue @authon/js
+
+# Nuxt 3
+npm install @authon/nuxt @authon/js
+
+# Svelte
+npm install @authon/svelte @authon/js
+
+# Angular
+npm install @authon/angular @authon/js
+
+# React Native / Expo
+npm install @authon/react-native react-native-svg
+
+# Node.js (server)
+npm install @authon/node
+
+# Python
+pip install authon
+
+# Go
+go get github.com/mikusnuz/authon-sdk/go
+
+# Dart / Flutter
+dart pub add authon
+
+# Swift (SPM)
+.package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")
+
+# Kotlin (Gradle)
+implementation("dev.authon:sdk:0.1.0")
+```
+
+## Core Concepts
+
+- **Modal**: A ShadowDOM-based sign-in/sign-up modal rendered inside your page. Prevents CSS conflicts. Branding is fetched from your Authon dashboard and can be overridden via `appearance`.
+- **Publishable Key**: Client-side key (`pk_live_...` or `pk_test_...`) used by browser and mobile SDKs. Safe to expose.
+- **Secret Key**: Server-side key (`sk_live_...` or `sk_test_...`) used by backend SDKs. Never expose to clients.
+- **OAuth Providers**: Google, Apple, GitHub, Discord, Facebook, Microsoft, Kakao, Naver, LINE, X. Configured in the dashboard, auto-detected by SDKs.
+- **Sessions**: Access token (15 min default TTL) + refresh token (7 days default TTL). Auto-refresh built into client SDKs. Max 5 concurrent sessions per user by default.
+- **Webhooks**: HMAC-SHA256 signed events sent to your endpoint. Events: user.created, user.updated, user.deleted, user.banned, user.unbanned, session.created, session.ended, session.revoked, provider.linked, provider.unlinked.
+- **Organizations**: Multi-tenant support with roles (owner, admin, member), invitations, and per-org settings.
+- **MFA**: TOTP-based (Google Authenticator / Authy compatible) with backup codes.
+- **Passkeys**: WebAuthn-based passwordless authentication. Register and authenticate with platform authenticators.
+- **Web3**: EVM (MetaMask, WalletConnect, Coinbase, Pexus, Trust) and Solana (Phantom) wallet authentication via sign-in-with-wallet.
+
+## Environment Variables
+
+```env
+# Client-side (browser / mobile)
+NEXT_PUBLIC_AUTHON_KEY=pk_live_...    # Next.js
+NUXT_PUBLIC_AUTHON_KEY=pk_live_...    # Nuxt
+VITE_AUTHON_KEY=pk_live_...           # Vite-based apps
+
+# Server-side
+AUTHON_SECRET_KEY=sk_live_...
+AUTHON_API_URL=https://api.authon.dev  # optional, this is the default
+AUTHON_WEBHOOK_SECRET=whsec_...        # for webhook verification
+```
+
+## Optional: llms-full.txt
+
+For the complete API reference with every SDK's code examples, all endpoints, and migration guides, see [llms-full.txt](./llms-full.txt).

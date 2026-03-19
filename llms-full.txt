@@ -1,0 +1,1845 @@
+# Authon — Complete AI Reference
+
+> Self-hosted authentication platform — a modern Clerk alternative with 15 SDKs.
+> This file contains everything needed to implement Authon authentication in any supported framework.
+
+Website: https://authon.dev
+Docs: https://docs.authon.dev
+GitHub: https://github.com/mikusnuz/authon-sdk
+License: MIT
+
+---
+
+## Table of Contents
+
+1. [Core Concepts](#core-concepts)
+2. [Environment Variables](#environment-variables)
+3. [SDK Reference — JavaScript / @authon/js](#sdk-javascript)
+4. [SDK Reference — React / @authon/react](#sdk-react)
+5. [SDK Reference — Next.js / @authon/nextjs](#sdk-nextjs)
+6. [SDK Reference — Vue / @authon/vue](#sdk-vue)
+7. [SDK Reference — Nuxt / @authon/nuxt](#sdk-nuxt)
+8. [SDK Reference — Svelte / @authon/svelte](#sdk-svelte)
+9. [SDK Reference — Angular / @authon/angular](#sdk-angular)
+10. [SDK Reference — React Native / @authon/react-native](#sdk-react-native)
+11. [SDK Reference — Node.js / @authon/node](#sdk-node)
+12. [SDK Reference — Python](#sdk-python)
+13. [SDK Reference — Go](#sdk-go)
+14. [SDK Reference — Dart/Flutter](#sdk-dart)
+15. [SDK Reference — Swift](#sdk-swift)
+16. [SDK Reference — Kotlin/Android](#sdk-kotlin)
+17. [REST API Endpoints](#rest-api-endpoints)
+18. [Webhook Events](#webhook-events)
+19. [TypeScript Types](#typescript-types)
+20. [Error Codes](#error-codes)
+21. [Common Patterns](#common-patterns)
+22. [Migration from Clerk](#migration-from-clerk)
+23. [Migration from Auth.js (NextAuth)](#migration-from-authjs)
+
+---
+
+## Core Concepts
+
+### Authentication Methods
+- **Email/Password**: Traditional sign-up and sign-in with email verification
+- **OAuth**: 10 providers — Google, Apple, GitHub, Discord, Facebook, Microsoft, Kakao, Naver, LINE, X
+- **Passwordless**: Magic link (email) and email OTP (6-digit code)
+- **Passkeys (WebAuthn)**: Hardware key and biometric authentication
+- **Web3**: EVM wallets (MetaMask, WalletConnect, Coinbase, Pexus, Trust) and Solana (Phantom)
+- **MFA (TOTP)**: Google Authenticator / Authy compatible with backup codes
+
+### Architecture
+- **Publishable Key** (`pk_live_...` / `pk_test_...`): Used by client-side SDKs. Safe to expose in browser code.
+- **Secret Key** (`sk_live_...` / `sk_test_...`): Used by server-side SDKs. Never expose to clients.
+- **ShadowDOM Modal**: Built-in sign-in/sign-up UI rendered inside a ShadowRoot to prevent CSS conflicts. Branding is fetched from your Authon project dashboard.
+- **Session Management**: Access token (default 15 min TTL) + refresh token (default 7 day TTL). Client SDKs auto-refresh. Default max 5 concurrent sessions per user.
+- **Organizations**: Multi-tenant with roles (owner, admin, member), invitations, and per-org metadata.
+
+### API Base URL
+Default: `https://api.authon.dev`
+Self-hosted: Configure `apiUrl` in SDK options or `AUTHON_API_URL` env var.
+
+---
+
+## Environment Variables
+
+```env
+# Client-side (safe to expose)
+NEXT_PUBLIC_AUTHON_KEY=pk_live_...       # Next.js
+NUXT_PUBLIC_AUTHON_KEY=pk_live_...       # Nuxt
+VITE_AUTHON_KEY=pk_live_...              # Vite apps (React, Vue, Svelte)
+
+# Server-side (keep secret)
+AUTHON_SECRET_KEY=sk_live_...            # Required for backend SDKs
+AUTHON_API_URL=https://api.authon.dev    # Optional, this is the default
+AUTHON_WEBHOOK_SECRET=whsec_...          # For verifying incoming webhooks
+```
+
+---
+
+## SDK Reference — JavaScript / @authon/js {#sdk-javascript}
+
+The core browser SDK. All framework SDKs wrap this internally.
+
+### Install
+
+```bash
+npm install @authon/js
+```
+
+### Initialize
+
+```ts
+import { Authon } from '@authon/js';
+
+const authon = new Authon('pk_live_...');
+```
+
+With options:
+
+```ts
+const authon = new Authon('pk_live_...', {
+  apiUrl: 'https://api.authon.dev',  // default
+  mode: 'popup',                      // 'popup' | 'embedded'
+  theme: 'auto',                      // 'light' | 'dark' | 'auto'
+  locale: 'en',
+  containerId: 'auth-container',      // element ID for embedded mode
+  appearance: {
+    brandName: 'My App',
+    primaryColorStart: '#7c3aed',
+    primaryColorEnd: '#4f46e5',
+    borderRadius: 12,
+  },
+});
+```
+
+### Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `apiUrl` | `string` | `'https://api.authon.dev'` | Authon API base URL |
+| `mode` | `'popup' \| 'embedded'` | `'popup'` | Modal display mode |
+| `theme` | `'light' \| 'dark' \| 'auto'` | `'auto'` | UI theme |
+| `locale` | `string` | `'en'` | UI locale |
+| `containerId` | `string` | — | Element ID for embedded mode |
+| `appearance` | `Partial<BrandingConfig>` | — | Override branding from dashboard |
+
+### Modal
+
+```ts
+await authon.openSignIn();
+await authon.openSignUp();
+```
+
+### Email / Password
+
+```ts
+// Sign up
+const user = await authon.signUpWithEmail('user@example.com', 'password', {
+  displayName: 'Alice',
+});
+
+// Sign in
+const user = await authon.signInWithEmail('user@example.com', 'password');
+
+// Sign out
+await authon.signOut();
+```
+
+### OAuth
+
+```ts
+// Supported providers: 'google' | 'apple' | 'github' | 'discord' | 'facebook' | 'microsoft' | 'kakao' | 'naver' | 'line' | 'x'
+await authon.signInWithOAuth('google');
+await authon.signInWithOAuth('github', { flowMode: 'popup' });
+await authon.signInWithOAuth('google', { flowMode: 'redirect' });
+await authon.signInWithOAuth('google', { flowMode: 'auto' }); // default — popup with redirect fallback
+```
+
+### Passwordless
+
+```ts
+// Magic link
+await authon.sendMagicLink('user@example.com');
+const user = await authon.verifyPasswordless({ token: 'token-from-url' });
+
+// Email OTP
+await authon.sendEmailOtp('user@example.com');
+const user = await authon.verifyPasswordless({ email: 'user@example.com', code: '123456' });
+```
+
+### Passkeys (WebAuthn)
+
+```ts
+// Register (user must be signed in)
+const credential = await authon.registerPasskey('My MacBook');
+
+// Authenticate
+const user = await authon.authenticateWithPasskey();
+const user = await authon.authenticateWithPasskey('user@example.com'); // restrict by email
+
+// List
+const passkeys = await authon.listPasskeys();
+
+// Rename
+await authon.renamePasskey(passkeys[0].id, 'Work Laptop');
+
+// Revoke
+await authon.revokePasskey(passkeys[0].id);
+```
+
+### Web3
+
+```ts
+// EVM (MetaMask example)
+const { message, nonce } = await authon.web3GetNonce('0xAbc...', 'evm', 'metamask', 1);
+const signature = await window.ethereum.request({
+  method: 'personal_sign',
+  params: [message, '0xAbc...'],
+});
+const user = await authon.web3Verify(message, signature, '0xAbc...', 'evm', 'metamask');
+
+// Solana (Phantom example)
+const { message } = await authon.web3GetNonce(publicKey.toString(), 'solana', 'phantom');
+const encodedMessage = new TextEncoder().encode(message);
+const { signature } = await window.solana.signMessage(encodedMessage, 'utf8');
+const user = await authon.web3Verify(message, bs58.encode(signature), publicKey.toString(), 'solana', 'phantom');
+
+// Link additional wallet (user must be signed in)
+const wallet = await authon.linkWallet({ address, chain: 'evm', walletType: 'walletconnect', chainId: 1, message, signature });
+
+// List / unlink wallets
+const wallets = await authon.listWallets();
+await authon.unlinkWallet(wallets[0].id);
+```
+
+Supported wallet types: `'metamask' | 'pexus' | 'walletconnect' | 'coinbase' | 'phantom' | 'trust' | 'other'`
+Supported chains: `'evm' | 'solana'`
+
+### MFA (TOTP)
+
+```ts
+// Setup
+const setup = await authon.setupMfa();
+// setup.qrCodeSvg — inline SVG string
+// setup.qrCodeUri — otpauth:// URI
+// setup.secret — raw TOTP secret
+// setup.backupCodes — one-time recovery codes
+
+// Confirm setup
+await authon.verifyMfaSetup('123456');
+
+// Sign-in with MFA
+import { AuthonMfaRequiredError } from '@authon/js';
+
+try {
+  await authon.signInWithEmail('user@example.com', 'password');
+} catch (err) {
+  if (err instanceof AuthonMfaRequiredError) {
+    const user = await authon.verifyMfa(err.mfaToken, '123456');
+  }
+}
+
+// Status
+const status = await authon.getMfaStatus();
+// { enabled: boolean, backupCodesRemaining: number }
+
+// Disable
+await authon.disableMfa('123456');
+
+// Regenerate backup codes
+const newCodes = await authon.regenerateBackupCodes('123456');
+```
+
+### User Profile
+
+```ts
+const user = authon.getUser();   // synchronous
+const token = authon.getToken(); // synchronous
+
+const updated = await authon.updateProfile({
+  displayName: 'Alice Smith',
+  avatarUrl: 'https://example.com/avatar.png',
+  phone: '+12025551234',
+  publicMetadata: { plan: 'pro' },
+});
+```
+
+### Session Management
+
+```ts
+const sessions = await authon.listSessions();
+// [{ id, ipAddress, userAgent, createdAt, lastActiveAt }]
+
+await authon.revokeSession(sessions[0].id);
+```
+
+### Organizations
+
+```ts
+// List
+const { data: orgs } = await authon.organizations.list();
+
+// Create
+const org = await authon.organizations.create({ name: 'My Team', slug: 'my-team' });
+
+// Get / update / delete
+const org = await authon.organizations.get('org_...');
+await authon.organizations.update('org_...', { name: 'New Name' });
+await authon.organizations.delete('org_...');
+
+// Members
+const members = await authon.organizations.getMembers('org_...');
+await authon.organizations.removeMember('org_...', 'member_...');
+await authon.organizations.updateMemberRole('org_...', 'member_...', 'admin');
+await authon.organizations.leave('org_...');
+
+// Invitations
+const invite = await authon.organizations.invite('org_...', { email: 'user@example.com', role: 'member' });
+const invitations = await authon.organizations.getInvitations('org_...');
+await authon.organizations.acceptInvitation('invitation_token');
+await authon.organizations.rejectInvitation('invitation_token');
+```
+
+### Events
+
+```ts
+const off = authon.on('signedIn', (user) => console.log('Signed in:', user.email));
+authon.on('signedOut', () => console.log('Signed out'));
+authon.on('tokenRefreshed', (token) => { /* update API client */ });
+authon.on('mfaRequired', (mfaToken) => { /* show TOTP input */ });
+authon.on('passkeyRegistered', (credential) => { /* passkey added */ });
+authon.on('web3Connected', (wallet) => { /* wallet linked */ });
+authon.on('error', (error) => console.error(error));
+off(); // unsubscribe
+```
+
+### Cleanup
+
+```ts
+authon.destroy();
+```
+
+### Complete Method Reference
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `openSignIn()` | `Promise<void>` | Open sign-in modal |
+| `openSignUp()` | `Promise<void>` | Open sign-up modal |
+| `signInWithEmail(email, password)` | `Promise<AuthonUser>` | Email sign-in |
+| `signUpWithEmail(email, password, meta?)` | `Promise<AuthonUser>` | Email sign-up |
+| `signInWithOAuth(provider, options?)` | `Promise<void>` | OAuth flow |
+| `signOut()` | `Promise<void>` | Sign out |
+| `sendMagicLink(email)` | `Promise<void>` | Send magic link |
+| `sendEmailOtp(email)` | `Promise<void>` | Send OTP code |
+| `verifyPasswordless(opts)` | `Promise<AuthonUser>` | Verify magic link or OTP |
+| `registerPasskey(name?)` | `Promise<PasskeyCredential>` | Register passkey |
+| `authenticateWithPasskey(email?)` | `Promise<AuthonUser>` | Sign in with passkey |
+| `listPasskeys()` | `Promise<PasskeyCredential[]>` | List passkeys |
+| `renamePasskey(id, name)` | `Promise<PasskeyCredential>` | Rename passkey |
+| `revokePasskey(id)` | `Promise<void>` | Delete passkey |
+| `web3GetNonce(address, chain, walletType, chainId?)` | `Promise<Web3NonceResponse>` | Get sign-in nonce |
+| `web3Verify(message, signature, address, chain, walletType)` | `Promise<AuthonUser>` | Verify wallet |
+| `listWallets()` | `Promise<Web3Wallet[]>` | List wallets |
+| `linkWallet(params)` | `Promise<Web3Wallet>` | Link wallet |
+| `unlinkWallet(walletId)` | `Promise<void>` | Unlink wallet |
+| `setupMfa()` | `Promise<MfaSetupResponse & { qrCodeSvg }>` | Begin MFA setup |
+| `verifyMfaSetup(code)` | `Promise<void>` | Confirm MFA setup |
+| `verifyMfa(mfaToken, code)` | `Promise<AuthonUser>` | Complete MFA sign-in |
+| `getMfaStatus()` | `Promise<MfaStatus>` | Get MFA status |
+| `disableMfa(code)` | `Promise<void>` | Disable MFA |
+| `regenerateBackupCodes(code)` | `Promise<string[]>` | New backup codes |
+| `getUser()` | `AuthonUser \| null` | Current user (sync) |
+| `getToken()` | `string \| null` | Current token (sync) |
+| `updateProfile(data)` | `Promise<AuthonUser>` | Update profile |
+| `listSessions()` | `Promise<SessionInfo[]>` | List sessions |
+| `revokeSession(sessionId)` | `Promise<void>` | Revoke session |
+| `getProviders()` | `Promise<OAuthProviderType[]>` | List enabled providers |
+| `on(event, listener)` | `() => void` | Subscribe to event |
+| `destroy()` | `void` | Cleanup |
+
+---
+
+## SDK Reference — React / @authon/react {#sdk-react}
+
+### Install
+
+```bash
+npm install @authon/react @authon/js
+```
+
+Requires React >= 18.
+
+### Setup
+
+```tsx
+import { AuthonProvider } from '@authon/react';
+
+function App() {
+  return (
+    <AuthonProvider publishableKey="pk_live_...">
+      <Router />
+    </AuthonProvider>
+  );
+}
+```
+
+### Components
+
+| Component | Description |
+|-----------|-------------|
+| `<AuthonProvider>` | Provides auth context — wrap at root |
+| `<SignIn mode="popup"\|"embedded">` | Sign-in modal or embedded form |
+| `<SignUp mode="popup"\|"embedded">` | Sign-up modal or embedded form |
+| `<UserButton>` | Avatar dropdown with user info + sign-out |
+| `<SignedIn>` | Renders children only when signed in |
+| `<SignedOut>` | Renders children only when signed out |
+| `<Protect fallback={...} condition={...}>` | Role-based access guard |
+| `<SocialButton provider="google">` | Single OAuth button |
+| `<SocialButtons>` | Auto-renders all enabled OAuth buttons |
+
+### Hooks
+
+| Hook | Returns |
+|------|---------|
+| `useAuthon()` | `{ isSignedIn, isLoading, user, signOut, openSignIn, openSignUp, getToken, client }` |
+| `useUser()` | `{ user, isLoading }` |
+| `useAuthonMfa()` | `{ setupMfa, verifyMfaSetup, verifyMfa, disableMfa, getMfaStatus, regenerateBackupCodes, isLoading, error }` |
+| `useAuthonPasskeys()` | `{ registerPasskey, authenticateWithPasskey, listPasskeys, renamePasskey, revokePasskey, isLoading, error }` |
+| `useAuthonPasswordless()` | `{ sendMagicLink, sendEmailOtp, verifyPasswordless, isLoading, error }` |
+| `useAuthonWeb3()` | `{ getNonce, verify, listWallets, linkWallet, unlinkWallet, isLoading, error }` |
+| `useAuthonSessions()` | `{ listSessions, revokeSession, isLoading, error }` |
+
+### Example: Full auth-aware app
+
+```tsx
+import { AuthonProvider, SignedIn, SignedOut, UserButton, useAuthon, useUser } from '@authon/react';
+
+function App() {
+  return (
+    <AuthonProvider publishableKey="pk_live_...">
+      <SignedIn>
+        <UserButton />
+        <Dashboard />
+      </SignedIn>
+      <SignedOut>
+        <LandingPage />
+      </SignedOut>
+    </AuthonProvider>
+  );
+}
+
+function Dashboard() {
+  const { user } = useUser();
+  return <h1>Welcome, {user?.displayName}</h1>;
+}
+
+function LandingPage() {
+  const { openSignIn } = useAuthon();
+  return <button onClick={openSignIn}>Sign in</button>;
+}
+```
+
+---
+
+## SDK Reference — Next.js / @authon/nextjs {#sdk-nextjs}
+
+### Install
+
+```bash
+npm install @authon/nextjs @authon/js
+```
+
+Requires Next.js >= 14.
+
+### 1. Middleware (route protection)
+
+```ts
+// middleware.ts
+import { authonMiddleware } from '@authon/nextjs';
+
+export default authonMiddleware({
+  publicRoutes: ['/', '/about', '/pricing', '/sign-in', '/sign-up'],
+  signInUrl: '/sign-in',
+});
+
+export const config = {
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\..*).*)'],
+};
+```
+
+Middleware options:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `publicRoutes` | `string[]` | `['/']` | Routes accessible without auth. Supports trailing `*` wildcard |
+| `signInUrl` | `string` | `'/sign-in'` | Redirect for unauthenticated users |
+| `secretKey` | `string` | `process.env.AUTHON_SECRET_KEY` | Secret key for token verification |
+| `apiUrl` | `string` | `'https://api.authon.dev'` | API base URL |
+
+### 2. Layout provider
+
+```tsx
+// app/layout.tsx
+import { AuthonProvider } from '@authon/nextjs';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+          {children}
+        </AuthonProvider>
+      </body>
+    </html>
+  );
+}
+```
+
+### 3. Server-side helpers
+
+```ts
+// In Server Components or Route Handlers
+import { currentUser, auth } from '@authon/nextjs/server';
+
+// Get current user
+const user = await currentUser();
+
+// Get full auth state
+const { userId, user, getToken } = await auth();
+const token = getToken(); // forward to downstream services
+```
+
+### 4. Client components
+
+All hooks and components from @authon/react are re-exported. Use `'use client'` directive.
+
+```tsx
+'use client';
+import { useAuthon, useUser, SignedIn, SignedOut, UserButton } from '@authon/nextjs';
+```
+
+### Environment variables
+
+```env
+NEXT_PUBLIC_AUTHON_KEY=pk_live_...
+AUTHON_SECRET_KEY=sk_live_...
+AUTHON_API_URL=https://api.authon.dev  # optional
+```
+
+---
+
+## SDK Reference — Vue / @authon/vue {#sdk-vue}
+
+### Install
+
+```bash
+npm install @authon/vue @authon/js
+```
+
+Requires Vue >= 3.3.
+
+### Setup
+
+```ts
+// main.ts
+import { createApp } from 'vue'
+import { createAuthon } from '@authon/vue'
+import App from './App.vue'
+
+const app = createApp(App)
+app.use(createAuthon({ publishableKey: 'pk_live_...' }))
+app.mount('#app')
+```
+
+### Composables
+
+```ts
+import { useAuthon, useUser } from '@authon/vue'
+
+const { isSignedIn, isLoading, user, client, signOut, openSignIn, openSignUp, getToken } = useAuthon()
+const { user, isLoading } = useUser()
+```
+
+### Components
+
+| Component | Description |
+|-----------|-------------|
+| `<AuthonSignIn>` | Sign-in modal or embedded form |
+| `<AuthonSignUp>` | Sign-up modal or embedded form |
+| `<AuthonUserButton>` | Avatar dropdown |
+| `<AuthonSignedIn>` | Slot only when signed in |
+| `<AuthonSignedOut>` | Slot only when signed out |
+| `<AuthonSocialButton>` | Single OAuth button |
+| `<AuthonSocialButtons>` | All enabled OAuth buttons |
+
+### Example
+
+```vue
+<template>
+  <nav>
+    <AuthonSignedIn>
+      <span>Hello, {{ user?.displayName }}</span>
+      <button @click="signOut">Sign out</button>
+    </AuthonSignedIn>
+    <AuthonSignedOut>
+      <AuthonUserButton />
+    </AuthonSignedOut>
+  </nav>
+</template>
+
+<script setup lang="ts">
+import { useAuthon, AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/vue'
+const { user, signOut } = useAuthon()
+</script>
+```
+
+---
+
+## SDK Reference — Nuxt / @authon/nuxt {#sdk-nuxt}
+
+### Install
+
+```bash
+npm install @authon/nuxt @authon/js
+```
+
+Requires Nuxt >= 3.
+
+### Setup
+
+```ts
+// plugins/authon.client.ts
+import { createAuthonPlugin } from '@authon/nuxt'
+
+export default defineNuxtPlugin(() => {
+  const config = useRuntimeConfig()
+  const authon = createAuthonPlugin(config.public.authonKey)
+  return { provide: { authon } }
+})
+```
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  runtimeConfig: {
+    public: { authonKey: process.env.NUXT_PUBLIC_AUTHON_KEY },
+  },
+})
+```
+
+### Usage
+
+```vue
+<script setup lang="ts">
+const { $authon } = useNuxtApp()
+const { client, isSignedIn, user } = $authon
+</script>
+```
+
+### Route middleware
+
+```ts
+// middleware/auth.ts
+import { createAuthMiddleware } from '@authon/nuxt'
+
+export default defineNuxtRouteMiddleware((to, from) => {
+  const { $authon } = useNuxtApp()
+  return createAuthMiddleware($authon, '/login')(to, from)
+})
+```
+
+```vue
+<!-- pages/dashboard.vue -->
+<script setup>
+definePageMeta({ middleware: 'auth' })
+</script>
+```
+
+---
+
+## SDK Reference — Svelte / @authon/svelte {#sdk-svelte}
+
+### Install
+
+```bash
+npm install @authon/svelte @authon/js
+```
+
+Requires Svelte >= 4.
+
+### Setup
+
+```svelte
+<!-- src/routes/+layout.svelte -->
+<script lang="ts">
+  import { initAuthon } from '@authon/svelte'
+  import { onDestroy } from 'svelte'
+
+  const authon = initAuthon('pk_live_...')
+  onDestroy(() => authon.destroy())
+</script>
+
+<slot />
+```
+
+### Usage
+
+```svelte
+<script lang="ts">
+  import { getAuthon } from '@authon/svelte'
+  const { user, isSignedIn, isLoading, openSignIn, signOut } = getAuthon()
+</script>
+
+{#if $isLoading}
+  <p>Loading...</p>
+{:else if $isSignedIn}
+  <p>Welcome, {$user?.displayName}</p>
+  <button on:click={signOut}>Sign out</button>
+{:else}
+  <button on:click={openSignIn}>Sign in</button>
+{/if}
+```
+
+### Social Buttons
+
+```svelte
+<script lang="ts">
+  import { getAuthon, renderSocialButtons } from '@authon/svelte'
+  import { onMount, onDestroy } from 'svelte'
+
+  const { client } = getAuthon()
+  let container: HTMLElement
+  let cleanup: (() => void) | undefined
+
+  onMount(() => {
+    cleanup = renderSocialButtons({
+      client,
+      container,
+      onSuccess: () => window.location.href = '/dashboard',
+    })
+  })
+  onDestroy(() => cleanup?.())
+</script>
+
+<div bind:this={container} />
+```
+
+---
+
+## SDK Reference — Angular / @authon/angular {#sdk-angular}
+
+### Install
+
+```bash
+npm install @authon/angular @authon/js
+```
+
+Requires Angular >= 16.
+
+### Setup (standalone)
+
+```ts
+// app.config.ts
+import { provideAuthon } from '@authon/angular'
+
+export const appConfig: ApplicationConfig = {
+  providers: [
+    provideRouter(routes),
+    ...provideAuthon({ publishableKey: 'pk_live_...' }),
+  ],
+}
+```
+
+### Service
+
+```ts
+import { AuthonService } from '@authon/angular'
+
+constructor(@Inject('AuthonService') private authon: AuthonService) {}
+
+// Properties: user, isSignedIn, isLoading
+// Methods: openSignIn(), openSignUp(), signOut(), getToken(), getClient(), onStateChange(cb), destroy()
+```
+
+### Route guard
+
+```ts
+import { authGuard, AuthonService } from '@authon/angular'
+import { inject } from '@angular/core'
+
+{
+  path: 'dashboard',
+  component: DashboardComponent,
+  canActivate: [() => authGuard(inject(AuthonService) as AuthonService, '/login')],
+}
+```
+
+### Change detection
+
+```ts
+ngOnInit() {
+  this.unsubscribe = this.authon.onStateChange(() => this.cdr.markForCheck())
+}
+ngOnDestroy() {
+  this.unsubscribe?.()
+}
+```
+
+---
+
+## SDK Reference — React Native / @authon/react-native {#sdk-react-native}
+
+### Install
+
+```bash
+npm install @authon/react-native react-native-svg
+npx expo install expo-secure-store expo-web-browser
+```
+
+### Setup
+
+```tsx
+import { AuthonProvider } from '@authon/react-native';
+import * as SecureStore from 'expo-secure-store';
+
+const storage = {
+  getItem: (key: string) => SecureStore.getItemAsync(key),
+  setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+  removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+};
+
+export default function App() {
+  return (
+    <AuthonProvider publishableKey="pk_live_..." storage={storage}>
+      <Navigation />
+    </AuthonProvider>
+  );
+}
+```
+
+### Hooks
+
+```ts
+const { isLoaded, isSignedIn, userId, user, signIn, signUp, signOut, getToken, startOAuth, completeOAuth, client } = useAuthon();
+const { isLoaded, isSignedIn, user } = useUser();
+```
+
+### Email sign-in
+
+```tsx
+const { signIn } = useAuthon();
+await signIn({ strategy: 'email_password', email, password });
+```
+
+### OAuth (Expo recommended flow)
+
+```tsx
+import * as WebBrowser from 'expo-web-browser';
+
+const { completeOAuth, getToken } = useAuthon();
+
+async function handleGoogleSignIn() {
+  // Request OAuth URL from API
+  const params = new URLSearchParams({
+    redirectUri: `${API_URL}/v1/auth/oauth/redirect`,
+    flow: 'redirect',
+    returnTo: 'https://auth.example.com/authon/mobile-callback',
+  });
+  const response = await fetch(`${API_URL}/v1/auth/oauth/google/url?${params}`, {
+    headers: { 'x-api-key': PUBLISHABLE_KEY },
+  });
+  const { url, state } = await response.json();
+
+  const pollPromise = completeOAuth(state);
+  await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
+  await pollPromise;
+
+  const token = getToken();
+}
+```
+
+### Social Buttons
+
+```tsx
+import { SocialButtons } from '@authon/react-native';
+
+<SocialButtons
+  onSuccess={() => console.log('Signed in')}
+  onError={(error) => console.error(error)}
+/>
+```
+
+---
+
+## SDK Reference — Node.js / @authon/node {#sdk-node}
+
+Server-side SDK for token verification, user management, session management, and webhooks.
+
+### Install
+
+```bash
+npm install @authon/node
+```
+
+### Initialize
+
+```ts
+import { AuthonBackend } from '@authon/node';
+
+const authon = new AuthonBackend('sk_live_...');
+// Optional: new AuthonBackend('sk_live_...', { apiUrl: 'https://custom.api' })
+```
+
+### Token Verification
+
+```ts
+const user = await authon.verifyToken(accessToken);
+// Returns AuthonUser
+```
+
+### User Management
+
+```ts
+// List
+const result = await authon.users.list({ page: 1, limit: 20, search: 'alice' });
+
+// Get
+const user = await authon.users.get('usr_...');
+const user = await authon.users.getByExternalId('your-db-id');
+
+// Create
+const user = await authon.users.create({
+  email: 'alice@example.com',
+  password: 'secret1234',
+  displayName: 'Alice',
+  externalId: 'your-db-id',
+  publicMetadata: { role: 'admin' },
+  privateMetadata: { plan: 'pro' },
+});
+
+// Update
+const user = await authon.users.update('usr_...', { displayName: 'Alice Smith' });
+
+// Delete
+await authon.users.delete('usr_...');
+
+// Ban / unban
+await authon.users.ban('usr_...', 'Spam');
+await authon.users.unban('usr_...');
+```
+
+### Session Management
+
+```ts
+const sessions = await authon.sessions.list('usr_...');
+await authon.sessions.revoke('usr_...', 'sess_...');
+```
+
+### Webhook Verification
+
+```ts
+const event = authon.webhooks.verify(
+  rawBody,        // string | Buffer
+  signature,      // X-Authon-Signature header ("v1=<hex>")
+  timestamp,      // X-Authon-Timestamp header (ISO 8601)
+  webhookSecret,  // from Authon dashboard
+);
+// Returns parsed payload object
+```
+
+### Organizations (Backend)
+
+```ts
+const { data: orgs } = await authon.organizations.list({ page: 1, limit: 20 });
+const org = await authon.organizations.get('org_...');
+const org = await authon.organizations.create({ name: 'Team', createdBy: 'usr_...' });
+await authon.organizations.delete('org_...');
+const members = await authon.organizations.getMembers('org_...');
+await authon.organizations.addMember('org_...', { userId: 'usr_...', role: 'admin' });
+await authon.organizations.removeMember('org_...', 'usr_...');
+```
+
+### Audit Logs
+
+```ts
+const { data: logs } = await authon.auditLogs.list({
+  event: 'auth.signin',
+  dateFrom: '2025-01-01',
+  page: 1,
+  limit: 50,
+});
+```
+
+### JWT Templates
+
+```ts
+const templates = await authon.jwtTemplates.list();
+const template = await authon.jwtTemplates.create({
+  name: 'custom',
+  claims: [{ key: 'role', source: 'publicMetadata.role' }],
+});
+await authon.jwtTemplates.update(template.id, { name: 'updated' });
+await authon.jwtTemplates.delete(template.id);
+```
+
+### Express Middleware
+
+```ts
+import { expressMiddleware } from '@authon/node';
+
+app.use('/api', expressMiddleware({
+  secretKey: process.env.AUTHON_SECRET_KEY!,
+  onError: (err) => console.error(err),
+}));
+
+app.get('/api/profile', (req, res) => {
+  res.json({ user: req.auth });
+});
+```
+
+### Express Webhook Handler
+
+```ts
+app.post('/webhooks/authon', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-authon-signature'] as string;
+  const timestamp = req.headers['x-authon-timestamp'] as string;
+
+  try {
+    const event = authon.webhooks.verify(req.body, signature, timestamp, process.env.AUTHON_WEBHOOK_SECRET!);
+    switch (event.type) {
+      case 'user.created': console.log('New user:', event.data); break;
+      case 'user.updated': console.log('User updated:', event.data); break;
+      case 'user.deleted': console.log('User deleted:', event.data); break;
+      case 'session.created': console.log('Session created:', event.data); break;
+    }
+    res.json({ received: true });
+  } catch {
+    res.status(400).json({ error: 'Invalid signature' });
+  }
+});
+```
+
+### Fastify Plugin
+
+```ts
+import { fastifyPlugin } from '@authon/node';
+
+const authHook = fastifyPlugin({ secretKey: process.env.AUTHON_SECRET_KEY! });
+app.addHook('onRequest', authHook);
+
+app.get('/api/profile', async (request) => ({ user: request.auth }));
+```
+
+---
+
+## SDK Reference — Python {#sdk-python}
+
+### Install
+
+```bash
+pip install authon
+```
+
+Requires Python >= 3.8. Uses httpx.
+
+### Basic Usage
+
+```python
+from authon import AuthonBackend
+
+authon = AuthonBackend("sk_live_...")
+
+user = authon.verify_token("eyJ...")
+result = authon.users.list(page=1, limit=10)
+new_user = authon.users.create(email="user@example.com", password="secret")
+authon.users.update("user_abc123", display_name="Updated Name")
+authon.users.ban("user_abc123", reason="Spam")
+authon.users.delete("user_abc123")
+```
+
+### Async Client
+
+```python
+from authon import AsyncAuthonBackend
+
+authon = AsyncAuthonBackend("sk_live_...")
+user = await authon.verify_token("eyJ...")
+```
+
+### FastAPI
+
+```python
+from fastapi import FastAPI, Depends, Header
+from authon.middleware.fastapi import AuthonDependency
+from authon.types import AuthonUser
+
+app = FastAPI()
+authon_dep = AuthonDependency("sk_live_...")
+
+@app.get("/api/profile")
+async def profile(user: AuthonUser = Depends(authon_dep)):
+    return {"id": user.id, "email": user.email}
+```
+
+### Django
+
+```python
+from authon import AuthonBackend
+from authon.middleware.django import authon_login_required
+
+authon = AuthonBackend("sk_live_...")
+
+@authon_login_required(authon)
+def profile(request):
+    user = request.authon_user
+    return JsonResponse({"id": user.id, "email": user.email})
+```
+
+### Flask
+
+```python
+from authon import AuthonBackend
+from authon.middleware.flask import flask_authon_required
+
+authon = AuthonBackend("sk_live_...")
+
+@app.route("/api/profile")
+@flask_authon_required(authon)
+def profile():
+    user = g.authon_user
+    return jsonify({"id": user.id, "email": user.email})
+```
+
+### Webhook Verification
+
+```python
+from authon import verify_webhook
+
+event = verify_webhook(
+    payload=request_body,
+    signature=request.headers["x-authon-signature"],
+    secret="whsec_...",
+)
+```
+
+---
+
+## SDK Reference — Go {#sdk-go}
+
+### Install
+
+```bash
+go get github.com/mikusnuz/authon-sdk/go
+```
+
+Requires Go >= 1.21.
+
+### Usage
+
+```go
+import authon "github.com/mikusnuz/authon-sdk/go"
+
+client := authon.NewBackend("sk_live_...")
+
+// Verify token
+user, err := client.VerifyToken("eyJ...")
+
+// HTTP middleware
+mux.Handle("/api/profile", client.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    user := authon.UserFromContext(r.Context())
+    w.Write([]byte("Hello, " + user.DisplayName))
+})))
+
+// User management
+result, _ := client.Users.List(authon.ListOptions{Page: 1, PerPage: 20})
+user, _ := client.Users.Get("user_abc123")
+user, _ := client.Users.Create(authon.CreateUserParams{Email: "user@example.com", Password: "secret"})
+client.Users.Delete("user_abc123")
+
+// Webhooks
+data, err := client.Webhooks.Verify([]byte(body), signature, "whsec_...")
+
+// Custom API URL
+client := authon.NewBackend("sk_live_...", authon.WithAPIURL("https://custom.api"))
+```
+
+---
+
+## SDK Reference — Dart/Flutter {#sdk-dart}
+
+### Install
+
+```yaml
+dependencies:
+  authon: ^0.1.0
+```
+
+### Setup
+
+```dart
+import 'package:authon/authon.dart';
+
+void main() {
+  runApp(AuthonProvider(publishableKey: 'pk_live_...', child: const MyApp()));
+}
+```
+
+### Usage
+
+```dart
+final authon = Authon.of(context);
+
+// OAuth
+await authon.signInWithOAuth(OAuthProvider.google);
+
+// Email
+final user = await authon.signInWithEmail('user@example.com', 'password');
+
+// Auth state
+AuthonBuilder(builder: (context, state) {
+  if (state.isLoading) return CircularProgressIndicator();
+  if (!state.isSignedIn) return SignInScreen();
+  return Text('Welcome, ${state.user!.displayName}');
+});
+
+// Token / sign out
+final token = await authon.getToken();
+await authon.signOut();
+```
+
+---
+
+## SDK Reference — Swift {#sdk-swift}
+
+### Install (SPM)
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")
+]
+```
+
+### Usage
+
+```swift
+import Authon
+
+let authon = AuthonClient(publishableKey: "pk_live_...")
+
+// OAuth
+let user = try await authon.signIn(with: .google)
+
+// Email
+let user = try await authon.signIn(email: "user@example.com", password: "password")
+
+// Auth state
+if let user = authon.currentUser { print(user.displayName) }
+let token = try await authon.getToken()
+try await authon.signOut()
+
+// SwiftUI
+@StateObject private var auth = AuthonObservable(publishableKey: "pk_live_...")
+// auth.user, auth.isSignedIn, auth.isLoading
+```
+
+Tokens stored in Keychain. OAuth uses ASWebAuthenticationSession.
+
+---
+
+## SDK Reference — Kotlin/Android {#sdk-kotlin}
+
+### Install (Gradle)
+
+```kotlin
+implementation("dev.authon:sdk:0.1.0")
+```
+
+### Usage
+
+```kotlin
+import dev.authon.sdk.AuthonClient
+
+val authon = AuthonClient(publishableKey = "pk_live_...", context = applicationContext)
+
+// OAuth
+val user = authon.signInWithOAuth(OAuthProvider.GOOGLE, activity)
+
+// Email
+val user = authon.signInWithEmail("user@example.com", "password")
+
+// Google One Tap
+val user = authon.signInWithGoogleOneTap(activity)
+
+// Auth state (Kotlin Flow)
+authon.authState.collect { state ->
+    when {
+        state.isLoading -> showLoading()
+        state.user != null -> showProfile(state.user)
+        else -> showSignIn()
+    }
+}
+
+// Jetpack Compose
+val auth = rememberAuthonState(publishableKey = "pk_live_...")
+// auth.isLoading, auth.isSignedIn, auth.user
+
+// Token / sign out
+val token = authon.getToken()
+authon.signOut()
+```
+
+Tokens stored in EncryptedSharedPreferences (AES256-GCM). OAuth uses Chrome Custom Tabs.
+
+---
+
+## REST API Endpoints {#rest-api-endpoints}
+
+Base URL: `https://api.authon.dev`
+
+All requests require `x-api-key` header with either a publishable key (client endpoints) or secret key (backend endpoints).
+Authenticated endpoints also require `Authorization: Bearer <accessToken>`.
+
+### Client Auth Endpoints (publishable key)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/v1/auth/signup` | Sign up with email/password |
+| POST | `/v1/auth/signin` | Sign in with email/password |
+| GET | `/v1/auth/branding` | Get project branding config |
+| GET | `/v1/auth/providers` | List enabled OAuth providers |
+| GET | `/v1/auth/oauth/{provider}/url` | Get OAuth authorization URL |
+| GET | `/v1/auth/oauth/poll?state=...` | Poll OAuth completion status |
+| GET | `/v1/auth/oauth/redirect` | OAuth redirect handler |
+| POST | `/v1/auth/passwordless/magic-link` | Send magic link |
+| POST | `/v1/auth/passwordless/email-otp` | Send email OTP |
+| POST | `/v1/auth/passwordless/verify` | Verify magic link or OTP |
+| POST | `/v1/auth/passkeys/register/options` | Get passkey registration options (auth required) |
+| POST | `/v1/auth/passkeys/register/verify` | Verify passkey registration (auth required) |
+| POST | `/v1/auth/passkeys/authenticate/options` | Get passkey auth options |
+| POST | `/v1/auth/passkeys/authenticate/verify` | Verify passkey authentication |
+| GET | `/v1/auth/passkeys` | List registered passkeys (auth required) |
+| PATCH | `/v1/auth/passkeys/{id}` | Rename passkey (auth required) |
+| DELETE | `/v1/auth/passkeys/{id}` | Delete passkey (auth required) |
+| POST | `/v1/auth/web3/nonce` | Get Web3 sign-in nonce |
+| POST | `/v1/auth/web3/verify` | Verify Web3 signature |
+| GET | `/v1/auth/web3/wallets` | List linked wallets (auth required) |
+| POST | `/v1/auth/web3/wallets/link` | Link wallet (auth required) |
+| DELETE | `/v1/auth/web3/wallets/{id}` | Unlink wallet (auth required) |
+| POST | `/v1/auth/mfa/totp/setup` | Begin TOTP MFA setup (auth required) |
+| POST | `/v1/auth/mfa/totp/verify-setup` | Confirm MFA setup (auth required) |
+| POST | `/v1/auth/mfa/verify` | Verify MFA code during sign-in |
+| POST | `/v1/auth/mfa/disable` | Disable MFA (auth required) |
+| GET | `/v1/auth/mfa/status` | Get MFA status (auth required) |
+| POST | `/v1/auth/mfa/backup-codes/regenerate` | Regenerate backup codes (auth required) |
+| GET | `/v1/auth/token/verify` | Verify access token |
+| PATCH | `/v1/auth/me` | Update user profile (auth required) |
+| GET | `/v1/auth/me/sessions` | List user sessions (auth required) |
+| DELETE | `/v1/auth/me/sessions/{id}` | Revoke session (auth required) |
+| GET | `/v1/auth/organizations` | List user's organizations (auth required) |
+| POST | `/v1/auth/organizations` | Create organization (auth required) |
+| GET | `/v1/auth/organizations/{id}` | Get organization (auth required) |
+| PATCH | `/v1/auth/organizations/{id}` | Update organization (auth required) |
+| DELETE | `/v1/auth/organizations/{id}` | Delete organization (auth required) |
+| GET | `/v1/auth/organizations/{id}/members` | List organization members (auth required) |
+| DELETE | `/v1/auth/organizations/{id}/members/{memberId}` | Remove member (auth required) |
+| PATCH | `/v1/auth/organizations/{id}/members/{memberId}` | Update member role (auth required) |
+| POST | `/v1/auth/organizations/{id}/invitations` | Send invitation (auth required) |
+| GET | `/v1/auth/organizations/{id}/invitations` | List invitations (auth required) |
+| POST | `/v1/auth/organizations/invitations/{token}/accept` | Accept invitation (auth required) |
+| POST | `/v1/auth/organizations/invitations/{token}/reject` | Reject invitation (auth required) |
+| POST | `/v1/auth/organizations/{id}/leave` | Leave organization (auth required) |
+
+### Backend Endpoints (secret key)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/v1/backend/users` | List all users |
+| GET | `/v1/backend/users/{id}` | Get user by ID |
+| GET | `/v1/backend/users/by-external-id/{externalId}` | Get user by external ID |
+| POST | `/v1/backend/users` | Create user |
+| PATCH | `/v1/backend/users/{id}` | Update user |
+| DELETE | `/v1/backend/users/{id}` | Delete user |
+| POST | `/v1/backend/users/{id}/ban` | Ban user |
+| POST | `/v1/backend/users/{id}/unban` | Unban user |
+| GET | `/v1/backend/users/{id}/sessions` | List user sessions |
+| DELETE | `/v1/backend/users/{id}/sessions/{sessionId}` | Revoke session |
+| GET | `/v1/backend/users/{id}/passkeys` | List user passkeys |
+| DELETE | `/v1/backend/users/{id}/passkeys/{credentialId}` | Delete passkey |
+| GET | `/v1/backend/users/{id}/web3-wallets` | List user wallets |
+| POST | `/v1/backend/web3/verify-signature` | Verify Web3 signature |
+| POST | `/v1/backend/passwordless/send` | Send passwordless code |
+| POST | `/v1/backend/passwordless/verify` | Verify passwordless code |
+| GET | `/v1/backend/organizations` | List organizations |
+| GET | `/v1/backend/organizations/{id}` | Get organization |
+| POST | `/v1/backend/organizations` | Create organization |
+| DELETE | `/v1/backend/organizations/{id}` | Delete organization |
+| GET | `/v1/backend/organizations/{id}/members` | List members |
+| POST | `/v1/backend/organizations/{id}/members` | Add member |
+| DELETE | `/v1/backend/organizations/{id}/members/{userId}` | Remove member |
+| GET | `/v1/backend/audit-logs` | List audit logs |
+| GET | `/v1/backend/jwt-templates` | List JWT templates |
+| GET | `/v1/backend/jwt-templates/{id}` | Get JWT template |
+| POST | `/v1/backend/jwt-templates` | Create JWT template |
+| PUT | `/v1/backend/jwt-templates/{id}` | Update JWT template |
+| DELETE | `/v1/backend/jwt-templates/{id}` | Delete JWT template |
+
+---
+
+## Webhook Events {#webhook-events}
+
+Events are sent as POST requests with these headers:
+- `X-Authon-Signature`: `v1=<hmac-sha256-hex>`
+- `X-Authon-Timestamp`: ISO 8601 timestamp
+- `Content-Type`: `application/json`
+
+Signature is computed as: `HMAC-SHA256(webhookSecret, timestamp + "." + rawBody)`
+
+### Event Types
+
+| Event | Description |
+|-------|-------------|
+| `user.created` | New user registered |
+| `user.updated` | User profile updated |
+| `user.deleted` | User deleted |
+| `user.banned` | User banned |
+| `user.unbanned` | User unbanned |
+| `session.created` | New session created (sign-in) |
+| `session.ended` | Session ended (sign-out) |
+| `session.revoked` | Session revoked (admin or user action) |
+| `provider.linked` | OAuth/Web3 provider linked |
+| `provider.unlinked` | OAuth/Web3 provider unlinked |
+
+### Audit Log Event Types
+
+| Event | Description |
+|-------|-------------|
+| `auth.signup` | User signed up |
+| `auth.signin` | User signed in |
+| `auth.signin.failed` | Sign-in attempt failed |
+| `auth.signout` | User signed out |
+| `auth.token.refresh` | Token refreshed |
+| `auth.mfa.setup` | MFA setup initiated |
+| `auth.mfa.verify` | MFA verified |
+| `auth.passkey.register` | Passkey registered |
+| `auth.web3.verify` | Web3 signature verified |
+| `admin.user.banned` | Admin banned a user |
+| `admin.user.unbanned` | Admin unbanned a user |
+| `admin.user.deleted` | Admin deleted a user |
+| `org.created` | Organization created |
+| `org.deleted` | Organization deleted |
+| `org.member.added` | Member added to organization |
+| `org.member.removed` | Member removed from organization |
+| `org.member.role_changed` | Member role changed |
+| `org.invitation.sent` | Organization invitation sent |
+| `org.invitation.accepted` | Organization invitation accepted |
+
+---
+
+## TypeScript Types {#typescript-types}
+
+All types are exported from `@authon/shared`.
+
+```ts
+interface AuthonUser {
+  id: string;
+  projectId: string;
+  email: string | null;
+  displayName: string | null;
+  avatarUrl: string | null;
+  phone: string | null;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  isBanned: boolean;
+  publicMetadata: Record<string, unknown> | null;
+  lastSignInAt: string | null;
+  signInCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number; // seconds
+  user: AuthonUser;
+}
+
+interface SessionInfo {
+  id: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  createdAt: string;
+  lastActiveAt: string | null;
+}
+
+interface MfaSetupResponse {
+  secret: string;
+  qrCodeUri: string;
+  backupCodes: string[];
+}
+
+interface MfaStatus {
+  enabled: boolean;
+  backupCodesRemaining: number;
+}
+
+interface PasskeyCredential {
+  id: string;
+  name: string | null;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+type Web3Chain = 'evm' | 'solana';
+type Web3WalletType = 'metamask' | 'pexus' | 'walletconnect' | 'coinbase' | 'phantom' | 'trust' | 'other';
+
+interface Web3Wallet {
+  id: string;
+  address: string;
+  chain: Web3Chain;
+  walletType: Web3WalletType;
+  chainId: number | null;
+  createdAt: string;
+}
+
+interface Web3NonceResponse {
+  message: string;
+  nonce: string;
+}
+
+interface BrandingConfig {
+  logoDataUrl?: string;
+  brandName?: string;
+  primaryColorStart?: string;
+  primaryColorEnd?: string;
+  lightBg?: string;
+  lightText?: string;
+  darkBg?: string;
+  darkText?: string;
+  borderRadius?: number;
+  providerOrder?: string[];
+  hiddenProviders?: string[];
+  showEmailPassword?: boolean;
+  showDivider?: boolean;
+  termsUrl?: string;
+  privacyUrl?: string;
+  customCss?: string;
+  locale?: string;
+  showSecuredBy?: boolean;
+}
+
+interface SessionConfig {
+  accessTokenTtl?: number;   // default 900 (15 min)
+  refreshTokenTtl?: number;  // default 604800 (7 days)
+  maxSessions?: number;      // default 5
+  singleSession?: boolean;   // default false
+}
+
+interface AuthonOrganization {
+  id: string;
+  projectId: string;
+  name: string;
+  slug: string;
+  logoUrl: string | null;
+  metadata: Record<string, any> | null;
+  maxMembers: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface OrganizationMember {
+  id: string;
+  organizationId: string;
+  userId: string;
+  role: 'owner' | 'admin' | 'member';
+  joinedAt: string;
+  createdAt: string;
+}
+
+interface OrganizationInvitation {
+  id: string;
+  organizationId: string;
+  email: string;
+  role: string;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  invitedBy: string;
+  expiresAt: string;
+  createdAt: string;
+}
+
+type OAuthProviderType = 'google' | 'apple' | 'kakao' | 'naver' | 'facebook' | 'github' | 'discord' | 'x' | 'line' | 'microsoft';
+
+type WebhookEventType = 'user.created' | 'user.updated' | 'user.deleted' | 'user.banned' | 'user.unbanned' | 'session.created' | 'session.ended' | 'session.revoked' | 'provider.linked' | 'provider.unlinked';
+```
+
+---
+
+## Error Codes {#error-codes}
+
+| HTTP Status | Error | Description |
+|-------------|-------|-------------|
+| 400 | Bad Request | Missing or invalid parameters |
+| 401 | Unauthorized | Invalid or expired token / API key |
+| 403 | Forbidden | Insufficient permissions |
+| 404 | Not Found | Resource does not exist |
+| 409 | Conflict | Email already registered |
+| 429 | Too Many Requests | Rate limit exceeded |
+
+### SDK-Specific Errors
+
+| Error Class | Thrown When |
+|-------------|------------|
+| `AuthonMfaRequiredError` | `signInWithEmail()` when MFA is enabled. Contains `mfaToken` property. |
+
+---
+
+## Common Patterns {#common-patterns}
+
+### Protect a Next.js API route (App Router)
+
+```ts
+// app/api/data/route.ts
+import { currentUser } from '@authon/nextjs/server';
+
+export async function GET() {
+  const user = await currentUser();
+  if (!user) return new Response('Unauthorized', { status: 401 });
+  return Response.json({ data: 'secret', userId: user.id });
+}
+```
+
+### Protect an Express API route
+
+```ts
+import { AuthonBackend } from '@authon/node';
+
+const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
+
+async function requireAuth(req, res, next) {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (!token) return res.status(401).json({ error: 'Missing token' });
+  try {
+    req.auth = await authon.verifyToken(token);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Invalid token' });
+  }
+}
+
+app.get('/api/profile', requireAuth, (req, res) => {
+  res.json({ user: req.auth });
+});
+```
+
+### Add Google login to React
+
+```tsx
+import { AuthonProvider, useAuthon, SocialButtons } from '@authon/react';
+
+function LoginPage() {
+  return (
+    <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+      <SocialButtons
+        onSuccess={() => window.location.href = '/dashboard'}
+        onError={(err) => console.error(err)}
+      />
+    </AuthonProvider>
+  );
+}
+```
+
+### Add MFA to an existing app
+
+```tsx
+import { useAuthonMfa } from '@authon/react';
+
+function MfaSetup() {
+  const { setupMfa, verifyMfaSetup, isLoading, error } = useAuthonMfa();
+  const [qr, setQr] = useState('');
+  const [code, setCode] = useState('');
+
+  const handleSetup = async () => {
+    const result = await setupMfa();
+    if (result) setQr(result.qrCodeSvg);
+  };
+
+  const handleVerify = async () => {
+    const success = await verifyMfaSetup(code);
+    if (success) alert('MFA enabled!');
+  };
+
+  return (
+    <div>
+      <button onClick={handleSetup} disabled={isLoading}>Enable MFA</button>
+      {qr && <div dangerouslySetInnerHTML={{ __html: qr }} />}
+      <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="6-digit code" />
+      <button onClick={handleVerify} disabled={isLoading}>Verify</button>
+    </div>
+  );
+}
+```
+
+### Role-based access control
+
+```tsx
+import { Protect } from '@authon/react';
+
+<Protect
+  fallback={<p>Admin access required</p>}
+  condition={(user) => user.publicMetadata?.role === 'admin'}
+>
+  <AdminPanel />
+</Protect>
+```
+
+### Send authenticated requests from client
+
+```ts
+const { getToken } = useAuthon();
+
+async function fetchProtectedData() {
+  const token = getToken();
+  const response = await fetch('/api/data', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return response.json();
+}
+```
+
+---
+
+## Migration from Clerk {#migration-from-clerk}
+
+### Package replacements
+
+| Clerk | Authon |
+|-------|--------|
+| `@clerk/nextjs` | `@authon/nextjs` |
+| `@clerk/clerk-react` | `@authon/react` |
+| `@clerk/clerk-js` | `@authon/js` |
+| `@clerk/backend` | `@authon/node` |
+| `@clerk/themes` | Built-in `appearance` config |
+
+### Import replacements
+
+| Clerk | Authon |
+|-------|--------|
+| `ClerkProvider` | `AuthonProvider` |
+| `useAuth()` | `useAuthon()` |
+| `useUser()` | `useUser()` (same name) |
+| `useClerk()` | `useAuthon()` (returns `client`) |
+| `<SignIn />` | `<SignIn />` (same name) |
+| `<SignUp />` | `<SignUp />` (same name) |
+| `<UserButton />` | `<UserButton />` (same name) |
+| `<SignedIn>` | `<SignedIn>` (same name) |
+| `<SignedOut>` | `<SignedOut>` (same name) |
+| `clerkMiddleware()` | `authonMiddleware()` |
+| `currentUser()` | `currentUser()` (same name, from `@authon/nextjs/server`) |
+| `auth()` | `auth()` (same name, from `@authon/nextjs/server`) |
+
+### Environment variables
+
+| Clerk | Authon |
+|-------|--------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `NEXT_PUBLIC_AUTHON_KEY` |
+| `CLERK_SECRET_KEY` | `AUTHON_SECRET_KEY` |
+| `CLERK_WEBHOOK_SECRET` | `AUTHON_WEBHOOK_SECRET` |
+
+### Middleware
+
+```ts
+// Before (Clerk)
+import { clerkMiddleware } from '@clerk/nextjs/server';
+export default clerkMiddleware();
+
+// After (Authon)
+import { authonMiddleware } from '@authon/nextjs';
+export default authonMiddleware({
+  publicRoutes: ['/', '/sign-in', '/sign-up'],
+});
+```
+
+### Provider
+
+```tsx
+// Before (Clerk)
+<ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
+
+// After (Authon)
+<AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+```
+
+---
+
+## Migration from Auth.js (NextAuth) {#migration-from-authjs}
+
+### Key differences
+
+- Auth.js uses server-side sessions by default; Authon uses JWT access/refresh tokens.
+- Auth.js requires configuring each provider in code; Authon configures providers in the dashboard.
+- Authon provides a built-in UI modal; Auth.js requires building your own or using third-party components.
+
+### Provider setup
+
+```ts
+// Before (Auth.js) — in auth.ts
+import GoogleProvider from "next-auth/providers/google";
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [GoogleProvider({ clientId: "...", clientSecret: "..." })],
+})
+
+// After (Authon) — configure Google in dashboard, then:
+// middleware.ts
+import { authonMiddleware } from '@authon/nextjs';
+
+export default authonMiddleware({
+  publicRoutes: ['/', '/sign-in'],
+});
+```
+
+### Session access
+
+```ts
+// Before (Auth.js)
+import { auth } from "@/auth";
+const session = await auth();
+const userId = session?.user?.id;
+
+// After (Authon)
+import { currentUser, auth } from '@authon/nextjs/server';
+const user = await currentUser();
+const { userId, getToken } = await auth();
+```
+
+### Protecting API routes
+
+```ts
+// Before (Auth.js)
+import { auth } from "@/auth";
+export async function GET() {
+  const session = await auth();
+  if (!session) return new Response("Unauthorized", { status: 401 });
+}
+
+// After (Authon)
+import { currentUser } from '@authon/nextjs/server';
+export async function GET() {
+  const user = await currentUser();
+  if (!user) return new Response("Unauthorized", { status: 401 });
+}
+```
+
+### Client-side auth state
+
+```tsx
+// Before (Auth.js)
+import { useSession } from "next-auth/react";
+const { data: session, status } = useSession();
+
+// After (Authon)
+import { useAuthon } from '@authon/nextjs';
+const { isSignedIn, isLoading, user } = useAuthon();
+```
