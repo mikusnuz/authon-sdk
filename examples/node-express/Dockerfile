@@ -18,8 +18,7 @@ FROM node:20-alpine
 WORKDIR /app
 COPY --from=build /app/packages/ ./packages/
 COPY --from=build /app/examples/node-express/dist ./dist
-COPY --from=build /app/examples/node-express/package*.json ./
 COPY --from=build /app/examples/node-express/src/views ./src/views
-RUN npm install --omit=dev
+COPY --from=build /app/examples/node-express/node_modules ./node_modules
 EXPOSE 3000
 CMD ["node", "dist/server.js"]
