@@ -1,13 +1,16 @@
 services:
   portal:
-    build: ./portal
+    build:
+      context: ..
+      dockerfile: examples/portal/Dockerfile
     ports:
       - "15585:80"
     restart: unless-stopped
 
   react:
     build:
-      context: ./react
+      context: ..
+      dockerfile: examples/react/Dockerfile
       args:
         VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
@@ -16,15 +19,18 @@ services:
     restart: unless-stopped
 
   nextjs:
-    build: ./nextjs
+    build:
+      context: ..
+      dockerfile: examples/nextjs/Dockerfile
     ports:
       - "15587:3000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   vue:
     build:
-      context: ./vue
+      context: ..
+      dockerfile: examples/vue/Dockerfile
       args:
         VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
@@ -33,15 +39,18 @@ services:
     restart: unless-stopped
 
   nuxt:
-    build: ./nuxt
+    build:
+      context: ..
+      dockerfile: examples/nuxt/Dockerfile
     ports:
       - "15589:3000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   angular:
     build:
-      context: ./angular
+      context: ..
+      dockerfile: examples/angular/Dockerfile
       args:
         AUTHON_PROJECT_ID: ${AUTHON_PROJECT_ID}
         AUTHON_API_URL: ${AUTHON_API_URL}
@@ -50,15 +59,18 @@ services:
     restart: unless-stopped
 
   svelte:
-    build: ./svelte
+    build:
+      context: ..
+      dockerfile: examples/svelte/Dockerfile
     ports:
       - "15596:3000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   vanilla-js:
     build:
-      context: ./vanilla-js
+      context: ..
+      dockerfile: examples/vanilla-js/Dockerfile
       args:
         VITE_AUTHON_PROJECT_ID: ${VITE_AUTHON_PROJECT_ID}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
@@ -67,36 +79,46 @@ services:
     restart: unless-stopped
 
   node-express:
-    build: ./node-express
+    build:
+      context: ..
+      dockerfile: examples/node-express/Dockerfile
     ports:
       - "15598:3000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   go:
-    build: ./go
+    build:
+      context: ..
+      dockerfile: examples/go/Dockerfile
     ports:
       - "15599:8080"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   python-fastapi:
-    build: ./python-fastapi
+    build:
+      context: ..
+      dockerfile: examples/python-fastapi/Dockerfile
     ports:
       - "15600:8000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   python-flask:
-    build: ./python-flask
+    build:
+      context: ..
+      dockerfile: examples/python-flask/Dockerfile
     ports:
       - "15601:5000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
 
   python-django:
-    build: ./python-django
+    build:
+      context: ..
+      dockerfile: examples/python-django/Dockerfile
     ports:
       - "15602:8000"
-    env_file: .env
+    env_file: examples/.env
     restart: unless-stopped
