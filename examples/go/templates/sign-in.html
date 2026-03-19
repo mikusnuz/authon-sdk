@@ -1,0 +1,221 @@
+{{template "layout" .}}
+
+{{define "content"}}
+<div class="page-centered">
+  <div>
+    <div style="text-align:center;margin-bottom:24px;">
+      <h1 style="font-size:26px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">Sign In</h1>
+      <p style="color:var(--text-secondary);font-size:14px;">Sign in to your Authon account</p>
+    </div>
+
+    <div class="card">
+      {{if .Error}}
+        <div class="alert alert-error" style="margin-bottom:16px;">{{.Error}}</div>
+      {{end}}
+
+      <form id="signin-form" style="display:flex;flex-direction:column;gap:16px;">
+        <div class="form-group">
+          <label class="form-label" for="email">Email</label>
+          <input id="email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input id="password" class="form-input" type="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password" required />
+          <div style="display:flex;justify-content:flex-end;margin-top:4px;">
+            <a href="/reset-password" style="font-size:13px;color:var(--accent);">Forgot password?</a>
+          </div>
+        </div>
+
+        <div id="form-error" class="alert alert-error" style="display:none;"></div>
+
+        <button type="submit" id="signin-btn" class="btn btn-primary btn-full">Sign in</button>
+      </form>
+
+      <div id="mfa-form" style="display:none;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="font-size:32px;margin-bottom:12px;">&#128273;</div>
+          <h2 style="font-size:20px;font-weight:700;color:var(--text-primary);margin-bottom:8px;">Two-Factor Authentication</h2>
+          <p style="color:var(--text-secondary);font-size:14px;">Enter the 6-digit code from your authenticator app</p>
+        </div>
+        <div id="mfa-error" class="alert alert-error" style="display:none;margin-bottom:16px;"></div>
+        <div class="form-group" style="margin-bottom:16px;">
+          <label class="form-label">Verification Code</label>
+          <input id="mfa-code" class="form-input" type="text" inputmode="numeric" maxlength="6" placeholder="000000" style="text-align:center;font-size:24px;letter-spacing:0.2em;" />
+        </div>
+        <button id="mfa-verify-btn" class="btn btn-primary btn-full" style="margin-bottom:8px;">Verify</button>
+        <button id="mfa-back-btn" class="btn btn-secondary btn-full">Back</button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:12px;margin:20px 0;">
+        <div class="divider" style="flex:1;"></div>
+        <span style="color:var(--text-tertiary);font-size:13px;">or continue with</span>
+        <div class="divider" style="flex:1;"></div>
+      </div>
+
+      <div class="social-grid">
+        <button class="social-btn" onclick="signInWithOAuth('google')">
+          <div class="social-btn-icon" style="background:#fff;border-radius:4px;">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+          </div>
+          Continue with Google
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('github')">
+          <div class="social-btn-icon" style="background:#24292e;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.202 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C19.138 20.167 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+          </div>
+          Continue with GitHub
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('discord')">
+          <div class="social-btn-icon" style="background:#5865F2;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03z"/></svg>
+          </div>
+          Continue with Discord
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('kakao')">
+          <div class="social-btn-icon" style="background:#FEE500;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#3C1E1E"><path d="M12 3C6.477 3 2 6.477 2 10.5c0 2.558 1.418 4.801 3.562 6.178L4.5 21l4.781-2.926A11.5 11.5 0 0 0 12 18c5.523 0 10-3.477 10-7.5S17.523 3 12 3z"/></svg>
+          </div>
+          Continue with Kakao
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('naver')">
+          <div class="social-btn-icon" style="background:#03C75A;">
+            <span style="color:white;font-weight:800;font-size:12px;">N</span>
+          </div>
+          Continue with Naver
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('facebook')">
+          <div class="social-btn-icon" style="background:#1877F2;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </div>
+          Continue with Facebook
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('x')">
+          <div class="social-btn-icon" style="background:#000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+          </div>
+          Continue with X
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('line')">
+          <div class="social-btn-icon" style="background:#06C755;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M19.365 9.863c.349 0 .63.285.63.631 0 .345-.281.63-.63.63H17.61v1.125h1.755c.349 0 .63.283.63.63 0 .344-.281.629-.63.629h-2.386c-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63h2.386c.346 0 .627.285.627.63 0 .349-.281.63-.63.63H17.61v1.125h1.755zm-3.855 3.016c0 .27-.174.51-.432.596-.064.021-.133.031-.199.031-.211 0-.391-.09-.51-.25l-2.443-3.317v2.94c0 .344-.279.629-.631.629-.346 0-.626-.285-.626-.629V8.108c0-.27.173-.51.43-.595.06-.023.136-.033.194-.033.195 0 .375.104.495.254l2.462 3.33V8.108c0-.345.282-.63.63-.63.345 0 .63.285.63.63v4.771zm-5.741 0c0 .344-.282.629-.631.629-.345 0-.627-.285-.627-.629V8.108c0-.345.282-.63.63-.63.346 0 .628.285.628.63v4.771zm-2.466.629H4.917c-.345 0-.63-.285-.63-.629V8.108c0-.345.285-.63.63-.63.348 0 .63.285.63.63v4.141h1.756c.348 0 .629.283.629.63 0 .344-.282.629-.629.629M24 10.314C24 4.943 18.615.572 12 .572S0 4.943 0 10.314c0 4.811 4.27 8.842 10.035 9.608.391.082.923.258 1.058.59.12.301.079.766.038 1.08l-.164 1.02c-.045.301-.24 1.186 1.049.645 1.291-.539 6.916-4.078 9.436-6.975C23.176 14.393 24 12.458 24 10.314"/></svg>
+          </div>
+          Continue with LINE
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('microsoft')">
+          <div class="social-btn-icon" style="background:#00a4ef;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M11.4 24H0V12.6h11.4V24zM24 24H12.6V12.6H24V24zM11.4 11.4H0V0h11.4v11.4zM24 11.4H12.6V0H24v11.4z"/></svg>
+          </div>
+          Continue with Microsoft
+        </button>
+        <button class="social-btn" onclick="signInWithOAuth('apple')">
+          <div class="social-btn-icon" style="background:#000;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+          </div>
+          Continue with Apple
+        </button>
+      </div>
+
+      <div style="margin-top:20px;text-align:center;font-size:14px;color:var(--text-secondary);">
+        Don't have an account? <a href="/sign-up" style="color:var(--accent);font-weight:600;">Sign up</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const form = document.getElementById('signin-form');
+  const mfaForm = document.getElementById('mfa-form');
+  const formError = document.getElementById('form-error');
+  const mfaError = document.getElementById('mfa-error');
+  const signinBtn = document.getElementById('signin-btn');
+  const mfaVerifyBtn = document.getElementById('mfa-verify-btn');
+  const mfaBackBtn = document.getElementById('mfa-back-btn');
+  let mfaToken = '';
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    formError.style.display = 'none';
+    signinBtn.disabled = true;
+    signinBtn.textContent = 'Signing in...';
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    try {
+      const result = await window.authon.signInWithEmail(email, password);
+      if (result && result.token) {
+        await fetch('/oauth/callback', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: 'token=' + encodeURIComponent(result.token),
+        });
+        window.location.href = '/';
+      }
+    } catch (err) {
+      if (err && err.mfaToken) {
+        mfaToken = err.mfaToken;
+        form.style.display = 'none';
+        mfaForm.style.display = 'block';
+      } else {
+        formError.textContent = err.message || 'Sign in failed';
+        formError.style.display = 'block';
+      }
+    } finally {
+      signinBtn.disabled = false;
+      signinBtn.textContent = 'Sign in';
+    }
+  });
+
+  mfaVerifyBtn.addEventListener('click', async function() {
+    mfaError.style.display = 'none';
+    mfaVerifyBtn.disabled = true;
+    mfaVerifyBtn.textContent = 'Verifying...';
+
+    const code = document.getElementById('mfa-code').value;
+    try {
+      const result = await window.authon.verifyMfa(mfaToken, code);
+      if (result && result.token) {
+        await fetch('/oauth/callback', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+          body: 'token=' + encodeURIComponent(result.token),
+        });
+        window.location.href = '/';
+      }
+    } catch (err) {
+      mfaError.textContent = err.message || 'MFA verification failed';
+      mfaError.style.display = 'block';
+    } finally {
+      mfaVerifyBtn.disabled = false;
+      mfaVerifyBtn.textContent = 'Verify';
+    }
+  });
+
+  mfaBackBtn.addEventListener('click', function() {
+    mfaToken = '';
+    mfaForm.style.display = 'none';
+    form.style.display = 'flex';
+    mfaError.style.display = 'none';
+    document.getElementById('mfa-code').value = '';
+  });
+})();
+
+async function signInWithOAuth(provider) {
+  try {
+    const result = await window.authon.signInWithOAuth(provider);
+    if (result && result.token) {
+      await fetch('/oauth/callback', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'token=' + encodeURIComponent(result.token),
+      });
+      window.location.href = '/';
+    }
+  } catch (err) {
+    alert(err.message || 'OAuth sign in failed');
+  }
+}
+</script>
+{{end}}
