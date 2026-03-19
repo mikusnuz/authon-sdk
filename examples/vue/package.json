@@ -1,0 +1,23 @@
+{
+  "name": "authon-vue-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@authon/vue": "file:../../packages/vue",
+    "@authon/js": "file:../../packages/js",
+    "@authon/shared": "file:../../packages/shared",
+    "vue": "^3.5",
+    "vue-router": "^4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5",
+    "typescript": "^5",
+    "vue-tsc": "^2",
+    "vite": "^6"
+  }
+}
