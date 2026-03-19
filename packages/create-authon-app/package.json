@@ -1,0 +1,45 @@
+{
+  "name": "create-authon-app",
+  "version": "0.1.0",
+  "description": "Create a new project with Authon authentication pre-configured",
+  "type": "module",
+  "bin": {
+    "create-authon-app": "dist/index.js"
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikusnuz/authon-sdk.git",
+    "directory": "packages/create-authon-app"
+  },
+  "homepage": "https://github.com/mikusnuz/authon-sdk/tree/main/packages/create-authon-app",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "authon",
+    "auth",
+    "authentication",
+    "create-app",
+    "scaffolding",
+    "cli"
+  ],
+  "dependencies": {
+    "@inquirer/prompts": "^7.0.0",
+    "fs-extra": "^11.0.0",
+    "picocolors": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.9.3"
+  }
+}

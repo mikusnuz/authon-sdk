@@ -21,6 +21,7 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 | [`@authon/angular`](./packages/angular) | 0.2.1 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
 | [`@authon/react-native`](./packages/react-native) | 0.2.2 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
 | [`@authon/node`](./packages/node) | 0.2.0 | Verify tokens, manage users, validate webhooks on Node.js | [npm](https://www.npmjs.com/package/@authon/node) |
+| [`create-authon-app`](./packages/create-authon-app) | 0.1.0 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/create-authon-app) |
 
 ### Other Languages
 
