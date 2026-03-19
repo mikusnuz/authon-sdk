@@ -1,0 +1,19 @@
+{
+  "name": "authon-nuxt-example",
+  "private": true,
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "@authon/nuxt": "file:../../packages/nuxt",
+    "@authon/js": "file:../../packages/js",
+    "@authon/shared": "file:../../packages/shared",
+    "nuxt": "^3.13.0"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  }
+}
