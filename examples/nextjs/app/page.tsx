@@ -1,10 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { useAuthon, SignedIn, SignedOut, UserButton } from '@authon/nextjs'
 
 export default function Home() {
-  const { user, signOut } = useAuthon()
+  const { user, signOut, client } = useAuthon()
 
   return (
     <div className="page">
@@ -13,12 +12,12 @@ export default function Home() {
           <div className="badge">@authon/nextjs SDK</div>
           <h1>Authon Next.js Example</h1>
           <p className="subtitle">
-            Drop-in authentication components. Branding, OAuth providers,
-            and MFA all configured from your Authon dashboard.
+            Drop-in authentication with dashboard-configured branding,
+            OAuth providers, and MFA.
           </p>
           <div className="btn-group">
-            <Link href="/sign-in" className="btn btn-primary">Sign In</Link>
-            <Link href="/sign-up" className="btn btn-outline">Create Account</Link>
+            <button className="btn btn-primary" onClick={() => client?.openSignIn()}>Sign In</button>
+            <button className="btn btn-outline" onClick={() => client?.openSignUp()}>Create Account</button>
           </div>
           <div className="feature-grid">
             <div className="feature-card">
