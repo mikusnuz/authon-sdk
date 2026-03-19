@@ -1,0 +1,57 @@
+{% extends "auth_app/base.html" %}
+{% block title %}Home — Authon Django Example{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 48px auto;">
+  <div style="text-align: center; margin-bottom: 48px;">
+    <div style="display: inline-flex; align-items: center; gap: 10px; background: var(--accent-light); border: 1px solid rgba(124,58,237,0.3); border-radius: 50px; padding: 6px 16px; font-size: 13px; color: var(--accent); margin-bottom: 24px;">
+      <div style="width: 6px; height: 6px; background: var(--accent); border-radius: 50%;"></div>
+      Python + Django Reference Implementation
+    </div>
+    <h1 style="font-size: 40px; font-weight: 800; color: var(--text-primary); line-height: 1.2; margin-bottom: 16px;">
+      Authon Django Example
+    </h1>
+    <p style="font-size: 17px; color: var(--text-secondary); line-height: 1.7;">
+      Full server-side auth flow using <code style="background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 15px;">authon</code> Python SDK + Django + templates.
+      Cookie-based sessions, OAuth via <code style="background: var(--surface-2); padding: 2px 6px; border-radius: 4px; font-size: 15px;">@authon/js</code>.
+    </p>
+  </div>
+
+  {% if token %}
+    <div class="card" style="text-align: center; padding: 32px;">
+      <p style="color: var(--text-secondary); margin-bottom: 24px;">You are signed in.</p>
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <a href="/profile" class="btn btn-primary">View Profile</a>
+        <a href="/mfa" class="btn btn-secondary">MFA Settings</a>
+        <a href="/sessions" class="btn btn-secondary">Sessions</a>
+      </div>
+    </div>
+  {% else %}
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px;">
+      <a href="/sign-in" class="btn btn-primary" style="padding: 14px; font-size: 16px;">Sign in</a>
+      <a href="/sign-up" class="btn btn-secondary" style="padding: 14px; font-size: 16px;">Sign up</a>
+    </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="section-title">Features Demonstrated</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      {% for feature in features %}
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-secondary); padding: 6px 0;">
+          <span style="color: var(--success); font-size: 14px;">&#10003;</span>
+          {{ feature }}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Stack</div>
+    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+      {% for item in stack %}
+        <span class="badge badge-accent" style="font-size: 13px; padding: 4px 10px;">{{ item }}</span>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
