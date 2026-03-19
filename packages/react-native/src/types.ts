@@ -63,3 +63,12 @@ export interface ApiAuthResponse {
   expiresIn: number;
   user: AuthonUser;
 }
+
+export interface OAuthCompletedResponse extends ApiAuthResponse {
+  status: 'completed';
+}
+
+export interface OAuthErrorResponse {
+  status: 'error';
+  message: string;
+}

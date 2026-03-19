@@ -46,9 +46,7 @@ export function SocialButtons({
       onSuccess?.();
     } catch (e: any) {
       const error = e instanceof Error ? e : new Error(String(e));
-      if (error.message !== 'OAuth timeout') {
-        onError?.(error);
-      }
+      onError?.(error);
     } finally {
       setLoadingProvider(null);
     }

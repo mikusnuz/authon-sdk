@@ -27,4 +27,6 @@ export type {
   BrandingConfig,
   OAuthProviderType,
   TokenPair,
+  OAuthCompletedResponse,
+  OAuthErrorResponse,
 } from './types';

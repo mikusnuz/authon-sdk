@@ -139,6 +139,12 @@ fun App() {
 
 Tokens are stored using Android `EncryptedSharedPreferences` (AndroidX Security), encrypted with AES256-GCM.
 
+## Native App Notes
+
+- The native Kotlin SDK manages Chrome Custom Tabs internally. You do not need the Expo / React Native `returnTo` bridge flow when you use this SDK directly.
+- If your app also maintains its own backend session, exchange `authon.getToken()` with your backend immediately after sign-in.
+- If you are building an Expo or React Native app, follow the React Native SDK guide instead of the Kotlin flow.
+
 ## Documentation
 
 [authon.dev/docs](https://authon.dev/docs)

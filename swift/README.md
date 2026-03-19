@@ -140,6 +140,12 @@ ObservableObject with `@Published` properties:
 
 Tokens are stored in the iOS/macOS Keychain using `kSecClassGenericPassword`, encrypted at rest.
 
+## Native App Notes
+
+- The native Swift SDK manages `ASWebAuthenticationSession` internally. You do not need the Expo / React Native `returnTo` bridge flow when you use this SDK directly.
+- If your app also maintains its own backend session, exchange `try await authon.getToken()` with your backend immediately after sign-in.
+- If you are building an Expo or React Native app, follow the React Native SDK guide instead of the Swift flow.
+
 ## Documentation
 
 [authon.dev/docs](https://authon.dev/docs)

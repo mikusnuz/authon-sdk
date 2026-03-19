@@ -15,6 +15,8 @@ import type {
   StartOAuthOptions,
   TokenPair,
   ApiAuthResponse,
+  OAuthCompletedResponse,
+  OAuthErrorResponse,
   AuthonEventType,
   AuthonEvents,
 } from './types';
@@ -31,6 +33,8 @@ interface ProvidersResponse {
   providers: OAuthProviderType[];
   providerConfigs?: Partial<Record<OAuthProviderType, { oauthFlow?: StartOAuthOptions['flow'] }>>;
 }
+
+type OAuthPollResponse = OAuthCompletedResponse | OAuthErrorResponse;
 
 const STORAGE_KEY = 'authon-tokens';
 
@@ -218,7 +222,7 @@ export class AuthonMobileClient {
     )) as { url: string; state: string };
   }
 
-  async pollOAuth(state: string): Promise<ApiAuthResponse | null> {
+  async pollOAuth(state: string): Promise<OAuthPollResponse | null> {
     try {
       const res = await fetch(
         `${this.apiUrl}/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`,
@@ -227,7 +231,13 @@ export class AuthonMobileClient {
       if (!res.ok) return null;
       const data = (await res.json()) as Record<string, unknown>;
       if (data.status === 'completed' && data.accessToken) {
-        return data as unknown as ApiAuthResponse;
+        return data as unknown as OAuthCompletedResponse;
+      }
+      if (data.status === 'error') {
+        return {
+          status: 'error',
+          message: typeof data.message === 'string' ? data.message : 'OAuth failed',
+        };
       }
       return null;
     } catch {
@@ -241,6 +251,9 @@ export class AuthonMobileClient {
     for (let i = 0; i < maxAttempts; i++) {
       const result = await this.pollOAuth(state);
       if (result) {
+        if (result.status === 'error') {
+          throw new Error(result.message || 'OAuth failed');
+        }
         this.tokens = this.toTokenPair(result);
         this.user = result.user;
         await this.persistTokens();
