@@ -37,14 +37,15 @@ function signOut() {
 
 <template>
   <div class="page">
-    <div v-if="isLoading" class="auth-page">
-      <div class="hero">
-        <div class="badge">@authon/nuxt SDK</div>
-        <p class="subtitle">Loading...</p>
+    <ClientOnly>
+      <div v-if="isLoading" class="auth-page">
+        <div class="hero">
+          <div class="badge">@authon/nuxt SDK</div>
+          <p class="subtitle">Loading...</p>
+        </div>
       </div>
-    </div>
 
-    <div v-else-if="!isSignedIn" class="hero">
+      <div v-else-if="!isSignedIn" class="hero">
       <div class="badge">@authon/nuxt SDK</div>
       <h1>Authon Nuxt Example</h1>
       <p class="subtitle">
@@ -142,5 +143,6 @@ function signOut() {
         </div>
       </div>
     </div>
+    </ClientOnly>
   </div>
 </template>
