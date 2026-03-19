@@ -1,10 +1,10 @@
 FROM node:20-alpine AS sdk-build
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
-COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/ ./packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
-RUN pnpm --filter '@authon/*' --filter '!@authon/react-native' build || true
+RUN pnpm --filter '@authon/*' --filter '!@authon/react-native' build
 
 FROM node:20-alpine AS build
 WORKDIR /app
