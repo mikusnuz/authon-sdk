@@ -1,0 +1,24 @@
+{
+  "name": "authon-svelte-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev --port 15596 --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview",
+    "sync": "svelte-kit sync"
+  },
+  "dependencies": {
+    "@authon/svelte": "file:../../packages/svelte",
+    "@authon/js": "file:../../packages/js",
+    "@authon/shared": "file:../../packages/shared"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "^5",
+    "@sveltejs/kit": "^2",
+    "@sveltejs/vite-plugin-svelte": "^5",
+    "svelte": "^5",
+    "typescript": "^5",
+    "vite": "^6"
+  }
+}
