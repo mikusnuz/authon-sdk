@@ -14,7 +14,7 @@ const authon = new AuthonBackend(process.env.AUTHON_API_KEY!, {
 app.use(express.json())
 app.use(cookieParser())
 app.set('view engine', 'ejs')
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', path.join(__dirname, '..', 'src', 'views'))
 
 app.get('/', async (req, res) => {
   const token = req.cookies.authon_token
