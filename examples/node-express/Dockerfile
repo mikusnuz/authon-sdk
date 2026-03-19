@@ -9,7 +9,7 @@ RUN pnpm --filter '@authon/node' --filter '@authon/shared' build
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY --from=sdk-build /app/packages/ ./packages/
-RUN find /app/packages -name "package.json" -exec sed -i 's/workspace:^/*/g' {} \;
+RUN apk add --no-cache python3 && python3 -c "import os,json;[open(os.path.join(r,f),'w').write(open(os.path.join(r,f)).read().replace('workspace:^','*')) for r,_,fs in os.walk('/app/packages') for f in fs if f=='package.json']"
 COPY examples/node-express/ ./examples/node-express/
 WORKDIR /app/examples/node-express
 RUN npm install --install-links
