@@ -17,7 +17,6 @@ RUN npm run build
 FROM node:20-alpine
 WORKDIR /app
 COPY --from=build /app/examples/svelte/build ./
-COPY --from=build /app/examples/svelte/package*.json ./
-RUN npm ci --production
+COPY --from=build /app/examples/svelte/node_modules ./node_modules
 EXPOSE 3000
 CMD ["node", "index.js"]
