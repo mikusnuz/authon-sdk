@@ -5,6 +5,7 @@ export {
   SignIn,
   SignUp,
   UserButton,
+  UserProfile,
   SignedIn,
   SignedOut,
   Protect,
@@ -26,6 +27,7 @@ export type {
   UseAuthonWeb3Return,
   LinkWalletParams,
   UseAuthonSessionsReturn,
+  UserProfileProps,
 } from '@authon/react';
 export { authonMiddleware } from './middleware';
 export type { AuthonMiddlewareOptions } from './middleware';
