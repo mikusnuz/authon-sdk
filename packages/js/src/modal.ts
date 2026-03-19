@@ -2,6 +2,25 @@ import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
 import { getProviderButtonConfig } from './providers';
 
+const WALLET_OPTIONS = [
+  { id: 'pexus', name: 'Pexus', color: '#7c3aed' },
+  { id: 'metamask', name: 'MetaMask', color: '#f6851b' },
+  { id: 'phantom', name: 'Phantom', color: '#ab9ff2' },
+] as const;
+
+function walletIconSvg(id: string): string {
+  switch (id) {
+    case 'pexus':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#7c3aed"/><path d="M7 8h4v8H7V8zm6 0h4v8h-4V8z" fill="#fff"/></svg>`;
+    case 'metamask':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#f6851b"/><path d="M17.2 4L12 8.5l1 .7L17.2 4zM6.8 4l5.1 5.3-1-0.6L6.8 4zM16 16.2l-1.4 2.1 3 .8.8-2.9h-2.4zM5.6 16.2l.9 2.8 3-.8-1.4-2h-2.5z" fill="#fff"/></svg>`;
+    case 'phantom':
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#ab9ff2"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6v2c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2v-2z" stroke="#fff" stroke-width="1.5" fill="none"/></svg>`;
+    default:
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#666"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12">${id[0]?.toUpperCase() ?? 'W'}</text></svg>`;
+  }
+}
+
 export class ModalRenderer {
   private shadowRoot: ShadowRoot | null = null;
   private hostElement: HTMLDivElement | null = null;
@@ -14,7 +33,17 @@ export class ModalRenderer {
   private onProviderClick: (provider: OAuthProviderType) => void;
   private onEmailSubmit: (email: string, password: string, isSignUp: boolean) => void;
   private onClose: () => void;
+  private onWeb3WalletSelect: (wallet: string) => void;
+  private onPasswordlessSubmit: (email: string) => void;
+  private onOtpVerify: (email: string, code: string) => void;
+  private onPasskeyClick: () => void;
   private escHandler: ((e: KeyboardEvent) => void) | null = null;
+
+  // Overlay state
+  private currentOverlay: string = 'none';
+  private selectedWallet: string = '';
+  private overlayEmail: string = '';
+  private overlayError: string = '';
 
   constructor(options: {
     mode: 'popup' | 'embedded';
@@ -24,6 +53,10 @@ export class ModalRenderer {
     onProviderClick: (provider: OAuthProviderType) => void;
     onEmailSubmit: (email: string, password: string, isSignUp: boolean) => void;
     onClose: () => void;
+    onWeb3WalletSelect?: (wallet: string) => void;
+    onPasswordlessSubmit?: (email: string) => void;
+    onOtpVerify?: (email: string, code: string) => void;
+    onPasskeyClick?: () => void;
   }) {
     this.mode = options.mode;
     this.theme = options.theme || 'auto';
@@ -31,6 +64,10 @@ export class ModalRenderer {
     this.onProviderClick = options.onProviderClick;
     this.onEmailSubmit = options.onEmailSubmit;
     this.onClose = options.onClose;
+    this.onWeb3WalletSelect = options.onWeb3WalletSelect || (() => {});
+    this.onPasswordlessSubmit = options.onPasswordlessSubmit || (() => {});
+    this.onOtpVerify = options.onOtpVerify || (() => {});
+    this.onPasskeyClick = options.onPasskeyClick || (() => {});
 
     if (options.mode === 'embedded' && options.containerId) {
       this.containerElement = document.getElementById(options.containerId);
@@ -48,9 +85,11 @@ export class ModalRenderer {
   open(view: 'signIn' | 'signUp' = 'signIn'): void {
     if (this.shadowRoot && this.hostElement) {
       // Modal already open — smooth in-place view switch
+      this.hideOverlay();
       this.switchView(view);
     } else {
       this.currentView = view;
+      this.currentOverlay = 'none';
       this.render(view);
     }
   }
@@ -68,6 +107,7 @@ export class ModalRenderer {
     if (this.containerElement) {
       this.containerElement.innerHTML = '';
     }
+    this.currentOverlay = 'none';
   }
 
   showError(message: string): void {
@@ -126,6 +166,59 @@ export class ModalRenderer {
     this.shadowRoot.getElementById('authon-loading-overlay')?.remove();
   }
 
+  // ── Flow Overlay Public API ──
+
+  showOverlay(overlay: string): void {
+    this.currentOverlay = overlay;
+    this.overlayError = '';
+    this.renderOverlay();
+  }
+
+  hideOverlay(): void {
+    this.currentOverlay = 'none';
+    this.overlayError = '';
+    if (!this.shadowRoot) return;
+    this.shadowRoot.getElementById('flow-overlay')?.remove();
+  }
+
+  showWeb3Success(walletId: string, address: string): void {
+    this.selectedWallet = walletId;
+    this.overlayError = '';
+    // Store truncated address for rendering
+    const truncated = address.length > 10
+      ? `${address.slice(0, 6)}...${address.slice(-4)}`
+      : address;
+    this.currentOverlay = 'web3-success';
+    this.renderOverlayWithData({ truncatedAddress: truncated, walletId });
+  }
+
+  showPasswordlessSent(): void {
+    this.overlayError = '';
+    this.currentOverlay = 'passwordless-sent';
+    this.renderOverlay();
+  }
+
+  showOtpInput(email: string): void {
+    this.overlayEmail = email;
+    this.overlayError = '';
+    this.currentOverlay = 'otp-input';
+    this.renderOverlay();
+  }
+
+  showPasskeySuccess(): void {
+    this.overlayError = '';
+    this.currentOverlay = 'passkey-success';
+    this.renderOverlay();
+  }
+
+  showOverlayError(message: string): void {
+    this.overlayError = message;
+    // Re-render the current overlay with the error displayed
+    if (this.currentOverlay !== 'none') {
+      this.renderOverlay();
+    }
+  }
+
   // ── Smooth view switch (no flicker) ──
 
   private switchView(view: 'signIn' | 'signUp'): void {
@@ -135,7 +228,7 @@ export class ModalRenderer {
     const inner = this.shadowRoot.getElementById('modal-inner');
     if (!inner) return;
 
-    // Cross-fade: fade out → update → fade in
+    // Cross-fade: fade out -> update -> fade in
     inner.style.opacity = '0';
     inner.style.transform = 'translateY(-4px)';
 
@@ -232,6 +325,42 @@ export class ModalRenderer {
         </form>`
         : '';
 
+    // Auth method divider and buttons (Web3, Passwordless, Passkey)
+    const hasMethodAbove = (showProviders && this.enabledProviders.length > 0) || b.showEmailPassword !== false;
+    const hasMethodBelow = b.showWeb3 || b.showPasswordless || b.showPasskey;
+    const methodDivider = hasMethodAbove && hasMethodBelow
+      ? `<div class="divider"><span>or</span></div>`
+      : '';
+
+    const methodButtons: string[] = [];
+    if (b.showWeb3) {
+      methodButtons.push(`<button class="auth-method-btn web3-btn" id="web3-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
+        </svg>
+        <span>Connect Wallet</span>
+      </button>`);
+    }
+    if (b.showPasswordless) {
+      methodButtons.push(`<button class="auth-method-btn passwordless-btn" id="passwordless-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+        </svg>
+        <span>Continue with Magic Link</span>
+      </button>`);
+    }
+    if (b.showPasskey) {
+      methodButtons.push(`<button class="auth-method-btn passkey-btn" id="passkey-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><path d="M21.7 13.3 19 11"/><path d="m21 15-2.5-1.5"/><path d="m17 17 2.5-1.5"/><path d="M22 9v6a1 1 0 0 1-1 1h-.5"/><circle cx="18" cy="9" r="3"/>
+        </svg>
+        <span>Sign in with Passkey</span>
+      </button>`);
+    }
+    const authMethods = methodButtons.length > 0
+      ? `<div class="auth-methods">${methodButtons.join('')}</div>`
+      : '';
+
     const footer =
       b.termsUrl || b.privacyUrl
         ? `<div class="footer">
@@ -257,6 +386,8 @@ export class ModalRenderer {
       ${showProviders ? `<div class="providers">${providerButtons}</div>` : ''}
       ${divider}
       ${emailForm}
+      ${methodDivider}
+      ${authMethods}
       <p class="switch-view">${subtitle} <a href="#" id="switch-link">${subtitleLink}</a></p>
       ${footer}
       ${b.showSecuredBy !== false ? `<div class="secured-by">Secured by <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ''}
@@ -393,6 +524,150 @@ export class ModalRenderer {
       }
       .secured-link { font-weight: 600; color: var(--authon-muted); text-decoration: none; }
       .secured-link:hover { text-decoration: underline; }
+
+      /* Auth method buttons */
+      .auth-methods { display: flex; flex-direction: column; gap: 8px; }
+      .auth-method-btn {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; padding: 10px 16px;
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 13px; font-weight: 500; cursor: pointer;
+        font-family: var(--authon-font); transition: opacity 0.15s, transform 0.1s;
+      }
+      .auth-method-btn:hover { opacity: 0.85; }
+      .auth-method-btn:active { transform: scale(0.98); }
+      /* Web3 -- purple */
+      .web3-btn {
+        background: ${dark ? 'rgba(139,92,246,0.12)' : 'rgba(139,92,246,0.08)'};
+        border: 1px solid ${dark ? 'rgba(139,92,246,0.3)' : 'rgba(139,92,246,0.25)'};
+        color: ${dark ? '#c4b5fd' : '#7c3aed'};
+      }
+      /* Passwordless -- cyan */
+      .passwordless-btn {
+        background: ${dark ? 'rgba(6,182,212,0.12)' : 'rgba(6,182,212,0.08)'};
+        border: 1px solid ${dark ? 'rgba(6,182,212,0.3)' : 'rgba(6,182,212,0.25)'};
+        color: ${dark ? '#67e8f9' : '#0891b2'};
+      }
+      /* Passkey -- amber */
+      .passkey-btn {
+        background: ${dark ? 'rgba(245,158,11,0.12)' : 'rgba(245,158,11,0.08)'};
+        border: 1px solid ${dark ? 'rgba(245,158,11,0.3)' : 'rgba(245,158,11,0.25)'};
+        color: ${dark ? '#fcd34d' : '#b45309'};
+      }
+
+      /* Flow overlay */
+      .flow-overlay {
+        position: absolute; inset: 0; z-index: 10;
+        background: ${dark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
+        backdrop-filter: blur(2px);
+        border-radius: var(--authon-radius);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 12px; padding: 24px;
+        animation: fadeIn 0.2s ease;
+      }
+      .flow-overlay .cancel-link {
+        font-size: 12px; color: var(--authon-dim); cursor: pointer; border: none;
+        background: none; font-family: var(--authon-font); margin-top: 4px;
+      }
+      .flow-overlay .cancel-link:hover { text-decoration: underline; }
+      .flow-overlay .overlay-title {
+        font-size: 14px; font-weight: 600; color: var(--authon-text); text-align: center;
+      }
+      .flow-overlay .overlay-subtitle {
+        font-size: 12px; color: var(--authon-muted); text-align: center;
+      }
+      .flow-overlay .overlay-error {
+        padding: 6px 12px; margin-top: 4px;
+        background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+        border-radius: calc(var(--authon-radius) * 0.33);
+        font-size: 12px; color: #ef4444; text-align: center; width: 100%;
+      }
+
+      /* Wallet picker */
+      .wallet-picker { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+      .wallet-btn {
+        display: flex; align-items: center; gap: 10px;
+        width: 100%; padding: 10px 14px;
+        background: ${dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'};
+        border: 1px solid ${dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'};
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 13px; font-weight: 500; color: var(--authon-text);
+        cursor: pointer; font-family: var(--authon-font);
+        transition: opacity 0.15s;
+      }
+      .wallet-btn:hover { opacity: 0.8; }
+      .wallet-btn .wallet-icon { display: flex; align-items: center; flex-shrink: 0; }
+      .wallet-btn .wallet-icon svg { border-radius: 6px; }
+
+      /* Passwordless email input in overlay */
+      .pwless-form { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+      .pwless-submit {
+        width: 100%; padding: 10px;
+        background: linear-gradient(135deg, #06b6d4, #0891b2);
+        color: #fff; border: none; border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 13px; font-weight: 600; cursor: pointer;
+        font-family: var(--authon-font); transition: opacity 0.15s;
+      }
+      .pwless-submit:hover { opacity: 0.9; }
+      .pwless-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      /* OTP input */
+      .otp-container { display: flex; flex-direction: column; align-items: center; gap: 16px; width: 100%; }
+      .otp-inputs { display: flex; gap: 8px; justify-content: center; }
+      .otp-digit {
+        width: 40px; height: 48px; text-align: center;
+        font-size: 20px; font-weight: 600; font-family: var(--authon-font);
+        background: var(--authon-input-bg); color: var(--authon-text);
+        border: 1px solid var(--authon-border);
+        border-radius: calc(var(--authon-radius) * 0.33);
+        outline: none; transition: border-color 0.15s;
+      }
+      .otp-digit:focus {
+        border-color: var(--authon-primary-start);
+        box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+      }
+
+      /* Success check animation */
+      .success-check {
+        width: 48px; height: 48px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+      }
+      .success-check svg path {
+        stroke-dasharray: 20;
+        stroke-dashoffset: 20;
+        animation: check-draw 0.4s ease-out 0.1s forwards;
+      }
+
+      /* Spinner */
+      .flow-spinner {
+        animation: spin 0.8s linear infinite;
+      }
+
+      /* Passkey verifying icon */
+      .passkey-icon-pulse {
+        width: 48px; height: 48px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(245,158,11,0.15);
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      /* Wallet connecting icon */
+      .wallet-connecting-icon {
+        width: 48px; height: 48px; border-radius: 12px;
+        display: flex; align-items: center; justify-content: center;
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+      .wallet-connecting-icon svg { border-radius: 6px; }
+
+      /* Address badge */
+      .address-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 2px 10px; border-radius: 6px;
+        background: ${dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'};
+        font-size: 11px; font-family: monospace; color: var(--authon-muted);
+      }
+      .address-badge .wallet-icon-sm svg { width: 16px; height: 16px; border-radius: 4px; }
+
       /* Loading overlay */
       #authon-loading-overlay {
         position: absolute; inset: 0; z-index: 10;
@@ -426,15 +701,282 @@ export class ModalRenderer {
       .loading-dots span:nth-child(3) { animation-delay: .4s; }
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes blink { 0%,80%,100% { opacity: .2; } 40% { opacity: 1; } }
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
       @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -48%); } to { opacity: 1; transform: translate(-50%, -50%); } }
+      @keyframes check-draw { to { stroke-dashoffset: 0; } }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
       ${b.customCss || ''}
     `;
   }
 
+  // ── Flow Overlay Rendering ──
+
+  private renderOverlay(): void {
+    this.renderOverlayWithData({});
+  }
+
+  private renderOverlayWithData(data: Record<string, string>): void {
+    if (!this.shadowRoot) return;
+    const container = this.shadowRoot.querySelector('.modal-container');
+    if (!container) return;
+
+    // Remove existing overlay
+    this.shadowRoot.getElementById('flow-overlay')?.remove();
+
+    if (this.currentOverlay === 'none') return;
+
+    const overlay = document.createElement('div');
+    overlay.id = 'flow-overlay';
+    overlay.className = 'flow-overlay';
+    overlay.innerHTML = this.buildOverlayContent(data);
+    container.appendChild(overlay);
+    this.attachOverlayEvents(overlay);
+  }
+
+  private buildOverlayContent(data: Record<string, string>): string {
+    const dark = this.isDark();
+    const errorHtml = this.overlayError
+      ? `<div class="overlay-error">${this.escapeHtml(this.overlayError)}</div>`
+      : '';
+    const subtitleColor = dark ? '#64748b' : '#6b7280';
+
+    switch (this.currentOverlay) {
+      case 'web3-picker': {
+        const walletItems = WALLET_OPTIONS.map(w =>
+          `<button class="wallet-btn" data-wallet="${w.id}">
+            <span class="wallet-icon">${walletIconSvg(w.id)}</span>
+            <span>${w.name}</span>
+          </button>`
+        ).join('');
+        return `
+          <div class="overlay-title" style="margin-bottom: 4px;">Select Wallet</div>
+          <div class="wallet-picker">${walletItems}</div>
+          ${errorHtml}
+          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+        `;
+      }
+
+      case 'web3-connecting': {
+        const wallet = WALLET_OPTIONS.find(w => w.id === this.selectedWallet);
+        const walletName = wallet?.name ?? this.selectedWallet;
+        return `
+          <div class="wallet-connecting-icon">${walletIconSvg(this.selectedWallet)}</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <svg class="flow-spinner" width="16" height="16" viewBox="0 0 16 16">
+              <circle cx="8" cy="8" r="6" fill="none" stroke="${wallet?.color ?? '#7c3aed'}" stroke-width="2" opacity="0.25"/>
+              <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="${wallet?.color ?? '#7c3aed'}" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <span class="overlay-subtitle">Connecting ${this.escapeHtml(walletName)}...</span>
+          </div>
+          ${errorHtml}
+          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+        `;
+      }
+
+      case 'web3-success': {
+        const wallet = WALLET_OPTIONS.find(w => w.id === (data.walletId || this.selectedWallet));
+        const walletColor = wallet?.color ?? '#8b5cf6';
+        const truncAddr = data.truncatedAddress || '0x...';
+        return `
+          <div class="success-check" style="background:linear-gradient(135deg, ${walletColor}, ${walletColor})">
+            <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="overlay-title">Wallet Connected</div>
+          <div class="address-badge">
+            <span class="wallet-icon-sm">${walletIconSvg(data.walletId || this.selectedWallet)}</span>
+            <span>${this.escapeHtml(truncAddr)}</span>
+          </div>
+        `;
+      }
+
+      case 'passwordless-input': {
+        return `
+          <div class="overlay-title">Enter your email</div>
+          <div class="pwless-form">
+            <input type="email" placeholder="you@example.com" class="input" id="pwless-email" autocomplete="email" />
+            <button class="pwless-submit" id="pwless-submit-btn">Send Magic Link</button>
+          </div>
+          ${errorHtml}
+          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+        `;
+      }
+
+      case 'passwordless-sending': {
+        return `
+          <svg class="flow-spinner" width="16" height="16" viewBox="0 0 16 16">
+            <circle cx="8" cy="8" r="6" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.25"/>
+            <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="overlay-subtitle">Sending magic link...</span>
+        `;
+      }
+
+      case 'passwordless-sent': {
+        return `
+          <div class="success-check" style="background:linear-gradient(135deg, #06b6d4, #0891b2)">
+            <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="overlay-title">Magic link sent!</div>
+          <span class="overlay-subtitle">Check your email inbox</span>
+        `;
+      }
+
+      case 'otp-input': {
+        const digitInputs = Array.from({ length: 6 }, (_, i) =>
+          `<input type="text" inputmode="numeric" maxlength="1" class="otp-digit" data-idx="${i}" autocomplete="one-time-code" />`
+        ).join('');
+        return `
+          <div class="otp-container">
+            <div class="overlay-title">Enter verification code</div>
+            <span class="overlay-subtitle">6-digit code sent to ${this.escapeHtml(this.overlayEmail)}</span>
+            <div class="otp-inputs">${digitInputs}</div>
+            ${errorHtml}
+            <button class="cancel-link" id="overlay-cancel">Cancel</button>
+          </div>
+        `;
+      }
+
+      case 'passkey-verifying': {
+        return `
+          <div class="passkey-icon-pulse">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/>
+              <path d="M21.7 13.3 19 11"/><path d="m21 15-2.5-1.5"/><path d="m17 17 2.5-1.5"/>
+              <path d="M22 9v6a1 1 0 0 1-1 1h-.5"/><circle cx="18" cy="9" r="3"/>
+            </svg>
+          </div>
+          <span class="overlay-subtitle">Verifying identity...</span>
+          ${errorHtml}
+          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+        `;
+      }
+
+      case 'passkey-success': {
+        return `
+          <div class="success-check" style="background:linear-gradient(135deg, #f59e0b, #d97706)">
+            <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
+              <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="overlay-title">Identity verified!</div>
+        `;
+      }
+
+      default:
+        return '';
+    }
+  }
+
+  private attachOverlayEvents(overlay: HTMLElement): void {
+    if (!this.shadowRoot) return;
+
+    // Cancel button
+    const cancelBtn = overlay.querySelector('#overlay-cancel');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', () => this.hideOverlay());
+    }
+
+    // Wallet buttons
+    overlay.querySelectorAll('.wallet-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const walletId = (btn as HTMLElement).dataset.wallet;
+        if (walletId) {
+          this.selectedWallet = walletId;
+          this.onWeb3WalletSelect(walletId);
+        }
+      });
+    });
+
+    // Passwordless form submit
+    const pwlessSubmit = overlay.querySelector('#pwless-submit-btn');
+    const pwlessEmail = overlay.querySelector('#pwless-email') as HTMLInputElement | null;
+    if (pwlessSubmit && pwlessEmail) {
+      // Focus email input
+      setTimeout(() => pwlessEmail.focus(), 50);
+
+      const submitHandler = () => {
+        const email = pwlessEmail.value.trim();
+        if (!email) return;
+        this.overlayEmail = email;
+        this.showOverlay('passwordless-sending');
+        this.onPasswordlessSubmit(email);
+      };
+      pwlessSubmit.addEventListener('click', submitHandler);
+      pwlessEmail.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          submitHandler();
+        }
+      });
+    }
+
+    // OTP inputs
+    const otpDigits = overlay.querySelectorAll('.otp-digit') as NodeListOf<HTMLInputElement>;
+    if (otpDigits.length === 6) {
+      // Auto-focus first digit
+      setTimeout(() => otpDigits[0].focus(), 50);
+
+      otpDigits.forEach((digit, idx) => {
+        // Only allow digits
+        digit.addEventListener('input', () => {
+          const val = digit.value.replace(/\D/g, '');
+          digit.value = val.slice(0, 1);
+
+          if (val && idx < 5) {
+            otpDigits[idx + 1].focus();
+          }
+
+          // Check if all filled -> auto-submit
+          const code = Array.from(otpDigits).map(d => d.value).join('');
+          if (code.length === 6) {
+            this.onOtpVerify(this.overlayEmail, code);
+          }
+        });
+
+        // Backspace: move to previous
+        digit.addEventListener('keydown', (e: KeyboardEvent) => {
+          if (e.key === 'Backspace' && !digit.value && idx > 0) {
+            otpDigits[idx - 1].focus();
+            otpDigits[idx - 1].value = '';
+          }
+        });
+
+        // Paste support: fill all 6 from clipboard
+        digit.addEventListener('paste', (e: ClipboardEvent) => {
+          e.preventDefault();
+          const pasted = (e.clipboardData?.getData('text') ?? '').replace(/\D/g, '').slice(0, 6);
+          if (pasted.length === 0) return;
+          for (let i = 0; i < 6; i++) {
+            otpDigits[i].value = pasted[i] || '';
+          }
+          // Focus last filled or next empty
+          const lastIdx = Math.min(pasted.length, 5);
+          otpDigits[lastIdx].focus();
+
+          // Auto-submit if full code pasted
+          if (pasted.length === 6) {
+            this.onOtpVerify(this.overlayEmail, pasted);
+          }
+        });
+      });
+    }
+  }
+
+  private escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
   // ── Event binding ──
 
-  /** Attach events to shell elements (backdrop, ESC) — called once */
+  /** Attach events to shell elements (backdrop, ESC) -- called once */
   private attachShellEvents(): void {
     if (!this.shadowRoot) return;
 
@@ -448,13 +990,19 @@ export class ModalRenderer {
     }
     if (this.mode === 'popup') {
       this.escHandler = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') this.onClose();
+        if (e.key === 'Escape') {
+          if (this.currentOverlay !== 'none') {
+            this.hideOverlay();
+          } else {
+            this.onClose();
+          }
+        }
       };
       document.addEventListener('keydown', this.escHandler);
     }
   }
 
-  /** Attach events to inner content (buttons, form, switch link) — called on each view */
+  /** Attach events to inner content (buttons, form, switch link) -- called on each view */
   private attachInnerEvents(view: 'signIn' | 'signUp'): void {
     if (!this.shadowRoot) return;
 
@@ -480,7 +1028,7 @@ export class ModalRenderer {
       });
     }
 
-    // Back button (signUp → signIn)
+    // Back button (signUp -> signIn)
     const backBtn = this.shadowRoot.getElementById('back-btn');
     if (backBtn) {
       backBtn.addEventListener('click', () => {
@@ -495,6 +1043,24 @@ export class ModalRenderer {
         e.preventDefault();
         this.open(view === 'signIn' ? 'signUp' : 'signIn');
       });
+    }
+
+    // Web3 button
+    const web3Btn = this.shadowRoot.getElementById('web3-btn');
+    if (web3Btn) {
+      web3Btn.addEventListener('click', () => this.showOverlay('web3-picker'));
+    }
+
+    // Passwordless button
+    const pwlessBtn = this.shadowRoot.getElementById('passwordless-btn');
+    if (pwlessBtn) {
+      pwlessBtn.addEventListener('click', () => this.showOverlay('passwordless-input'));
+    }
+
+    // Passkey button
+    const passkeyBtn = this.shadowRoot.getElementById('passkey-btn');
+    if (passkeyBtn) {
+      passkeyBtn.addEventListener('click', () => this.onPasskeyClick());
     }
   }
 }
