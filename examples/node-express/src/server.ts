@@ -22,7 +22,7 @@ const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY ?? '', {
 });
 
 app.set('view engine', 'ejs');
-app.set('views', join(__dirname, 'views'));
+app.set('views', join(__dirname, '..', 'src', 'views'));
 
 app.use('/webhook', webhookRoutes);
 
