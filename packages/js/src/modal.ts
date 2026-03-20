@@ -397,6 +397,12 @@ export class ModalRenderer {
   private isDark(): boolean {
     if (this.theme === 'dark') return true;
     if (this.theme === 'light') return false;
+    // Auto: check host page's <html> class/attribute first, then OS preference
+    if (typeof document !== 'undefined') {
+      const html = document.documentElement;
+      if (html.classList.contains('dark') || html.getAttribute('data-theme') === 'dark') return true;
+      if (html.classList.contains('light') || html.getAttribute('data-theme') === 'light') return false;
+    }
     return typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
   }
 
@@ -701,7 +707,7 @@ export class ModalRenderer {
       .loading-dots span:nth-child(3) { animation-delay: .4s; }
       @keyframes spin { to { transform: rotate(360deg); } }
       @keyframes blink { 0%,80%,100% { opacity: .2; } 40% { opacity: 1; } }
-      @keyframes fadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -48%); } to { opacity: 1; transform: translate(-50%, -50%); } }
       @keyframes check-draw { to { stroke-dashoffset: 0; } }
       @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }

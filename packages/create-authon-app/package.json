@@ -4,7 +4,7 @@
   "description": "Create a new project with Authon authentication pre-configured",
   "type": "module",
   "bin": {
-    "create-authon-app": "dist/index.js",
+    "@authon/create-app": "dist/index.js",
     "create-authon": "dist/index.js"
   },
   "files": [

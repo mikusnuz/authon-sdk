@@ -34,7 +34,7 @@ export function parseArgs(argv: string[]): CliArgs {
 
 function printHelp() {
   console.log(`
-  Usage: create-authon-app [project-name] [options]
+  Usage: @authon/create-app [project-name] [options]
 
   Options:
     -t, --template <template>  Use a specific template (skip framework prompt)
@@ -53,8 +53,8 @@ function printHelp() {
     node             Plain Node.js
 
   Examples:
-    npx create-authon-app
-    npx create-authon-app my-app
-    npx create-authon-app my-app --template nextjs-app
+    npx @authon/create-app
+    npx @authon/create-app my-app
+    npx @authon/create-app my-app --template nextjs-app
   `);
 }

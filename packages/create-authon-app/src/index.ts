@@ -7,7 +7,7 @@ import { parseArgs } from './args.js';
 
 async function main() {
   console.log();
-  console.log(pc.bold(pc.magenta('  create-authon-app')) + pc.dim(' — scaffold a new Authon project'));
+  console.log(pc.bold(pc.magenta('  @authon/create-app')) + pc.dim(' — scaffold a new Authon project'));
   console.log();
 
   try {

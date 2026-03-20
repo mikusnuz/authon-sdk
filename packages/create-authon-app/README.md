@@ -1,17 +1,17 @@
-# create-authon-app
+# @authon/create-app
 
 Scaffold a new project with [Authon](https://authon.dev) authentication pre-configured.
 
 ## Usage
 
 ```bash
-npx create-authon-app
+npx @authon/create-app
 ```
 
 ### Non-interactive
 
 ```bash
-npx create-authon-app my-app --template nextjs-app --yes
+npx @authon/create-app my-app --template nextjs-app --yes
 ```
 
 ## Templates
