@@ -1,8 +1,9 @@
 # Authon (Swift)
 
-> Swift server SDK for iOS/macOS token verification and user management — self-hosted Clerk alternative, Auth0 alternative
+> Native iOS/macOS client SDK — self-hosted Clerk alternative with SwiftUI login UI
 
 [![License](https://img.shields.io/badge/license-MIT-blue)](../LICENSE)
+[![Platform](https://img.shields.io/badge/platform-iOS%2016%2B%20%7C%20macOS%2013%2B-lightgrey)]()
 
 ## Install
 
@@ -11,118 +12,209 @@
 ```swift
 // Package.swift
 dependencies: [
-    .package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")
+    .package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.3.0")
 ]
 ```
 
-Or in Xcode: File > Add Package Dependencies > `https://github.com/mikusnuz/authon-sdk.git`
+Or in Xcode: **File > Add Package Dependencies** > `https://github.com/mikusnuz/authon-sdk.git`
+
+### Info.plist — Register URL Scheme
+
+Required for OAuth callback:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+    <dict>
+        <key>CFBundleURLSchemes</key>
+        <array>
+            <string>authon</string>
+        </array>
+    </dict>
+</array>
+```
 
 ## Quick Start
 
 ```swift
-// main.swift — complete working example
+import SwiftUI
 import Authon
 
-let authon = AuthonBackend(secretKey: "sk_live_YOUR_SECRET_KEY")
-
-// Verify a token
-let user = try await authon.verifyToken("eyJhbGci...")
-print("\(user.id) \(user.email ?? "no email")")
-
-// List users
-let result = try await authon.users.list()
-for u in result.data {
-    print(u.email ?? "no email")
+@main
+struct MyApp: App {
+    var body: some Scene {
+        WindowGroup {
+            AuthonProvider(publishableKey: "pk_live_...") {
+                ContentView()
+            }
+        }
+    }
 }
 
-// Create a user
-let newUser = try await authon.users.create(CreateUserParams(
-    email: "alice@example.com",
-    password: "securePassword"
-))
+struct ContentView: View {
+    @EnvironmentObject var authon: Authon
+
+    var body: some View {
+        SignedOut {
+            SignInView { user in
+                print("Signed in: \(user.email ?? "")")
+            }
+        }
+        SignedIn {
+            VStack {
+                UserButton()
+                Text("Welcome, \(authon.user?.displayName ?? "")")
+
+                // Get token for your backend
+                if let token = authon.getToken() {
+                    // Send to your API
+                }
+            }
+        }
+    }
+}
 ```
 
-## Common Tasks
+## Authentication Methods
 
-### Verify a Token
+### Email / Password
 
 ```swift
-let authon = AuthonBackend(secretKey: "sk_live_...")
-let user = try await authon.verifyToken(accessToken)
-// user.id, user.email, user.displayName, ...
+let user = try await authon.signIn(email: "user@example.com", password: "secret")
 ```
 
-### Manage Users
+### OAuth (Social Login)
 
 ```swift
-let authon = AuthonBackend(secretKey: "sk_live_...")
-
-// List
-let result = try await authon.users.list(options: ListOptions(page: 1, perPage: 20))
-
-// Get
-let user = try await authon.users.get("user_abc123")
-
-// Create
-let user = try await authon.users.create(CreateUserParams(email: "user@example.com", password: "pass123"))
-
-// Update
-let updated = try await authon.users.update("user_abc123", params: UpdateUserParams(firstName: "Alice"))
-
-// Ban / Unban / Delete
-try await authon.users.ban("user_abc123")
-try await authon.users.unban("user_abc123")
-try await authon.users.delete("user_abc123")
+let user = try await authon.signInWithOAuth(.google)
+// Opens ASWebAuthenticationSession → system browser
 ```
 
-### Verify Webhooks
+### MFA (TOTP)
 
 ```swift
-let event = try authon.webhooks.verify(
-    payload: requestBodyData,
-    signature: request.headers["x-authon-signature"]!,
-    secret: "whsec_YOUR_WEBHOOK_SECRET"
+do {
+    let user = try await authon.signIn(email: email, password: password)
+} catch let error as AuthonMfaRequiredError {
+    // Show TOTP code input, then:
+    let user = try await authon.verifyMfa(mfaToken: error.mfaToken, code: "123456")
+}
+```
+
+### Passwordless
+
+```swift
+try await authon.sendEmailOtp(email: "user@example.com")
+let user = try await authon.verifyPasswordless(email: "user@example.com", code: "123456")
+```
+
+### Web3 Wallet
+
+```swift
+let nonce = try await authon.getWeb3Nonce(address: addr, chain: .evm, walletType: .metamask)
+let user = try await authon.verifyWeb3Signature(
+    message: nonce.message, signature: sig, address: addr, chain: .evm, walletType: .metamask
 )
-// event["type"] == "user.created"
 ```
 
-### Custom API URL
+## SwiftUI Components
+
+| Component | Description |
+|-----------|-------------|
+| `AuthonProvider` | Wraps app, injects Authon into environment |
+| `SignInView` | Email/password + passwordless + social login form |
+| `SignUpView` | Registration form with social buttons |
+| `UserButton` | Avatar dropdown with sign out |
+| `SocialButton` | Single OAuth provider button |
+| `SocialButtons` | All enabled provider buttons |
+| `SignedIn { }` | Renders content only when signed in |
+| `SignedOut { }` | Renders content only when signed out |
+
+## Full API
+
+### Auth
+| Method | Description |
+|--------|-------------|
+| `signIn(email:password:)` | Email/password sign in |
+| `signUp(email:password:displayName:)` | Register new user |
+| `signInWithOAuth(_:)` | OAuth via ASWebAuthenticationSession |
+| `signOut()` | Sign out, clear Keychain |
+| `getUser()` | Refresh user from server |
+| `getToken()` | Get cached access token |
+
+### MFA
+| Method | Description |
+|--------|-------------|
+| `setupMfa()` | Get TOTP secret + QR code URI |
+| `verifyMfaSetup(code:)` | Confirm TOTP setup |
+| `verifyMfa(mfaToken:code:)` | Complete MFA sign in |
+| `disableMfa(code:)` | Disable MFA |
+| `getMfaStatus()` | Check MFA enabled status |
+| `regenerateBackupCodes(code:)` | New backup codes |
+
+### Passwordless
+| Method | Description |
+|--------|-------------|
+| `sendMagicLink(email:)` | Send magic link email |
+| `sendEmailOtp(email:)` | Send email OTP |
+| `sendSmsOtp(phone:)` | Send SMS OTP |
+| `verifyPasswordless(token:email:code:)` | Verify code/token |
+
+### Passkeys
+| Method | Description |
+|--------|-------------|
+| `registerPasskey(name:)` | Register new passkey |
+| `authenticateWithPasskey(email:)` | Sign in with passkey |
+| `listPasskeys()` | List registered passkeys |
+| `renamePasskey(id:name:)` | Rename a passkey |
+| `deletePasskey(id:)` | Delete a passkey |
+
+### Web3
+| Method | Description |
+|--------|-------------|
+| `getWeb3Nonce(address:chain:walletType:)` | Get signing nonce |
+| `verifyWeb3Signature(...)` | Verify wallet signature |
+| `linkWallet(...)` | Link wallet to account |
+| `unlinkWallet(id:)` | Unlink wallet |
+| `listWallets()` | List linked wallets |
+
+### Organizations
+| Method | Description |
+|--------|-------------|
+| `listOrganizations()` | List user's organizations |
+| `createOrganization(_:)` | Create organization |
+| `updateOrganization(id:params:)` | Update organization |
+| `deleteOrganization(id:)` | Delete organization |
+| `inviteToOrganization(orgId:email:role:)` | Invite member |
+| `listOrganizationMembers(orgId:)` | List members |
+| `updateMemberRole(orgId:memberId:role:)` | Change member role |
+| `leaveOrganization(orgId:)` | Leave organization |
+
+### Sessions & Profile
+| Method | Description |
+|--------|-------------|
+| `updateProfile(_:)` | Update display name, avatar, etc. |
+| `listSessions()` | List active sessions |
+| `revokeSession(id:)` | Revoke a session |
+| `revokeAllSessions()` | Revoke all sessions |
+
+## Events
 
 ```swift
-let authon = AuthonBackend(secretKey: "sk_live_...", apiURL: "https://custom.api.url")
+let cancel = authon.on(.signedIn) { user in
+    print("User signed in: \(user?.email ?? "")")
+}
+// Later: cancel() to unsubscribe
 ```
+
+Events: `.signedIn`, `.signedOut`, `.tokenRefreshed`, `.mfaRequired`, `.error`
 
 ## Environment Variables
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `AUTHON_SECRET_KEY` | Yes | Server secret key (`sk_live_...`) |
-| `AUTHON_API_URL` | No | Custom API URL (default: `https://api.authon.dev`) |
-
-## API Reference
-
-| Method | Returns |
-|--------|---------|
-| `AuthonBackend(secretKey:, apiURL?)` | Constructor |
-| `verifyToken(_:)` | `async throws -> User` |
-| `users.list(options?)` | `async throws -> ListResult<User>` |
-| `users.get(_:)` | `async throws -> User` |
-| `users.create(_:)` | `async throws -> User` |
-| `users.update(_:, params:)` | `async throws -> User` |
-| `users.delete(_:)` | `async throws` |
-| `users.ban(_:)` | `async throws -> User` |
-| `users.unban(_:)` | `async throws -> User` |
-| `webhooks.verify(payload:, signature:, secret:)` | `throws -> [String: Any]` |
-
-## Comparison
-
-| Feature | Authon | Clerk | Firebase Auth |
-|---------|--------|-------|---------------|
-| Self-hosted | Yes | No | No |
-| Pricing | Free | $25/mo+ | Free tier |
-| Swift SDK | Yes | No | Yes |
-| async/await | Yes | N/A | Yes |
-| Server-side verification | Yes | Yes | Yes |
+| Publishable Key | Yes | `pk_live_...` or `pk_test_...` |
+| API URL | No | Default: `https://api.authon.dev` |
 
 ## License
 
