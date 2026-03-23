@@ -38,65 +38,63 @@ struct ProviderIcon: View {
     }
 }
 
-// MARK: - Google Icon
+// MARK: - Google Icon (Official 4-color G)
 
 private struct GoogleIcon: View {
     let size: CGFloat
 
     var body: some View {
         Canvas { context, canvasSize in
-            let scale = canvasSize.width / 48
-            // Red arc (top-right)
-            var redPath = Path()
-            redPath.move(to: CGPoint(x: 44.5 * scale, y: 20 * scale))
-            redPath.addLine(to: CGPoint(x: 24 * scale, y: 20 * scale))
-            redPath.addLine(to: CGPoint(x: 24 * scale, y: 28.5 * scale))
-            redPath.addLine(to: CGPoint(x: 35.5 * scale, y: 28.5 * scale))
-            redPath.addCurve(
-                to: CGPoint(x: 24 * scale, y: 38 * scale),
-                control1: CGPoint(x: 33.5 * scale, y: 34 * scale),
-                control2: CGPoint(x: 29 * scale, y: 38 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 10 * scale, y: 24 * scale),
-                control1: CGPoint(x: 16.3 * scale, y: 38 * scale),
-                control2: CGPoint(x: 10 * scale, y: 31.7 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 24 * scale, y: 10 * scale),
-                control1: CGPoint(x: 10 * scale, y: 16.3 * scale),
-                control2: CGPoint(x: 16.3 * scale, y: 10 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 35.3 * scale, y: 14.8 * scale),
-                control1: CGPoint(x: 28.7 * scale, y: 10 * scale),
-                control2: CGPoint(x: 32.6 * scale, y: 11.8 * scale)
-            )
-            redPath.addLine(to: CGPoint(x: 41 * scale, y: 9.2 * scale))
-            redPath.addCurve(
-                to: CGPoint(x: 24 * scale, y: 2 * scale),
-                control1: CGPoint(x: 36.7 * scale, y: 5 * scale),
-                control2: CGPoint(x: 30.7 * scale, y: 2 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 2 * scale, y: 24 * scale),
-                control1: CGPoint(x: 11.8 * scale, y: 2 * scale),
-                control2: CGPoint(x: 2 * scale, y: 11.8 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 24 * scale, y: 46 * scale),
-                control1: CGPoint(x: 2 * scale, y: 36.2 * scale),
-                control2: CGPoint(x: 11.8 * scale, y: 46 * scale)
-            )
-            redPath.addCurve(
-                to: CGPoint(x: 44.5 * scale, y: 20 * scale),
-                control1: CGPoint(x: 38 * scale, y: 46 * scale),
-                control2: CGPoint(x: 44.5 * scale, y: 34 * scale)
-            )
-            redPath.closeSubpath()
+            let s = canvasSize.width / 24
 
-            // Draw the multi-color G as a single path with blended fill
-            context.fill(redPath, with: .color(Color(hex: "#4285F4")))
+            // Blue section (right arc + bar)
+            var blue = Path()
+            blue.move(to: CGPoint(x: 23.0 * s, y: 12.27 * s))
+            blue.addCurve(to: CGPoint(x: 22.68 * s, y: 10.7 * s), control1: CGPoint(x: 23.0 * s, y: 11.73 * s), control2: CGPoint(x: 22.88 * s, y: 11.22 * s))
+            blue.addLine(to: CGPoint(x: 12.24 * s, y: 10.7 * s))
+            blue.addLine(to: CGPoint(x: 12.24 * s, y: 13.76 * s))
+            blue.addLine(to: CGPoint(x: 18.45 * s, y: 13.76 * s))
+            blue.addCurve(to: CGPoint(x: 16.75 * s, y: 16.77 * s), control1: CGPoint(x: 18.12 * s, y: 15.18 * s), control2: CGPoint(x: 17.56 * s, y: 16.15 * s))
+            blue.addLine(to: CGPoint(x: 19.22 * s, y: 18.68 * s))
+            blue.addCurve(to: CGPoint(x: 23.0 * s, y: 12.27 * s), control1: CGPoint(x: 21.46 * s, y: 16.72 * s), control2: CGPoint(x: 23.0 * s, y: 14.66 * s))
+            blue.closeSubpath()
+            context.fill(blue, with: .color(Color(hex: "#4285F4")))
+
+            // Green section (bottom-right)
+            var green = Path()
+            green.move(to: CGPoint(x: 12.24 * s, y: 22.5 * s))
+            green.addCurve(to: CGPoint(x: 19.22 * s, y: 18.68 * s), control1: CGPoint(x: 15.32 * s, y: 22.5 * s), control2: CGPoint(x: 17.78 * s, y: 20.97 * s))
+            green.addLine(to: CGPoint(x: 16.75 * s, y: 16.77 * s))
+            green.addCurve(to: CGPoint(x: 12.24 * s, y: 18.5 * s), control1: CGPoint(x: 15.66 * s, y: 17.62 * s), control2: CGPoint(x: 14.04 * s, y: 18.5 * s))
+            green.addCurve(to: CGPoint(x: 6.01 * s, y: 14.76 * s), control1: CGPoint(x: 9.37 * s, y: 18.5 * s), control2: CGPoint(x: 6.92 * s, y: 17.01 * s))
+            green.addLine(to: CGPoint(x: 3.47 * s, y: 16.63 * s))
+            green.addCurve(to: CGPoint(x: 12.24 * s, y: 22.5 * s), control1: CGPoint(x: 5.06 * s, y: 19.94 * s), control2: CGPoint(x: 8.39 * s, y: 22.5 * s))
+            green.closeSubpath()
+            context.fill(green, with: .color(Color(hex: "#34A853")))
+
+            // Yellow section (bottom-left)
+            var yellow = Path()
+            yellow.move(to: CGPoint(x: 6.01 * s, y: 14.76 * s))
+            yellow.addCurve(to: CGPoint(x: 5.58 * s, y: 12.25 * s), control1: CGPoint(x: 5.68 * s, y: 13.98 * s), control2: CGPoint(x: 5.5 * s, y: 13.14 * s))
+            yellow.addCurve(to: CGPoint(x: 6.01 * s, y: 9.74 * s), control1: CGPoint(x: 5.58 * s, y: 11.36 * s), control2: CGPoint(x: 5.74 * s, y: 10.52 * s))
+            yellow.addLine(to: CGPoint(x: 3.47 * s, y: 7.87 * s))
+            yellow.addCurve(to: CGPoint(x: 1.5 * s, y: 12.25 * s), control1: CGPoint(x: 2.28 * s, y: 9.18 * s), control2: CGPoint(x: 1.5 * s, y: 10.66 * s))
+            yellow.addCurve(to: CGPoint(x: 3.47 * s, y: 16.63 * s), control1: CGPoint(x: 1.5 * s, y: 13.84 * s), control2: CGPoint(x: 2.28 * s, y: 15.32 * s))
+            yellow.addLine(to: CGPoint(x: 6.01 * s, y: 14.76 * s))
+            yellow.closeSubpath()
+            context.fill(yellow, with: .color(Color(hex: "#FBBC05")))
+
+            // Red section (top-left)
+            var red = Path()
+            red.move(to: CGPoint(x: 12.24 * s, y: 6.0 * s))
+            red.addCurve(to: CGPoint(x: 17.18 * s, y: 7.91 * s), control1: CGPoint(x: 14.2 * s, y: 6.0 * s), control2: CGPoint(x: 15.91 * s, y: 6.72 * s))
+            red.addLine(to: CGPoint(x: 19.79 * s, y: 5.36 * s))
+            red.addCurve(to: CGPoint(x: 12.24 * s, y: 2.0 * s), control1: CGPoint(x: 17.87 * s, y: 3.56 * s), control2: CGPoint(x: 15.22 * s, y: 2.0 * s))
+            red.addCurve(to: CGPoint(x: 3.47 * s, y: 7.87 * s), control1: CGPoint(x: 8.39 * s, y: 2.0 * s), control2: CGPoint(x: 5.06 * s, y: 4.56 * s))
+            red.addLine(to: CGPoint(x: 6.01 * s, y: 9.74 * s))
+            red.addCurve(to: CGPoint(x: 12.24 * s, y: 6.0 * s), control1: CGPoint(x: 6.92 * s, y: 7.49 * s), control2: CGPoint(x: 9.37 * s, y: 6.0 * s))
+            red.closeSubpath()
+            context.fill(red, with: .color(Color(hex: "#EA4335")))
         }
         .frame(width: size, height: size)
     }
