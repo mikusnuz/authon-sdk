@@ -50,6 +50,7 @@ public struct SocialButton: View {
                 if isLoading {
                     ProgressView()
                         .controlSize(.small)
+                        .tint(Color(hex: provider.brandColor.text))
                         .padding(.trailing, 16)
                 }
             }
