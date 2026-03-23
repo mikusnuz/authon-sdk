@@ -41,15 +41,17 @@ public struct SocialButton: View {
 
                 Spacer()
 
-                // Reserve fixed space for loading indicator to prevent layout shift
-                Group {
-                    if isLoading {
-                        ProgressView()
-                            .controlSize(.small)
-                    }
+                // Invisible spacer matching icon width for symmetry
+                Color.clear
+                    .frame(width: 20)
+                    .padding(.trailing, 16)
+            }
+            .overlay(alignment: .trailing) {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.small)
+                        .padding(.trailing, 16)
                 }
-                .frame(width: 20)
-                .padding(.trailing, 16)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 44)
@@ -63,5 +65,13 @@ public struct SocialButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isLoading)
+
+        if let error {
+            Text(error)
+                .font(.system(size: 12))
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 4)
+        }
     }
 }
