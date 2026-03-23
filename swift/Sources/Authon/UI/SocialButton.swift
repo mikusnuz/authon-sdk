@@ -28,22 +28,28 @@ public struct SocialButton: View {
                 }
             }
         } label: {
-            ZStack {
-                HStack(spacing: 12) {
-                    ProviderIcon(provider: provider)
-                        .foregroundStyle(Color(hex: provider.brandColor.text))
-                    Spacer()
-                }
-                .padding(.horizontal, 16)
+            HStack(spacing: 0) {
+                ProviderIcon(provider: provider)
+                    .foregroundStyle(Color(hex: provider.brandColor.text))
+                    .frame(width: 20)
+                    .padding(.leading, 16)
 
-                HStack(spacing: 8) {
-                    Text("Continue with \(provider.displayName)")
-                        .font(.system(size: 15, weight: .medium))
+                Spacer()
+
+                Text("Continue with \(provider.displayName)")
+                    .font(.system(size: 15, weight: .medium))
+
+                Spacer()
+
+                // Reserve fixed space for loading indicator to prevent layout shift
+                Group {
                     if isLoading {
                         ProgressView()
                             .controlSize(.small)
                     }
                 }
+                .frame(width: 20)
+                .padding(.trailing, 16)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 44)
