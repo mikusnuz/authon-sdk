@@ -3,14 +3,15 @@ import SwiftUI
 public struct SocialButton: View {
     let provider: OAuthProvider
     var onSuccess: ((AuthonUser) -> Void)?
+    var onError: ((Error) -> Void)?
 
     @EnvironmentObject private var authon: Authon
     @State private var isLoading = false
-    @State private var error: String?
 
-    public init(provider: OAuthProvider, onSuccess: ((AuthonUser) -> Void)? = nil) {
+    public init(provider: OAuthProvider, onSuccess: ((AuthonUser) -> Void)? = nil, onError: ((Error) -> Void)? = nil) {
         self.provider = provider
         self.onSuccess = onSuccess
+        self.onError = onError
     }
 
     public var body: some View {
@@ -18,13 +19,12 @@ public struct SocialButton: View {
             guard !isLoading else { return }
             Task {
                 isLoading = true
-                error = nil
                 defer { isLoading = false }
                 do {
                     let user = try await authon.signInWithOAuth(provider)
                     onSuccess?(user)
                 } catch {
-                    self.error = error.localizedDescription
+                    onError?(error)
                 }
             }
         } label: {
@@ -65,13 +65,5 @@ public struct SocialButton: View {
         }
         .buttonStyle(.plain)
         .disabled(isLoading)
-
-        if let error {
-            Text(error)
-                .font(.system(size: 12))
-                .foregroundStyle(.red)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 4)
-        }
     }
 }
