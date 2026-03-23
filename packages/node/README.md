@@ -7,6 +7,24 @@
 [![npm version](https://img.shields.io/npm/v/@authon/node?color=6d28d9)](https://www.npmjs.com/package/@authon/node)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
+## Prerequisites
+
+Before installing the SDK, create an Authon project and get your API keys:
+
+1. **Create a project** at [Authon Dashboard](https://authon.dev/dashboard/overview)
+   - Click "Create Project" and enter your app name
+   - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
+
+2. **Get your API keys** from Project Settings → API Keys
+   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
+   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+
+3. **Configure OAuth providers** (optional) in Project Settings → OAuth
+   - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
+   - Set the redirect URL to `https://api.authon.dev/v1/auth/oauth/redirect`
+
+> **Test vs Live keys:** Use `pk_test_...` during development. Switch to `pk_live_...` before deploying to production. Test keys use a sandbox environment with no rate limits.
+
 ## Install
 
 ```bash

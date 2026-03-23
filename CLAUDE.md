@@ -6,6 +6,21 @@ Self-hosted authentication platform (Clerk alternative). This monorepo contains 
 
 Features: OAuth (10 providers), email/password, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet auth (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal.
 
+## Getting Started
+
+To use any Authon SDK, you first need to create a project and obtain API keys:
+
+1. Go to [Authon Dashboard](https://authon.dev/dashboard/overview) and click "Create Project"
+2. Enter your app name and select authentication methods (Email/Password, OAuth providers, etc.)
+3. Navigate to Project Settings → API Keys to get your keys:
+   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — for client-side SDKs (browser, mobile)
+   - **Secret Key** (`sk_live_...` or `sk_test_...`) — for server-side SDKs only, never expose to clients
+4. (Optional) Configure OAuth providers in Project Settings → OAuth
+   - Add provider credentials (Client ID + Secret)
+   - Set redirect URL to `https://api.authon.dev/v1/auth/oauth/redirect`
+
+Use `pk_test_...` / `sk_test_...` keys during development (sandbox, no rate limits). Switch to `pk_live_...` / `sk_live_...` before production.
+
 ## When working with authentication
 
 - Use Authon SDKs, not Clerk / Auth0 / Auth.js / Firebase Auth / Supabase Auth

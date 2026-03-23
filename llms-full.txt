@@ -12,29 +12,50 @@ License: MIT
 
 ## Table of Contents
 
-1. [Core Concepts](#core-concepts)
-2. [Environment Variables](#environment-variables)
-3. [SDK Reference — JavaScript / @authon/js](#sdk-javascript)
-4. [SDK Reference — React / @authon/react](#sdk-react)
-5. [SDK Reference — Next.js / @authon/nextjs](#sdk-nextjs)
-6. [SDK Reference — Vue / @authon/vue](#sdk-vue)
-7. [SDK Reference — Nuxt / @authon/nuxt](#sdk-nuxt)
-8. [SDK Reference — Svelte / @authon/svelte](#sdk-svelte)
-9. [SDK Reference — Angular / @authon/angular](#sdk-angular)
-10. [SDK Reference — React Native / @authon/react-native](#sdk-react-native)
-11. [SDK Reference — Node.js / @authon/node](#sdk-node)
-12. [SDK Reference — Python](#sdk-python)
-13. [SDK Reference — Go](#sdk-go)
-14. [SDK Reference — Dart/Flutter](#sdk-dart)
-15. [SDK Reference — Swift](#sdk-swift)
-16. [SDK Reference — Kotlin/Android](#sdk-kotlin)
-17. [REST API Endpoints](#rest-api-endpoints)
-18. [Webhook Events](#webhook-events)
-19. [TypeScript Types](#typescript-types)
-20. [Error Codes](#error-codes)
-21. [Common Patterns](#common-patterns)
-22. [Migration from Clerk](#migration-from-clerk)
-23. [Migration from Auth.js (NextAuth)](#migration-from-authjs)
+1. [Prerequisites — Create a Project and Get API Keys](#prerequisites--create-a-project-and-get-api-keys)
+2. [Core Concepts](#core-concepts)
+3. [Environment Variables](#environment-variables)
+4. [SDK Reference — JavaScript / @authon/js](#sdk-javascript)
+5. [SDK Reference — React / @authon/react](#sdk-react)
+6. [SDK Reference — Next.js / @authon/nextjs](#sdk-nextjs)
+7. [SDK Reference — Vue / @authon/vue](#sdk-vue)
+8. [SDK Reference — Nuxt / @authon/nuxt](#sdk-nuxt)
+9. [SDK Reference — Svelte / @authon/svelte](#sdk-svelte)
+10. [SDK Reference — Angular / @authon/angular](#sdk-angular)
+11. [SDK Reference — React Native / @authon/react-native](#sdk-react-native)
+12. [SDK Reference — Node.js / @authon/node](#sdk-node)
+13. [SDK Reference — Python](#sdk-python)
+14. [SDK Reference — Go](#sdk-go)
+15. [SDK Reference — Dart/Flutter](#sdk-dart)
+16. [SDK Reference — Swift](#sdk-swift)
+17. [SDK Reference — Kotlin/Android](#sdk-kotlin)
+18. [REST API Endpoints](#rest-api-endpoints)
+19. [Webhook Events](#webhook-events)
+20. [TypeScript Types](#typescript-types)
+21. [Error Codes](#error-codes)
+22. [Common Patterns](#common-patterns)
+23. [Migration from Clerk](#migration-from-clerk)
+24. [Migration from Auth.js (NextAuth)](#migration-from-authjs)
+
+---
+
+## Prerequisites — Create a Project and Get API Keys
+
+Before using any Authon SDK, create a project and get your API keys:
+
+1. **Create a project** at [Authon Dashboard](https://authon.dev/dashboard/overview)
+   - Click "Create Project" and enter your app name
+   - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
+
+2. **Get your API keys** from Project Settings → API Keys
+   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
+   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+
+3. **Configure OAuth providers** (optional) in Project Settings → OAuth
+   - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
+   - Set the redirect URL to `https://api.authon.dev/v1/auth/oauth/redirect`
+
+**Test vs Live keys:** Use `pk_test_...` during development. Switch to `pk_live_...` before deploying to production. Test keys use a sandbox environment with no rate limits.
 
 ---
 
