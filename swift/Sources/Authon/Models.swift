@@ -2,9 +2,9 @@ import Foundation
 
 // MARK: - AuthonUser
 
-public struct AuthonUser: Codable, Sendable, Identifiable {
+public struct AuthonUser: Sendable, Identifiable {
     public let id: String
-    public let projectId: String
+    public let projectId: String?
     public let email: String?
     public let displayName: String?
     public let avatarUrl: String?
@@ -15,12 +15,12 @@ public struct AuthonUser: Codable, Sendable, Identifiable {
     public let publicMetadata: [String: AnyCodable]?
     public let lastSignInAt: String?
     public let signInCount: Int
-    public let createdAt: String
-    public let updatedAt: String
+    public let createdAt: String?
+    public let updatedAt: String?
 
     public init(
         id: String,
-        projectId: String,
+        projectId: String? = nil,
         email: String? = nil,
         displayName: String? = nil,
         avatarUrl: String? = nil,
@@ -31,8 +31,8 @@ public struct AuthonUser: Codable, Sendable, Identifiable {
         publicMetadata: [String: AnyCodable]? = nil,
         lastSignInAt: String? = nil,
         signInCount: Int = 0,
-        createdAt: String,
-        updatedAt: String
+        createdAt: String? = nil,
+        updatedAt: String? = nil
     ) {
         self.id = id
         self.projectId = projectId
@@ -48,6 +48,61 @@ public struct AuthonUser: Codable, Sendable, Identifiable {
         self.signInCount = signInCount
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+}
+
+extension AuthonUser: Codable {
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case projectId
+        case email
+        case displayName
+        case avatarUrl
+        case phone
+        case emailVerified
+        case phoneVerified
+        case isBanned
+        case publicMetadata
+        case lastSignInAt
+        case signInCount
+        case createdAt
+        case updatedAt
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        projectId = try container.decodeIfPresent(String.self, forKey: .projectId)
+        email = try container.decodeIfPresent(String.self, forKey: .email)
+        displayName = try container.decodeIfPresent(String.self, forKey: .displayName)
+        avatarUrl = try container.decodeIfPresent(String.self, forKey: .avatarUrl)
+        phone = try container.decodeIfPresent(String.self, forKey: .phone)
+        emailVerified = try container.decodeIfPresent(Bool.self, forKey: .emailVerified) ?? false
+        phoneVerified = try container.decodeIfPresent(Bool.self, forKey: .phoneVerified) ?? false
+        isBanned = try container.decodeIfPresent(Bool.self, forKey: .isBanned) ?? false
+        publicMetadata = try container.decodeIfPresent([String: AnyCodable].self, forKey: .publicMetadata)
+        lastSignInAt = try container.decodeIfPresent(String.self, forKey: .lastSignInAt)
+        signInCount = try container.decodeIfPresent(Int.self, forKey: .signInCount) ?? 0
+        createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encodeIfPresent(projectId, forKey: .projectId)
+        try container.encodeIfPresent(email, forKey: .email)
+        try container.encodeIfPresent(displayName, forKey: .displayName)
+        try container.encodeIfPresent(avatarUrl, forKey: .avatarUrl)
+        try container.encodeIfPresent(phone, forKey: .phone)
+        try container.encode(emailVerified, forKey: .emailVerified)
+        try container.encode(phoneVerified, forKey: .phoneVerified)
+        try container.encode(isBanned, forKey: .isBanned)
+        try container.encodeIfPresent(publicMetadata, forKey: .publicMetadata)
+        try container.encodeIfPresent(lastSignInAt, forKey: .lastSignInAt)
+        try container.encode(signInCount, forKey: .signInCount)
+        try container.encodeIfPresent(createdAt, forKey: .createdAt)
+        try container.encodeIfPresent(updatedAt, forKey: .updatedAt)
     }
 }
 
