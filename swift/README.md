@@ -108,6 +108,36 @@ let user = try await authon.signInWithOAuth(.google)
 // Opens ASWebAuthenticationSession → system browser
 ```
 
+### Native Apple Sign In (macOS / iOS)
+
+On macOS and iOS, calling `signInWithOAuth(.apple)` automatically uses `ASAuthorizationAppleIDProvider` instead of a browser window. No code changes are required — the SDK detects the platform and picks the right flow.
+
+```swift
+let user = try await authon.signInWithOAuth(.apple)
+// macOS/iOS: native Apple Sign In sheet → POST /v1/auth/oauth/native
+// Other platforms: ASWebAuthenticationSession → /v1/auth/oauth/redirect
+```
+
+#### Required setup
+
+1. **Enable the entitlement** in Xcode → your target → Signing & Capabilities → add **Sign In with Apple**.
+
+2. **Set your Development Team** (required for the entitlement to be valid during development).
+
+3. **Configure `bundleId` in the Authon dashboard** so the API accepts tokens issued to your app's Bundle ID alongside the web Services ID:
+   - Go to **Authon Dashboard → Project Settings → OAuth → Apple → Extra Config**
+   - Add `bundleId` matching your app's Bundle ID:
+
+   ```json
+   {
+     "bundleId": "app.example.MyApp"
+   }
+   ```
+
+   Without this setting, the API only accepts tokens issued to the web Services ID (audience). Adding `bundleId` enables both web and native Apple Sign In from the same project.
+
+> **Note:** The `authon://` URL scheme in `Info.plist` is still needed for other OAuth providers (Google, GitHub, etc.) but is not required for native Apple Sign In.
+
 ### MFA (TOTP)
 
 ```swift
@@ -155,7 +185,7 @@ let user = try await authon.verifyWeb3Signature(
 |--------|-------------|
 | `signIn(email:password:)` | Email/password sign in |
 | `signUp(email:password:displayName:)` | Register new user |
-| `signInWithOAuth(_:)` | OAuth via ASWebAuthenticationSession |
+| `signInWithOAuth(_:)` | OAuth sign in — native Apple sheet on macOS/iOS, ASWebAuthenticationSession elsewhere |
 | `signOut()` | Sign out, clear Keychain |
 | `getUser()` | Refresh user from server |
 | `getToken()` | Get cached access token |
