@@ -1,55 +1,103 @@
-import { defineComponent, h, onMounted, ref, computed } from 'vue';
+import { defineComponent, h, inject, onMounted, onUnmounted, ref, computed } from 'vue';
+import { Authon } from '@authon/js';
+import type { AuthonConfig } from '@authon/js';
+import { AUTHON_KEY } from './plugin';
+import type { AuthonState } from './plugin';
 import { useAuthon } from './composables';
+
+let _embeddedCounter = 0;
+
+function requireState(): AuthonState {
+  const state = inject<AuthonState>(AUTHON_KEY);
+  if (!state) {
+    throw new Error('AuthonSignIn/AuthonSignUp must be used inside a component tree with createAuthon() installed');
+  }
+  return state;
+}
 
 export const AuthonSignIn = defineComponent({
   name: 'AuthonSignIn',
   props: {
-    mode: {
-      type: String as () => 'popup' | 'embedded',
-      default: 'popup',
-    },
+    afterSignInUrl: { type: String, default: undefined },
+    appearance: { type: Object as () => AuthonConfig['appearance'], default: undefined },
   },
-  setup(props) {
-    const { client } = useAuthon();
+  emits: ['signIn'],
+  setup(props, { emit }) {
+    const state = requireState();
+    const containerId = ref(`authon-signin-${++_embeddedCounter}`);
+    let embeddedClient: Authon | null = null;
+    let cleanupSignedIn: (() => void) | null = null;
 
     onMounted(() => {
-      if (props.mode === 'popup') {
-        client?.openSignIn();
-      }
+      embeddedClient = new Authon(state.publishableKey, {
+        apiUrl: state.apiUrl,
+        mode: 'embedded',
+        containerId: containerId.value,
+        appearance: props.appearance,
+      });
+
+      cleanupSignedIn = embeddedClient.on('signedIn', (user) => {
+        state.user = user;
+        state.isSignedIn = true;
+        emit('signIn', user);
+        if (props.afterSignInUrl) {
+          window.location.href = props.afterSignInUrl;
+        }
+      });
+
+      embeddedClient.openSignIn();
     });
 
-    return () => {
-      if (props.mode === 'embedded') {
-        return h('div', { id: 'authon-signin-container' });
-      }
-      return null;
-    };
+    onUnmounted(() => {
+      cleanupSignedIn?.();
+      embeddedClient?.destroy();
+      embeddedClient = null;
+    });
+
+    return () => h('div', { id: containerId.value });
   },
 });
 
 export const AuthonSignUp = defineComponent({
   name: 'AuthonSignUp',
   props: {
-    mode: {
-      type: String as () => 'popup' | 'embedded',
-      default: 'popup',
-    },
+    afterSignUpUrl: { type: String, default: undefined },
+    appearance: { type: Object as () => AuthonConfig['appearance'], default: undefined },
   },
-  setup(props) {
-    const { client } = useAuthon();
+  emits: ['signUp'],
+  setup(props, { emit }) {
+    const state = requireState();
+    const containerId = ref(`authon-signup-${++_embeddedCounter}`);
+    let embeddedClient: Authon | null = null;
+    let cleanupSignedIn: (() => void) | null = null;
 
     onMounted(() => {
-      if (props.mode === 'popup') {
-        client?.openSignUp();
-      }
+      embeddedClient = new Authon(state.publishableKey, {
+        apiUrl: state.apiUrl,
+        mode: 'embedded',
+        containerId: containerId.value,
+        appearance: props.appearance,
+      });
+
+      cleanupSignedIn = embeddedClient.on('signedIn', (user) => {
+        state.user = user;
+        state.isSignedIn = true;
+        emit('signUp', user);
+        if (props.afterSignUpUrl) {
+          window.location.href = props.afterSignUpUrl;
+        }
+      });
+
+      embeddedClient.openSignUp();
     });
 
-    return () => {
-      if (props.mode === 'embedded') {
-        return h('div', { id: 'authon-signup-container' });
-      }
-      return null;
-    };
+    onUnmounted(() => {
+      cleanupSignedIn?.();
+      embeddedClient?.destroy();
+      embeddedClient = null;
+    });
+
+    return () => h('div', { id: containerId.value });
   },
 });
 

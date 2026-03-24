@@ -38,7 +38,8 @@
   ],
   "dependencies": {
     "@authon/js": "workspace:^",
-    "@authon/shared": "workspace:^"
+    "@authon/shared": "workspace:^",
+    "@authon/vue": "workspace:^"
   },
   "peerDependencies": {
     "nuxt": "^3.0.0"

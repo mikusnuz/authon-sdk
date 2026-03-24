@@ -11,10 +11,13 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
-    }
+    },
+    "./SignIn.svelte": "./src/components/SignIn.svelte",
+    "./SignUp.svelte": "./src/components/SignUp.svelte"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/components"
   ],
   "scripts": {
     "build": "tsup",

@@ -13,3 +13,4 @@ export type { UseAuthonPasskeysReturn } from './useAuthonPasskeys';
 export { createAuthMiddleware } from './middleware';
 export { renderSocialButtons } from './SocialButtons';
 export type { SocialButtonsConfig } from './SocialButtons';
+export { AuthonSignIn, AuthonSignUp, AuthonUserButton, AuthonSignedIn, AuthonSignedOut } from '@authon/vue';

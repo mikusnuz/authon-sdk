@@ -11,6 +11,8 @@ export interface AuthonState {
   isLoading: boolean;
   user: AuthonUser | null;
   client: Authon | null;
+  publishableKey: string;
+  apiUrl: string;
 }
 
 export interface AuthonPluginOptions {
@@ -24,6 +26,8 @@ export function createAuthon(options: AuthonPluginOptions) {
     isLoading: true,
     user: null,
     client: null,
+    publishableKey: options.publishableKey,
+    apiUrl: options.config?.apiUrl ?? 'https://api.authon.dev',
   });
 
   return {

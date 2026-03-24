@@ -10,3 +10,8 @@ export type {
   Web3Wallet,
   Web3WalletType,
 } from '@authon/shared';
+
+// Svelte components are exported as raw .svelte source for the consumer's compiler.
+// Import them directly:
+//   import SignIn from '@authon/svelte/SignIn.svelte'
+//   import SignUp from '@authon/svelte/SignUp.svelte'
