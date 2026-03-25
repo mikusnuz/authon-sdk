@@ -1160,9 +1160,42 @@ var SessionManager = class {
   refreshTimer = null;
   apiUrl;
   publishableKey;
+  storageKey;
   constructor(publishableKey, apiUrl) {
     this.publishableKey = publishableKey;
     this.apiUrl = apiUrl;
+    this.storageKey = `authon_session_${publishableKey.slice(0, 16)}`;
+    this.restoreFromStorage();
+  }
+  restoreFromStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      if (!stored) return;
+      const data = JSON.parse(stored);
+      if (data.accessToken && data.refreshToken && data.user) {
+        this.accessToken = data.accessToken;
+        this.refreshToken = data.refreshToken;
+        this.user = data.user;
+        this.scheduleRefresh(5);
+      }
+    } catch {
+    }
+  }
+  persistToStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      if (this.accessToken && this.refreshToken && this.user) {
+        localStorage.setItem(this.storageKey, JSON.stringify({
+          accessToken: this.accessToken,
+          refreshToken: this.refreshToken,
+          user: this.user
+        }));
+      } else {
+        localStorage.removeItem(this.storageKey);
+      }
+    } catch {
+    }
   }
   getToken() {
     return this.accessToken;
@@ -1174,6 +1207,7 @@ var SessionManager = class {
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
+    this.persistToStorage();
     if (tokens.expiresIn && tokens.expiresIn > 0) {
       this.scheduleRefresh(tokens.expiresIn);
     }
@@ -1185,6 +1219,7 @@ var SessionManager = class {
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
+    this.persistToStorage();
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;

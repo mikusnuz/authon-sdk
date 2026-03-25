@@ -7,10 +7,44 @@ export class SessionManager {
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private apiUrl: string;
   private publishableKey: string;
+  private storageKey: string;
 
   constructor(publishableKey: string, apiUrl: string) {
     this.publishableKey = publishableKey;
     this.apiUrl = apiUrl;
+    this.storageKey = `authon_session_${publishableKey.slice(0, 16)}`;
+    this.restoreFromStorage();
+  }
+
+  private restoreFromStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const stored = localStorage.getItem(this.storageKey);
+      if (!stored) return;
+      const data = JSON.parse(stored);
+      if (data.accessToken && data.refreshToken && data.user) {
+        this.accessToken = data.accessToken;
+        this.refreshToken = data.refreshToken;
+        this.user = data.user;
+        // Token might be expired, schedule immediate refresh
+        this.scheduleRefresh(5);
+      }
+    } catch { /* ignore corrupt storage */ }
+  }
+
+  private persistToStorage(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      if (this.accessToken && this.refreshToken && this.user) {
+        localStorage.setItem(this.storageKey, JSON.stringify({
+          accessToken: this.accessToken,
+          refreshToken: this.refreshToken,
+          user: this.user,
+        }));
+      } else {
+        localStorage.removeItem(this.storageKey);
+      }
+    } catch { /* ignore */ }
   }
 
   getToken(): string | null {
@@ -25,6 +59,7 @@ export class SessionManager {
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
+    this.persistToStorage();
     if (tokens.expiresIn && tokens.expiresIn > 0) {
       this.scheduleRefresh(tokens.expiresIn);
     }
@@ -38,6 +73,7 @@ export class SessionManager {
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
+    this.persistToStorage();
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
