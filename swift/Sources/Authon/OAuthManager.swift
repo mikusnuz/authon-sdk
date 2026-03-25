@@ -1,10 +1,13 @@
 import Foundation
 import AuthenticationServices
+#if canImport(AppKit)
+import AppKit
+#endif
 
 final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProviding {
     private let api: AuthonAPI
 
-    #if os(macOS)
+    #if os(iOS)
     private var nativeContinuation: CheckedContinuation<ApiAuthResponse, Error>?
     #endif
 
@@ -16,7 +19,10 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     // MARK: - OAuth Flow
 
     func authenticate(provider: OAuthProvider) async throws -> ApiAuthResponse {
-        #if os(macOS)
+        // All providers use browser + polling on macOS (native Apple Sign In requires
+        // com.apple.developer.applesignin entitlement which needs provisioning).
+        // On iOS, Apple uses native ASAuthorizationController, others use ASWebAuthenticationSession.
+        #if os(iOS)
         if provider == .apple {
             return try await authenticateWithNativeApple()
         }
@@ -34,6 +40,7 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
 
         struct OAuthUrlResponse: Decodable {
             let url: String
+            let state: String?
         }
         let urlResponse: OAuthUrlResponse = try await api.request("GET", urlPath)
 
@@ -41,7 +48,27 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
             throw AuthonError(statusCode: 0, message: "Invalid OAuth URL returned by server", code: "invalid_oauth_url")
         }
 
-        // 2. Open ASWebAuthenticationSession
+        // Extract state from the OAuth URL for polling
+        let state: String
+        if let urlState = urlResponse.state {
+            state = urlState
+        } else if let components = URLComponents(string: urlResponse.url),
+                  let stateParam = components.queryItems?.first(where: { $0.name == "state" })?.value {
+            state = stateParam
+        } else {
+            throw AuthonError(statusCode: 0, message: "Missing state in OAuth URL", code: "oauth_missing_state")
+        }
+
+        #if os(macOS)
+        // macOS: Open system browser + poll for result
+        // ASWebAuthenticationSession doesn't work because the server shows a "close tab"
+        // page instead of redirecting to authon:// callback scheme.
+        await MainActor.run {
+            NSWorkspace.shared.open(authURL)
+        }
+        return try await pollForResult(state: state)
+        #else
+        // iOS: Use ASWebAuthenticationSession
         let callbackURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
             let session = ASWebAuthenticationSession(
                 url: authURL,
@@ -60,19 +87,17 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
             session.start()
         }
 
-        // 3. Extract state from callback URL query params
         guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-              let state = components.queryItems?.first(where: { $0.name == "state" })?.value else {
+              let cbState = components.queryItems?.first(where: { $0.name == "state" })?.value else {
             throw AuthonError(statusCode: 0, message: "Missing state parameter in OAuth callback", code: "oauth_missing_state")
         }
-
-        // 4. Poll for completion
-        return try await pollForResult(state: state)
+        return try await pollForResult(state: cbState)
+        #endif
     }
 
-    // MARK: - Native Apple Sign In (macOS only)
+    // MARK: - Native Apple Sign In (iOS only)
 
-    #if os(macOS)
+    #if os(iOS)
     @MainActor
     private func authenticateWithNativeApple() async throws -> ApiAuthResponse {
         return try await withCheckedThrowingContinuation { continuation in
@@ -144,9 +169,9 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     }
 }
 
-// MARK: - ASAuthorizationControllerDelegate (macOS native Apple Sign In)
+// MARK: - ASAuthorizationControllerDelegate (iOS native Apple Sign In)
 
-#if os(macOS)
+#if os(iOS)
 extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
 
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
