@@ -49,6 +49,8 @@ export class Authon {
   private providers: OAuthProviderType[] = [];
   private providerFlowModes: Partial<Record<OAuthProviderType, OAuthFlowMode>> = {};
   private initialized = false;
+  private captchaEnabled = false;
+  private turnstileSiteKey = '';
 
   constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
@@ -91,10 +93,12 @@ export class Authon {
     await this.startOAuthFlow(provider, options);
   }
 
-  async signInWithEmail(email: string, password: string): Promise<AuthonUser> {
+  async signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser> {
+    const body: Record<string, string> = { email, password };
+    if (turnstileToken) body.turnstileToken = turnstileToken;
     const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string }>(
       '/v1/auth/signin',
-      { email, password },
+      body,
     );
     if (res.mfaRequired && res.mfaToken) {
       this.emit('mfaRequired', res.mfaToken);
@@ -108,7 +112,7 @@ export class Authon {
   async signUpWithEmail(
     email: string,
     password: string,
-    meta?: { displayName?: string },
+    meta?: { displayName?: string; turnstileToken?: string },
   ): Promise<AuthonUser> {
     const tokens = await this.apiPost<AuthTokens>('/v1/auth/signup', {
       email,
@@ -476,6 +480,15 @@ export class Authon {
 
   // ── Internal ──
 
+  private loadTurnstileScript(): void {
+    if (typeof document === 'undefined') return;
+    if (document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]')) return;
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    document.head.appendChild(script);
+  }
+
   private emit(event: string, ...args: unknown[]): void {
     this.listeners.get(event)?.forEach((fn) => fn(...args));
   }
@@ -488,6 +501,11 @@ export class Authon {
         this.apiGet<ProvidersResponse>('/v1/auth/providers'),
       ]);
       this.branding = { ...branding, ...this.config.appearance };
+      this.captchaEnabled = !!(branding as any).captchaEnabled;
+      this.turnstileSiteKey = (branding as any).turnstileSiteKey || '';
+      if (this.captchaEnabled && this.turnstileSiteKey) {
+        this.loadTurnstileScript();
+      }
       this.providers = providersRes.providers;
       this.providerFlowModes = {};
       for (const provider of this.providers) {
@@ -509,15 +527,18 @@ export class Authon {
         theme: this.config.theme,
         containerId: this.config.containerId,
         branding: this.branding || undefined,
+        captchaSiteKey: this.captchaEnabled ? this.turnstileSiteKey : undefined,
         onProviderClick: (provider) => this.startOAuthFlow(provider),
         onEmailSubmit: (email, password, isSignUp) => {
           this.modal?.clearError();
+          const turnstileToken = this.modal?.getTurnstileToken?.() || undefined;
           const promise = isSignUp
-            ? this.signUpWithEmail(email, password)
-            : this.signInWithEmail(email, password);
+            ? this.signUpWithEmail(email, password, { turnstileToken })
+            : this.signInWithEmail(email, password, turnstileToken);
           promise
             .then(() => this.modal?.close())
             .catch((err) => {
+              this.modal?.resetTurnstile?.();
               const msg = err instanceof Error ? err.message : String(err);
               this.modal?.showError(msg || 'Authentication failed');
               this.emit('error', err instanceof Error ? err : new Error(msg));

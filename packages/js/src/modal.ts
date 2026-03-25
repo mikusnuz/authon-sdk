@@ -55,11 +55,17 @@ export class ModalRenderer {
   private overlayEmail: string = '';
   private overlayError: string = '';
 
+  // Turnstile CAPTCHA
+  private captchaSiteKey: string = '';
+  private turnstileWidgetId: string | null = null;
+  private turnstileToken: string = '';
+
   constructor(options: {
     mode: 'popup' | 'embedded';
     theme?: 'light' | 'dark' | 'auto';
     containerId?: string;
     branding?: BrandingConfig;
+    captchaSiteKey?: string;
     onProviderClick: (provider: OAuthProviderType) => void;
     onEmailSubmit: (email: string, password: string, isSignUp: boolean) => void;
     onClose: () => void;
@@ -71,6 +77,7 @@ export class ModalRenderer {
     this.mode = options.mode;
     this.theme = options.theme || 'auto';
     this.branding = { ...DEFAULT_BRANDING, ...options.branding };
+    this.captchaSiteKey = options.captchaSiteKey || '';
     this.onProviderClick = options.onProviderClick;
     this.onEmailSubmit = options.onEmailSubmit;
     this.onClose = options.onClose;
@@ -110,6 +117,12 @@ export class ModalRenderer {
       document.removeEventListener('keydown', this.escHandler);
       this.escHandler = null;
     }
+    // Cleanup turnstile
+    if (this.turnstileWidgetId !== null) {
+      (window as any).turnstile?.remove(this.turnstileWidgetId);
+      this.turnstileWidgetId = null;
+      this.turnstileToken = '';
+    }
     if (this.hostElement) {
       this.hostElement.remove();
       this.hostElement = null;
@@ -119,6 +132,17 @@ export class ModalRenderer {
       this.containerElement.innerHTML = '';
     }
     this.currentOverlay = 'none';
+  }
+
+  getTurnstileToken(): string {
+    return this.turnstileToken;
+  }
+
+  resetTurnstile(): void {
+    if (this.turnstileWidgetId !== null) {
+      (window as any).turnstile?.reset(this.turnstileWidgetId);
+      this.turnstileToken = '';
+    }
   }
 
   /** Update theme at runtime without destroying form state */
@@ -378,12 +402,16 @@ export class ModalRenderer {
         ? `<div class="divider"><span>or</span></div>`
         : '';
 
+    const captchaContainer = this.captchaSiteKey
+      ? '<div id="turnstile-container" style="display:flex;justify-content:center;margin:4px 0"></div>'
+      : '';
     const emailForm =
       b.showEmailPassword !== false
         ? `<form class="email-form" id="email-form">
           <input type="email" placeholder="Email address" name="email" required class="input" autocomplete="email" />
           <input type="password" placeholder="Password" name="password" required class="input" autocomplete="${isSignUp ? 'new-password' : 'current-password'}" />
           ${isSignUp ? '<p class="password-hint">Must contain uppercase, lowercase, and a number (min 8 chars)</p>' : ''}
+          ${captchaContainer}
           <button type="submit" class="submit-btn">${isSignUp ? 'Sign up' : 'Sign in'}</button>
         </form>`
         : '';
@@ -455,6 +483,46 @@ export class ModalRenderer {
       ${footer}
       ${b.showSecuredBy !== false ? `<div class="secured-by">Secured by <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ''}
     `;
+  }
+
+  private renderTurnstile(): void {
+    if (!this.captchaSiteKey || !this.shadowRoot) return;
+    const container = this.shadowRoot.getElementById('turnstile-container');
+    if (!container) return;
+
+    const w = window as any;
+    const tryRender = () => {
+      if (!w.turnstile || !container.isConnected) return;
+      // Turnstile normally needs the container in the real DOM.
+      // ShadowDOM containers work if we create a regular DOM element.
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.justifyContent = 'center';
+      document.body.appendChild(wrapper);
+      this.turnstileWidgetId = w.turnstile.render(wrapper, {
+        sitekey: this.captchaSiteKey,
+        callback: (token: string) => { this.turnstileToken = token; },
+        'expired-callback': () => { this.turnstileToken = ''; },
+        'error-callback': () => { this.turnstileToken = ''; },
+        theme: this.isDark() ? 'dark' : 'light',
+        size: 'flexible',
+      });
+      // Move rendered iframe into shadow DOM
+      container.appendChild(wrapper);
+    };
+
+    if (w.turnstile) {
+      tryRender();
+    } else {
+      const interval = setInterval(() => {
+        if (w.turnstile) {
+          clearInterval(interval);
+          tryRender();
+        }
+      }, 200);
+      // Stop after 10s
+      setTimeout(() => clearInterval(interval), 10000);
+    }
   }
 
   private isDark(): boolean {
@@ -1100,6 +1168,9 @@ export class ModalRenderer {
         );
       });
     }
+
+    // Turnstile CAPTCHA
+    this.renderTurnstile();
 
     // Back button (signUp -> signIn)
     const backBtn = this.shadowRoot.getElementById('back-btn');
