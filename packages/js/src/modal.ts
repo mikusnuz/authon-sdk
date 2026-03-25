@@ -90,8 +90,20 @@ export class ModalRenderer {
 
     if (options.mode === 'embedded' && options.containerId) {
       this.containerId = options.containerId;
-      this.containerElement = document.getElementById(options.containerId);
     }
+  }
+
+  private resolveContainerElement(): HTMLElement | null {
+    if (this.mode !== 'embedded' || !this.containerId) return null;
+    const next = document.getElementById(this.containerId);
+    if (this.containerElement !== next) {
+      // Container changed (SPA navigation) — discard stale mount
+      this.hostElement?.remove();
+      this.hostElement = null;
+      this.shadowRoot = null;
+    }
+    this.containerElement = next;
+    return next;
   }
 
   setProviders(providers: OAuthProviderType[]): void {
@@ -103,17 +115,11 @@ export class ModalRenderer {
   }
 
   open(view: 'signIn' | 'signUp' = 'signIn'): void {
-    // Reset stale references (e.g. after SPA navigation where container was replaced)
+    this.resolveContainerElement();
+
     if (this.hostElement && !this.hostElement.isConnected) {
       this.hostElement = null;
       this.shadowRoot = null;
-    }
-    if (this.mode === 'embedded' && this.containerId) {
-      const container = document.getElementById(this.containerId);
-      if (container && this.hostElement && this.hostElement.parentNode !== container) {
-        this.hostElement = null;
-        this.shadowRoot = null;
-      }
     }
 
     if (this.shadowRoot && this.hostElement) {
@@ -148,8 +154,9 @@ export class ModalRenderer {
       this.hostElement = null;
       this.shadowRoot = null;
     }
-    if (this.containerElement) {
-      this.containerElement.innerHTML = '';
+    const liveContainer = this.resolveContainerElement();
+    if (liveContainer) {
+      liveContainer.replaceChildren();
     }
     this.currentOverlay = 'none';
   }
@@ -353,8 +360,14 @@ export class ModalRenderer {
 
     if (this.mode === 'popup') {
       document.body.appendChild(host);
-    } else if (this.containerElement) {
-      this.containerElement.appendChild(host);
+    } else {
+      const container = this.resolveContainerElement();
+      if (!container) {
+        this.hostElement = null;
+        throw new Error(`Authon container "#${this.containerId}" not found`);
+      }
+      container.replaceChildren();
+      container.appendChild(host);
     }
 
     this.shadowRoot = host.attachShadow({ mode: 'open' });
