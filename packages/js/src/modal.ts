@@ -59,6 +59,7 @@ export class ModalRenderer {
   private captchaSiteKey: string = '';
   private turnstileWidgetId: string | null = null;
   private turnstileToken: string = '';
+  private turnstileWrapper: HTMLDivElement | null = null;
 
   constructor(options: {
     mode: 'popup' | 'embedded';
@@ -122,6 +123,10 @@ export class ModalRenderer {
       (window as any).turnstile?.remove(this.turnstileWidgetId);
       this.turnstileWidgetId = null;
       this.turnstileToken = '';
+    }
+    if (this.turnstileWrapper) {
+      this.turnstileWrapper.remove();
+      this.turnstileWrapper = null;
     }
     if (this.hostElement) {
       this.hostElement.remove();
@@ -487,19 +492,31 @@ export class ModalRenderer {
 
   private renderTurnstile(): void {
     if (!this.captchaSiteKey || !this.shadowRoot) return;
-    const container = this.shadowRoot.getElementById('turnstile-container');
-    if (!container) return;
+    const anchor = this.shadowRoot.getElementById('turnstile-container');
+    if (!anchor) return;
 
     const w = window as any;
+    const positionWrapper = () => {
+      if (!this.turnstileWrapper || !anchor.isConnected) return;
+      const rect = anchor.getBoundingClientRect();
+      Object.assign(this.turnstileWrapper.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        zIndex: '2147483647',
+        display: 'flex',
+        justifyContent: 'center',
+      });
+    };
+
     const tryRender = () => {
-      if (!w.turnstile || !container.isConnected) return;
-      // Turnstile normally needs the container in the real DOM.
-      // ShadowDOM containers work if we create a regular DOM element.
-      const wrapper = document.createElement('div');
-      wrapper.style.display = 'flex';
-      wrapper.style.justifyContent = 'center';
-      document.body.appendChild(wrapper);
-      this.turnstileWidgetId = w.turnstile.render(wrapper, {
+      if (!w.turnstile || !anchor.isConnected) return;
+      // Render in real DOM (Turnstile doesn't work inside ShadowDOM)
+      this.turnstileWrapper = document.createElement('div');
+      document.body.appendChild(this.turnstileWrapper);
+      positionWrapper();
+      this.turnstileWidgetId = w.turnstile.render(this.turnstileWrapper, {
         sitekey: this.captchaSiteKey,
         callback: (token: string) => { this.turnstileToken = token; },
         'expired-callback': () => { this.turnstileToken = ''; },
@@ -507,8 +524,9 @@ export class ModalRenderer {
         theme: this.isDark() ? 'dark' : 'light',
         size: 'flexible',
       });
-      // Move rendered iframe into shadow DOM
-      container.appendChild(wrapper);
+      // Reposition on scroll/resize
+      window.addEventListener('scroll', positionWrapper, { passive: true });
+      window.addEventListener('resize', positionWrapper, { passive: true });
     };
 
     if (w.turnstile) {
@@ -520,7 +538,6 @@ export class ModalRenderer {
           tryRender();
         }
       }, 200);
-      // Stop after 10s
       setTimeout(() => clearInterval(interval), 10000);
     }
   }
