@@ -483,6 +483,10 @@ export class ModalRenderer {
         --authon-border: ${borderColor};
         --authon-divider: ${dividerColor};
         --authon-input-bg: ${inputBg};
+        --authon-overlay-bg: ${dark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)'};
+        --authon-overlay-bg-solid: ${dark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
+        --authon-backdrop-bg: rgba(0,0,0,${dark ? '0.7' : '0.5'});
+        --authon-shadow-opacity: ${dark ? '0.5' : '0.25'};
         --authon-radius: ${b.borderRadius ?? 12}px;
         --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--authon-font);
@@ -491,7 +495,7 @@ export class ModalRenderer {
       * { box-sizing: border-box; margin: 0; padding: 0; }
       .backdrop {
         position: fixed; inset: 0; z-index: 99998;
-        background: rgba(0,0,0,${dark ? '0.7' : '0.5'}); backdrop-filter: blur(4px);
+        background: var(--authon-backdrop-bg); backdrop-filter: blur(4px);
         animation: fadeIn 0.2s ease;
       }
       .modal-container {
@@ -619,7 +623,7 @@ export class ModalRenderer {
       /* Flow overlay */
       .flow-overlay {
         position: absolute; inset: 0; z-index: 10;
-        background: ${dark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
+        background: var(--authon-overlay-bg-solid);
         backdrop-filter: blur(2px);
         border-radius: var(--authon-radius);
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -732,7 +736,7 @@ export class ModalRenderer {
       /* Loading overlay */
       #authon-loading-overlay {
         position: absolute; inset: 0; z-index: 10;
-        background: ${dark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)'};
+        background: var(--authon-overlay-bg);
         backdrop-filter: blur(2px);
         border-radius: var(--authon-radius);
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
