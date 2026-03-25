@@ -7,7 +7,7 @@ import AppKit
 final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProviding {
     private let api: AuthonAPI
 
-    #if os(iOS)
+    #if os(macOS) || os(iOS)
     private var nativeContinuation: CheckedContinuation<ApiAuthResponse, Error>?
     #endif
 
@@ -19,10 +19,7 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     // MARK: - OAuth Flow
 
     func authenticate(provider: OAuthProvider) async throws -> ApiAuthResponse {
-        // All providers use browser + polling on macOS (native Apple Sign In requires
-        // com.apple.developer.applesignin entitlement which needs provisioning).
-        // On iOS, Apple uses native ASAuthorizationController, others use ASWebAuthenticationSession.
-        #if os(iOS)
+        #if os(macOS) || os(iOS)
         if provider == .apple {
             return try await authenticateWithNativeApple()
         }
@@ -95,9 +92,9 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
         #endif
     }
 
-    // MARK: - Native Apple Sign In (iOS only)
+    // MARK: - Native Apple Sign In
 
-    #if os(iOS)
+    #if os(macOS) || os(iOS)
     @MainActor
     private func authenticateWithNativeApple() async throws -> ApiAuthResponse {
         return try await withCheckedThrowingContinuation { continuation in
@@ -169,9 +166,9 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     }
 }
 
-// MARK: - ASAuthorizationControllerDelegate (iOS native Apple Sign In)
+// MARK: - ASAuthorizationControllerDelegate (native Apple Sign In)
 
-#if os(iOS)
+#if os(macOS) || os(iOS)
 extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
 
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
