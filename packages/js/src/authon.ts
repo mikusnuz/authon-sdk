@@ -81,6 +81,11 @@ export class Authon {
     this.getModal().open('signUp');
   }
 
+  /** Update theme at runtime without destroying form state */
+  setTheme(theme: 'light' | 'dark' | 'auto'): void {
+    this.getModal().setTheme(theme);
+  }
+
   async signInWithOAuth(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void> {
     await this.ensureInitialized();
     await this.startOAuthFlow(provider, options);

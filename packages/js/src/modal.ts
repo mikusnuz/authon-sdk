@@ -28,6 +28,8 @@ export class ModalRenderer {
   private mode: 'popup' | 'embedded';
   private theme: 'light' | 'dark' | 'auto';
   private branding: BrandingConfig;
+  private themeObserver: MutationObserver | null = null;
+  private mediaQueryListener: ((e: MediaQueryListEvent) => void) | null = null;
   private enabledProviders: OAuthProviderType[] = [];
   private currentView: 'signIn' | 'signUp' = 'signIn';
   private onProviderClick: (provider: OAuthProviderType) => void;
@@ -95,6 +97,7 @@ export class ModalRenderer {
   }
 
   close(): void {
+    this.stopThemeObserver();
     if (this.escHandler) {
       document.removeEventListener('keydown', this.escHandler);
       this.escHandler = null;
@@ -108,6 +111,53 @@ export class ModalRenderer {
       this.containerElement.innerHTML = '';
     }
     this.currentOverlay = 'none';
+  }
+
+  /** Update theme at runtime without destroying form state */
+  setTheme(theme: 'light' | 'dark' | 'auto'): void {
+    this.theme = theme;
+    this.updateThemeCSS();
+    if (theme === 'auto') {
+      this.startThemeObserver();
+    } else {
+      this.stopThemeObserver();
+    }
+  }
+
+  private updateThemeCSS(): void {
+    if (!this.shadowRoot) return;
+    const styleEl = this.shadowRoot.getElementById('authon-theme-style');
+    if (styleEl) {
+      styleEl.textContent = this.buildCSS();
+    }
+  }
+
+  private startThemeObserver(): void {
+    this.stopThemeObserver();
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+
+    // Watch for data-theme / class changes on <html>
+    this.themeObserver = new MutationObserver(() => this.updateThemeCSS());
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme', 'class'],
+    });
+
+    // Watch for OS-level prefers-color-scheme changes
+    const mq = window.matchMedia('(prefers-color-scheme: dark)');
+    this.mediaQueryListener = () => this.updateThemeCSS();
+    mq.addEventListener('change', this.mediaQueryListener);
+  }
+
+  private stopThemeObserver(): void {
+    if (this.themeObserver) {
+      this.themeObserver.disconnect();
+      this.themeObserver = null;
+    }
+    if (this.mediaQueryListener) {
+      window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', this.mediaQueryListener);
+      this.mediaQueryListener = null;
+    }
   }
 
   showError(message: string): void {
@@ -259,6 +309,11 @@ export class ModalRenderer {
     this.shadowRoot.innerHTML = this.buildShell(view);
     this.attachInnerEvents(view);
     this.attachShellEvents();
+
+    // Start observing theme changes in auto mode
+    if (this.theme === 'auto') {
+      this.startThemeObserver();
+    }
   }
 
   // ── HTML builders ──
@@ -271,7 +326,7 @@ export class ModalRenderer {
         : '';
 
     return `
-      <style>${this.buildCSS()}</style>
+      <style id="authon-theme-style">${this.buildCSS()}</style>
       ${popupWrapper}
       <div class="modal-container" role="dialog" aria-modal="true">
         <div id="modal-inner" class="modal-inner">
