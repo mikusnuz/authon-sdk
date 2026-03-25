@@ -407,16 +407,12 @@ export class ModalRenderer {
         ? `<div class="divider"><span>or</span></div>`
         : '';
 
-    const captchaContainer = this.captchaSiteKey
-      ? '<div id="turnstile-container" style="display:flex;justify-content:center;margin:4px 0"></div>'
-      : '';
     const emailForm =
       b.showEmailPassword !== false
         ? `<form class="email-form" id="email-form">
           <input type="email" placeholder="Email address" name="email" required class="input" autocomplete="email" />
           <input type="password" placeholder="Password" name="password" required class="input" autocomplete="${isSignUp ? 'new-password' : 'current-password'}" />
           ${isSignUp ? '<p class="password-hint">Must contain uppercase, lowercase, and a number (min 8 chars)</p>' : ''}
-          ${captchaContainer}
           <button type="submit" class="submit-btn">${isSignUp ? 'Sign up' : 'Sign in'}</button>
         </form>`
         : '';
@@ -491,42 +487,23 @@ export class ModalRenderer {
   }
 
   private renderTurnstile(): void {
-    if (!this.captchaSiteKey || !this.shadowRoot) return;
-    const anchor = this.shadowRoot.getElementById('turnstile-container');
-    if (!anchor) return;
+    if (!this.captchaSiteKey) return;
 
     const w = window as any;
-    const positionWrapper = () => {
-      if (!this.turnstileWrapper || !anchor.isConnected) return;
-      const rect = anchor.getBoundingClientRect();
-      Object.assign(this.turnstileWrapper.style, {
-        position: 'fixed',
-        top: `${rect.top}px`,
-        left: `${rect.left}px`,
-        width: `${rect.width}px`,
-        zIndex: '2147483647',
-        display: 'flex',
-        justifyContent: 'center',
-      });
-    };
-
     const tryRender = () => {
-      if (!w.turnstile || !anchor.isConnected) return;
-      // Render in real DOM (Turnstile doesn't work inside ShadowDOM)
+      if (!w.turnstile) return;
+      // Render off-screen in real DOM — invisible unless challenge needed
       this.turnstileWrapper = document.createElement('div');
+      this.turnstileWrapper.style.cssText = 'position:fixed;bottom:10px;right:10px;z-index:2147483647;';
       document.body.appendChild(this.turnstileWrapper);
-      positionWrapper();
       this.turnstileWidgetId = w.turnstile.render(this.turnstileWrapper, {
         sitekey: this.captchaSiteKey,
         callback: (token: string) => { this.turnstileToken = token; },
         'expired-callback': () => { this.turnstileToken = ''; },
         'error-callback': () => { this.turnstileToken = ''; },
         theme: this.isDark() ? 'dark' : 'light',
-        size: 'flexible',
+        appearance: 'interaction-only',
       });
-      // Reposition on scroll/resize
-      window.addEventListener('scroll', positionWrapper, { passive: true });
-      window.addEventListener('resize', positionWrapper, { passive: true });
     };
 
     if (w.turnstile) {
