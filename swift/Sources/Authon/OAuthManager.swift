@@ -226,13 +226,13 @@ extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationContro
     private func exchangeAppleToken(identityToken: String) async throws -> ApiAuthResponse {
         struct NativeOAuthRequest: Encodable {
             let provider: String
-            let identityToken: String
+            let identity_token: String
         }
 
         return try await api.request(
             "POST",
             "/v1/auth/oauth/native",
-            body: NativeOAuthRequest(provider: "apple", identityToken: identityToken)
+            body: NativeOAuthRequest(provider: "apple", identity_token: identityToken)
         )
     }
 }
