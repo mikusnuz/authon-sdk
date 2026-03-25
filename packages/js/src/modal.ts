@@ -2,6 +2,14 @@ import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
 import { getProviderButtonConfig } from './providers';
 
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 const WALLET_OPTIONS = [
   { id: 'pexus', name: 'Pexus', color: '#7c3aed' },
   { id: 'metamask', name: 'MetaMask', color: '#f6851b' },
@@ -483,8 +491,8 @@ export class ModalRenderer {
         --authon-border: ${borderColor};
         --authon-divider: ${dividerColor};
         --authon-input-bg: ${inputBg};
-        --authon-overlay-bg: ${dark ? 'rgba(15,23,42,0.92)' : 'rgba(255,255,255,0.92)'};
-        --authon-overlay-bg-solid: ${dark ? 'rgba(15,23,42,0.97)' : 'rgba(255,255,255,0.97)'};
+        --authon-overlay-bg: ${hexToRgba(bg, 0.92)};
+        --authon-overlay-bg-solid: ${hexToRgba(bg, 0.97)};
         --authon-backdrop-bg: rgba(0,0,0,${dark ? '0.7' : '0.5'});
         --authon-shadow-opacity: ${dark ? '0.5' : '0.25'};
         --authon-radius: ${b.borderRadius ?? 12}px;
@@ -803,7 +811,7 @@ export class ModalRenderer {
     const errorHtml = this.overlayError
       ? `<div class="overlay-error">${this.escapeHtml(this.overlayError)}</div>`
       : '';
-    const subtitleColor = dark ? '#64748b' : '#6b7280';
+    // subtitleColor handled by var(--authon-dim) in CSS
 
     switch (this.currentOverlay) {
       case 'web3-picker': {
@@ -871,8 +879,8 @@ export class ModalRenderer {
       case 'passwordless-sending': {
         return `
           <svg class="flow-spinner" width="16" height="16" viewBox="0 0 16 16">
-            <circle cx="8" cy="8" r="6" fill="none" stroke="#06b6d4" stroke-width="2" opacity="0.25"/>
-            <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round"/>
+            <circle cx="8" cy="8" r="6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" opacity="0.25"/>
+            <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" stroke-linecap="round"/>
           </svg>
           <span class="overlay-subtitle">Sending magic link...</span>
         `;
@@ -880,7 +888,7 @@ export class ModalRenderer {
 
       case 'passwordless-sent': {
         return `
-          <div class="success-check" style="background:linear-gradient(135deg, #06b6d4, #0891b2)">
+          <div class="success-check" style="background:linear-gradient(135deg, var(--authon-primary-start, #7c3aed), var(--authon-primary-end, #4f46e5))">
             <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
               <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
@@ -908,7 +916,7 @@ export class ModalRenderer {
       case 'passkey-verifying': {
         return `
           <div class="passkey-icon-pulse">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/>
               <path d="M21.7 13.3 19 11"/><path d="m21 15-2.5-1.5"/><path d="m17 17 2.5-1.5"/>
               <path d="M22 9v6a1 1 0 0 1-1 1h-.5"/><circle cx="18" cy="9" r="3"/>
@@ -922,7 +930,7 @@ export class ModalRenderer {
 
       case 'passkey-success': {
         return `
-          <div class="success-check" style="background:linear-gradient(135deg, #f59e0b, #d97706)">
+          <div class="success-check" style="background:linear-gradient(135deg, var(--authon-primary-start, #7c3aed), var(--authon-primary-end, #4f46e5))">
             <svg width="24" height="24" viewBox="0 0 20 20" fill="none">
               <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
