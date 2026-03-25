@@ -33,6 +33,7 @@ export class ModalRenderer {
   private shadowRoot: ShadowRoot | null = null;
   private hostElement: HTMLDivElement | null = null;
   private containerElement: HTMLElement | null = null;
+  private containerId: string | null = null;
   private mode: 'popup' | 'embedded';
   private theme: 'light' | 'dark' | 'auto';
   private branding: BrandingConfig;
@@ -88,6 +89,7 @@ export class ModalRenderer {
     this.onPasskeyClick = options.onPasskeyClick || (() => {});
 
     if (options.mode === 'embedded' && options.containerId) {
+      this.containerId = options.containerId;
       this.containerElement = document.getElementById(options.containerId);
     }
   }
@@ -101,6 +103,19 @@ export class ModalRenderer {
   }
 
   open(view: 'signIn' | 'signUp' = 'signIn'): void {
+    // Reset stale references (e.g. after SPA navigation where container was replaced)
+    if (this.hostElement && !this.hostElement.isConnected) {
+      this.hostElement = null;
+      this.shadowRoot = null;
+    }
+    if (this.mode === 'embedded' && this.containerId) {
+      const container = document.getElementById(this.containerId);
+      if (container && this.hostElement && this.hostElement.parentNode !== container) {
+        this.hostElement = null;
+        this.shadowRoot = null;
+      }
+    }
+
     if (this.shadowRoot && this.hostElement) {
       // Modal already open — smooth in-place view switch
       this.hideOverlay();
