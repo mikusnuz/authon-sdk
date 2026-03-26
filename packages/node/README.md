@@ -1,8 +1,10 @@
 **English** | [한국어](./README.ko.md)
 
+> **Deprecated:** Authon is a frontend authentication platform. This package is no longer maintained. Use the frontend SDKs instead.
+
 # @authon/node
 
-> Node.js server SDK for token verification, user management, and webhooks — self-hosted Clerk alternative, Auth0 alternative
+> Node.js server SDK for token verification, user management, and webhooks — Auth0 alternative
 
 [![npm version](https://img.shields.io/npm/v/@authon/node?color=6d28d9)](https://www.npmjs.com/package/@authon/node)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
@@ -16,8 +18,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -175,7 +177,6 @@ app.post('/webhooks/authon', express.raw({ type: 'application/json' }), (req, re
 
 | Feature | Authon | Clerk | Auth.js |
 |---------|--------|-------|---------|
-| Self-hosted | Yes | No | Partial |
 | Pricing | Free | $25/mo+ | Free |
 | Server SDK | Yes | Yes | Partial |
 | User management API | Yes | Yes | No |

@@ -11,27 +11,16 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 
 | Package | Version | Description | npm |
 |---------|---------|-------------|-----|
-| [`@authon/shared`](./packages/shared) | 0.2.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
-| [`@authon/js`](./packages/js) | 0.2.1 | Core browser SDK — ShadowDOM modal, OAuth, sessions | [npm](https://www.npmjs.com/package/@authon/js) |
-| [`@authon/react`](./packages/react) | 0.2.1 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
-| [`@authon/nextjs`](./packages/nextjs) | 0.2.1 | Middleware, server helpers, and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
-| [`@authon/vue`](./packages/vue) | 0.2.1 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
-| [`@authon/nuxt`](./packages/nuxt) | 0.2.1 | Auto-imported composables and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
-| [`@authon/svelte`](./packages/svelte) | 0.2.1 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
-| [`@authon/angular`](./packages/angular) | 0.2.1 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
-| [`@authon/react-native`](./packages/react-native) | 0.2.2 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
-| [`@authon/node`](./packages/node) | 0.2.0 | Verify tokens, manage users, validate webhooks on Node.js | [npm](https://www.npmjs.com/package/@authon/node) |
+| [`@authon/shared`](./packages/shared) | 0.3.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
+| [`@authon/js`](./packages/js) | 0.4.1 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/react`](./packages/react) | 0.3.1 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
+| [`@authon/nextjs`](./packages/nextjs) | 0.3.0 | Middleware, server helpers, and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
+| [`@authon/vue`](./packages/vue) | 0.3.2 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
+| [`@authon/nuxt`](./packages/nuxt) | 0.3.2 | Auto-imported composables and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
+| [`@authon/svelte`](./packages/svelte) | 0.3.2 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
+| [`@authon/angular`](./packages/angular) | 0.3.2 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
+| [`@authon/react-native`](./packages/react-native) | 0.3.3 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
 | [`@authon/create-app`](./packages/create-authon-app) | 0.1.0 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
-
-### Other Languages
-
-| Package | Registry | Description |
-|---------|----------|-------------|
-| [`authon` (Python)](./python) | [PyPI](https://pypi.org/project/authon/) | Django, Flask, FastAPI |
-| [`authon-go`](./go) | [Go modules](https://pkg.go.dev/github.com/mikusnuz/authon-sdk/go) | Go net/http middleware |
-| [`authon` (Dart)](./dart) | [pub.dev](https://pub.dev/packages/authon) | Flutter SDK |
-| [`Authon` (Swift)](./swift) | SPM | iOS / macOS SDK |
-| [`authon-kotlin`](./kotlin) | Maven | Android SDK |
 
 ## Features
 
@@ -53,9 +42,9 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Click "Create Project" and enter your app name
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
-2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+2. **Get your API key** from Project Settings → API Keys
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables [Dev Teleport](https://authon.dev/docs/testing)
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -185,32 +174,6 @@ export async function GET() {
 }
 ```
 
-### Node.js (Server)
-
-```bash
-npm install @authon/node
-```
-
-```ts
-import { AuthonBackend, expressMiddleware } from '@authon/node';
-
-// Express middleware — protects routes automatically
-app.use('/api', expressMiddleware({
-  secretKey: process.env.AUTHON_SECRET_KEY!,
-}));
-
-app.get('/api/profile', (req, res) => {
-  res.json({ user: req.auth });
-});
-
-// Direct client usage
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-const user = await authon.verifyToken(accessToken);
-const users = await authon.users.list({ page: 1, limit: 10 });
-const event = authon.webhooks.verify(payload, signature, webhookSecret);
-```
-
 ## Package READMEs
 
 - [@authon/js](./packages/js/README.md) — Core browser SDK (full API reference)
@@ -221,12 +184,10 @@ const event = authon.webhooks.verify(payload, signature, webhookSecret);
 - [@authon/svelte](./packages/svelte/README.md)
 - [@authon/angular](./packages/angular/README.md)
 - [@authon/react-native](./packages/react-native/README.md)
-- [@authon/node](./packages/node/README.md)
-- [@authon/shared](./packages/shared/README.md) — Types and constants reference
 
 ## Documentation
 
-Full documentation: [docs.authon.dev](https://docs.authon.dev)
+Full documentation: [authon.dev/docs](https://authon.dev/docs/getting-started)
 
 Website: [authon.dev](https://authon.dev)
 

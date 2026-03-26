@@ -2,7 +2,7 @@
 
 # @authon/react-native
 
-> Drop-in React Native authentication with secure token storage — self-hosted Clerk alternative, Auth0 alternative
+> Drop-in React Native authentication with secure token storage — Auth0 alternative
 
 [![npm version](https://img.shields.io/npm/v/@authon/react-native?color=6d28d9)](https://www.npmjs.com/package/@authon/react-native)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
@@ -16,8 +16,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -76,7 +76,6 @@ export default function App() {
   return (
     <AuthonProvider
       publishableKey="pk_live_YOUR_PUBLISHABLE_KEY"
-      apiUrl="https://your-authon-server.com"
       storage={storage}
     >
       <HomeScreen />
@@ -160,8 +159,8 @@ await signOut();
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `AUTHON_API_URL` | Yes | Your Authon server URL |
-| `AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key |
+| `AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
+| `AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
 
 ## API Reference
 
@@ -187,7 +186,6 @@ await signOut();
 
 | Feature | Authon | Clerk | Auth0 |
 |---------|--------|-------|-------|
-| Self-hosted | Yes | No | No |
 | Pricing | Free | $25/mo+ | $23/mo+ |
 | React Native | Yes | Yes | Yes |
 | Secure token storage | Yes | Yes | Yes |

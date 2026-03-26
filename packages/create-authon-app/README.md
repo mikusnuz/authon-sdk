@@ -11,8 +11,8 @@ Before using this CLI, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -42,8 +42,6 @@ npx @authon/create-app my-app --template nextjs-app --yes
 | `vue-vite` | Vue 3 + Vite | `@authon/vue` |
 | `nuxt` | Nuxt 3 | `@authon/vue` |
 | `svelte` | SvelteKit | `@authon/svelte` |
-| `express` | Express.js | `@authon/node` |
-| `node` | Plain Node.js | `@authon/node` |
 
 ## What's included
 
@@ -53,7 +51,6 @@ Each generated project includes:
 - Authon authentication setup (provider, middleware)
 - Landing page with sign-in
 - Protected dashboard page
-- Server-side token verification (where applicable)
 - `.env.example` with Authon configuration
 - `CLAUDE.md` for AI agent context
 

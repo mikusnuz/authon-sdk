@@ -2,7 +2,7 @@
 
 # @authon/nuxt
 
-> Drop-in Nuxt 3 authentication with plugin, composables, and route middleware — self-hosted Clerk alternative, Auth0 alternative
+> Drop-in Nuxt 3 authentication with plugin, composables, and route middleware — Auth0 alternative
 
 [![npm version](https://img.shields.io/npm/v/@authon/nuxt?color=6d28d9)](https://www.npmjs.com/package/@authon/nuxt)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
@@ -16,8 +16,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -40,7 +40,6 @@ import { createAuthonPlugin } from '@authon/nuxt';
 export default defineNuxtPlugin(() => {
   const config = useRuntimeConfig();
   const authon = createAuthonPlugin(config.public.authonKey, {
-    apiUrl: config.public.authonApiUrl,
     theme: 'auto',
   });
   return { provide: { authon } };
@@ -53,7 +52,6 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       authonKey: process.env.NUXT_PUBLIC_AUTHON_KEY,
-      authonApiUrl: process.env.NUXT_PUBLIC_AUTHON_API_URL,
     },
   },
 });
@@ -173,8 +171,8 @@ const { $authon } = useNuxtApp();
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NUXT_PUBLIC_AUTHON_API_URL` | Yes | Your Authon server URL |
-| `NUXT_PUBLIC_AUTHON_KEY` | Yes | Project publishable key |
+| `NUXT_PUBLIC_AUTHON_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
+| `NUXT_PUBLIC_AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
 
 ## API Reference
 
@@ -200,7 +198,6 @@ const { $authon } = useNuxtApp();
 
 | Feature | Authon | Clerk | Auth.js |
 |---------|--------|-------|---------|
-| Self-hosted | Yes | No | Partial |
 | Pricing | Free | $25/mo+ | Free |
 | OAuth providers | 10+ | 20+ | 80+ |
 | Nuxt 3 module | Yes | No | Via Sidebase |

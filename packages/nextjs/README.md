@@ -2,7 +2,7 @@
 
 # @authon/nextjs
 
-> Drop-in Next.js authentication with middleware, server helpers, and React components — self-hosted Clerk alternative, Auth0 alternative
+> Drop-in Next.js authentication with middleware, server helpers, and React components — Auth0 alternative
 
 [![npm version](https://img.shields.io/npm/v/@authon/nextjs?color=6d28d9)](https://www.npmjs.com/package/@authon/nextjs)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
@@ -16,8 +16,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -43,7 +43,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <AuthonProvider
           publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}
-          config={{ apiUrl: process.env.NEXT_PUBLIC_AUTHON_API_URL }}
         >
           {children}
         </AuthonProvider>
@@ -183,9 +182,8 @@ export function SignOutButton() {
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `NEXT_PUBLIC_AUTHON_API_URL` | Yes | Your Authon server URL |
-| `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key |
-| `AUTHON_SECRET_KEY` | Server only | Secret key for server-side token verification |
+| `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
+| `NEXT_PUBLIC_AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
 
 ## API Reference
 
@@ -210,7 +208,6 @@ authonMiddleware({ publicRoutes?: string[], signInUrl?: string, secretKey?: stri
 
 | Feature | Authon | Clerk | Auth.js |
 |---------|--------|-------|---------|
-| Self-hosted | Yes | No | Partial |
 | Pricing | Free | $25/mo+ | Free |
 | OAuth providers | 10+ | 20+ | 80+ |
 | Next.js middleware | Yes | Yes | Manual |

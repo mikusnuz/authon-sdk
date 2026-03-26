@@ -2,7 +2,7 @@
 
 # @authon/svelte
 
-> Drop-in Svelte authentication with reactive stores — self-hosted Clerk alternative, Auth0 alternative
+> Drop-in Svelte authentication with reactive stores — Auth0 alternative
 
 [![npm version](https://img.shields.io/npm/v/@authon/svelte?color=6d28d9)](https://www.npmjs.com/package/@authon/svelte)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
@@ -16,8 +16,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -40,7 +40,6 @@ npm install @authon/svelte
   import { onDestroy } from 'svelte';
 
   const authon = initAuthon('pk_live_YOUR_PUBLISHABLE_KEY', {
-    apiUrl: 'https://your-authon-server.com',
     theme: 'auto',
   });
 
@@ -155,8 +154,8 @@ npm install @authon/svelte
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `PUBLIC_AUTHON_API_URL` | Yes | Your Authon server URL |
-| `PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key |
+| `PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
+| `PUBLIC_AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
 
 ## API Reference
 
@@ -192,7 +191,6 @@ npm install @authon/svelte
 
 | Feature | Authon | Clerk | Auth.js |
 |---------|--------|-------|---------|
-| Self-hosted | Yes | No | Partial |
 | Pricing | Free | $25/mo+ | Free |
 | OAuth providers | 10+ | 20+ | 80+ |
 | ShadowDOM modal | Yes | No | No |

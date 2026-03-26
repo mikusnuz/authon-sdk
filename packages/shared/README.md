@@ -2,12 +2,12 @@
 
 # @authon/shared
 
-> Shared types and constants for all Authon SDKs — self-hosted Clerk alternative
+> Shared types and constants for all Authon SDKs
 
 [![npm version](https://img.shields.io/npm/v/@authon/shared?color=6d28d9)](https://www.npmjs.com/package/@authon/shared)
 [![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
 
-Internal package consumed by `@authon/js`, `@authon/react`, `@authon/node`, and all other Authon SDKs. Not intended for direct application use -- install the appropriate framework SDK instead.
+Internal package consumed by `@authon/js`, `@authon/react`, and all other Authon frontend SDKs. Not intended for direct application use -- install the appropriate framework SDK instead.
 
 ## Prerequisites
 
@@ -18,8 +18,8 @@ Before installing the SDK, create an Authon project and get your API keys:
    - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
 
 2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
+   - **Publishable Key** (`pk_live_...`) — use in your frontend code
+   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -134,7 +134,6 @@ Not applicable -- this is a types-only package. See the framework-specific SDK f
 
 | Feature | Authon | Clerk | Auth.js |
 |---------|--------|-------|---------|
-| Self-hosted | Yes | No | Partial |
 | Pricing | Free | $25/mo+ | Free |
 | Shared types package | Yes | Yes | No |
 | OAuth providers | 10+ | 20+ | 80+ |
