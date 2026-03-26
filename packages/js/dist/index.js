@@ -126,11 +126,16 @@ var ModalRenderer = class {
   turnstileWidgetId = null;
   turnstileToken = "";
   turnstileWrapper = null;
+  // Dev Teleport (test mode)
+  isTestMode = false;
+  onDevTeleport = null;
   constructor(options) {
     this.mode = options.mode;
     this.theme = options.theme || "auto";
     this.branding = { ...DEFAULT_BRANDING, ...options.branding };
     this.captchaSiteKey = options.captchaSiteKey || "";
+    this.isTestMode = options.isTestMode || false;
+    this.onDevTeleport = options.onDevTeleport || null;
     this.onProviderClick = options.onProviderClick;
     this.onEmailSubmit = options.onEmailSubmit;
     this.onClose = options.onClose;
@@ -474,6 +479,16 @@ var ModalRenderer = class {
       ${authMethods}
       <p class="switch-view">${subtitle} <a href="#" id="switch-link">${subtitleLink}</a></p>
       ${footer}
+      ${this.isTestMode ? `<div class="dev-teleport">
+        <div class="dev-teleport-label">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          Dev Teleport
+        </div>
+        <div class="dev-teleport-row">
+          <input type="email" placeholder="test@example.com" id="dev-teleport-email" class="dev-teleport-input" value="dev@test.com" />
+          <button type="button" id="dev-teleport-btn" class="dev-teleport-btn">Go</button>
+        </div>
+      </div>` : ""}
       ${b.showSecuredBy !== false ? `<div class="secured-by">Secured by <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ""}
     `;
   }
@@ -649,6 +664,34 @@ var ModalRenderer = class {
       }
       .secured-link { font-weight: 600; color: var(--authon-muted); text-decoration: none; }
       .secured-link:hover { text-decoration: underline; }
+
+      /* Dev Teleport */
+      .dev-teleport {
+        margin-top: 12px; padding: 10px;
+        border-radius: calc(var(--authon-radius) * 0.5);
+        background: rgba(251,191,36,0.06);
+        border: 1px dashed rgba(251,191,36,0.25);
+      }
+      .dev-teleport-label {
+        display: flex; align-items: center; gap: 4px;
+        font-size: 10px; font-weight: 600; color: #fbbf24;
+        margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+      }
+      .dev-teleport-row { display: flex; gap: 6px; }
+      .dev-teleport-input {
+        flex: 1; padding: 6px 10px; font-size: 12px;
+        border-radius: calc(var(--authon-radius) * 0.4);
+        background: rgba(0,0,0,0.2); border: 1px solid rgba(251,191,36,0.2);
+        color: #fbbf24; outline: none; font-family: ui-monospace, monospace;
+      }
+      .dev-teleport-input:focus { border-color: rgba(251,191,36,0.5); }
+      .dev-teleport-btn {
+        padding: 6px 14px; font-size: 11px; font-weight: 700;
+        border-radius: calc(var(--authon-radius) * 0.4);
+        background: rgba(251,191,36,0.15); border: 1px solid rgba(251,191,36,0.3);
+        color: #fbbf24; cursor: pointer;
+      }
+      .dev-teleport-btn:hover { background: rgba(251,191,36,0.25); }
 
       /* Auth method buttons */
       .auth-methods { display: flex; flex-direction: column; gap: 8px; }
@@ -1095,6 +1138,21 @@ var ModalRenderer = class {
       });
     }
     this.renderTurnstile();
+    const devTeleportBtn = this.shadowRoot.getElementById("dev-teleport-btn");
+    const devTeleportEmail = this.shadowRoot.getElementById("dev-teleport-email");
+    if (devTeleportBtn && devTeleportEmail && this.onDevTeleport) {
+      const handler = this.onDevTeleport;
+      devTeleportBtn.addEventListener("click", () => {
+        const email = devTeleportEmail.value.trim();
+        if (email) handler(email);
+      });
+      devTeleportEmail.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+          const email = devTeleportEmail.value.trim();
+          if (email) handler(email);
+        }
+      });
+    }
     const backBtn = this.shadowRoot.getElementById("back-btn");
     if (backBtn) {
       backBtn.addEventListener("click", () => {
@@ -2049,6 +2107,17 @@ var Authon = class {
         containerId: this.config.containerId,
         branding: this.branding || void 0,
         captchaSiteKey: this.captchaEnabled ? this.turnstileSiteKey : void 0,
+        isTestMode: this.publishableKey.startsWith("pk_test_"),
+        onDevTeleport: this.publishableKey.startsWith("pk_test_") ? async (email) => {
+          this.modal?.clearError();
+          try {
+            await this.testing.signIn({ email });
+            this.modal?.close();
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.modal?.showError(msg || "Dev teleport failed");
+          }
+        } : void 0,
         onProviderClick: (provider) => this.startOAuthFlow(provider),
         onEmailSubmit: (email, password, isSignUp) => {
           this.modal?.clearError();

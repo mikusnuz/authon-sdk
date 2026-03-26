@@ -541,6 +541,17 @@ export class Authon {
         containerId: this.config.containerId,
         branding: this.branding || undefined,
         captchaSiteKey: this.captchaEnabled ? this.turnstileSiteKey : undefined,
+        isTestMode: this.publishableKey.startsWith('pk_test_'),
+        onDevTeleport: this.publishableKey.startsWith('pk_test_') ? async (email: string) => {
+          this.modal?.clearError();
+          try {
+            await this.testing!.signIn({ email });
+            this.modal?.close();
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            this.modal?.showError(msg || 'Dev teleport failed');
+          }
+        } : undefined,
         onProviderClick: (provider) => this.startOAuthFlow(provider),
         onEmailSubmit: (email, password, isSignUp) => {
           this.modal?.clearError();
