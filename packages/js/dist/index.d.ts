@@ -110,6 +110,13 @@ declare class Authon {
         updateMemberRole: (orgId: string, memberId: string, role: string) => Promise<OrganizationMember>;
         leave: (orgId: string) => Promise<void>;
     };
+    /** Testing utilities — only available when initialized with a pk_test_ key */
+    get testing(): {
+        signIn(params: {
+            email: string;
+            nickname?: string;
+        }): Promise<AuthonUser>;
+    } | undefined;
     destroy(): void;
     private loadTurnstileScript;
     private emit;

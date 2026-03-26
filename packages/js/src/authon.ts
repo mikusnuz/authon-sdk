@@ -472,6 +472,19 @@ export class Authon {
     },
   };
 
+  /** Testing utilities — only available when initialized with a pk_test_ key */
+  get testing(): { signIn(params: { email: string; nickname?: string }): Promise<AuthonUser> } | undefined {
+    if (!this.publishableKey.startsWith('pk_test_')) return undefined;
+    return {
+      signIn: async (params: { email: string; nickname?: string }): Promise<AuthonUser> => {
+        const res = await this.apiPost<AuthTokens>('/v1/auth/testing/token', params);
+        this.session.setSession(res);
+        this.emit('signedIn', res.user);
+        return res.user;
+      },
+    };
+  }
+
   destroy(): void {
     this.modal?.close();
     this.session.destroy();

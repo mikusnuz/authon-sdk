@@ -224,6 +224,12 @@ extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationContro
     }
 
     private func exchangeAppleToken(identityToken: String) async throws -> ApiAuthResponse {
+        // Decode JWT to check audience
+        let parts = identityToken.split(separator: ".")
+        if parts.count >= 2, let data = Data(base64Encoded: String(parts[1]).padding(toLength: ((parts[1].count + 3) / 4) * 4, withPad: "=", startingAt: 0)) {
+            NSLog("[Authon-Apple] token payload: %@", String(data: data, encoding: .utf8) ?? "?")
+        }
+
         struct NativeOAuthRequest: Encodable {
             let provider: String
             let identity_token: String

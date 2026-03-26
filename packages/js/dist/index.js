@@ -1986,6 +1986,18 @@ var Authon = class {
       await this.apiPostAuth(`/v1/auth/organizations/${orgId}/leave`, void 0, token);
     }
   };
+  /** Testing utilities — only available when initialized with a pk_test_ key */
+  get testing() {
+    if (!this.publishableKey.startsWith("pk_test_")) return void 0;
+    return {
+      signIn: async (params) => {
+        const res = await this.apiPost("/v1/auth/testing/token", params);
+        this.session.setSession(res);
+        this.emit("signedIn", res.user);
+        return res.user;
+      }
+    };
+  }
   destroy() {
     this.modal?.close();
     this.session.destroy();
