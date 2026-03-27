@@ -438,8 +438,9 @@ export class ModalRenderer {
           .join('')
       : '';
 
+    const hasVisibleProviders = showProviders && this.enabledProviders.filter((p) => !b.hiddenProviders?.includes(p)).length > 0;
     const divider =
-      showProviders && b.showDivider !== false && b.showEmailPassword !== false
+      hasVisibleProviders && b.showDivider !== false && b.showEmailPassword !== false
         ? `<div class="divider"><span>or</span></div>`
         : '';
 

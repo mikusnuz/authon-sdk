@@ -421,7 +421,8 @@ var ModalRenderer = class {
               <span>${config.label}</span>
             </button>`;
     }).join("") : "";
-    const divider = showProviders && b.showDivider !== false && b.showEmailPassword !== false ? `<div class="divider"><span>or</span></div>` : "";
+    const hasVisibleProviders = showProviders && this.enabledProviders.filter((p) => !b.hiddenProviders?.includes(p)).length > 0;
+    const divider = hasVisibleProviders && b.showDivider !== false && b.showEmailPassword !== false ? `<div class="divider"><span>or</span></div>` : "";
     const emailForm = b.showEmailPassword !== false ? `<form class="email-form" id="email-form">
           <input type="email" placeholder="Email address" name="email" required class="input" autocomplete="email" />
           <input type="password" placeholder="Password" name="password" required class="input" autocomplete="${isSignUp ? "new-password" : "current-password"}" />
