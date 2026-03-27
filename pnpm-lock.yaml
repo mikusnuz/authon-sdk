@@ -46,7 +46,7 @@ importers:
         version: file:packages/angular(@angular/core@19.2.18(rxjs@7.8.2)(zone.js@0.15.1))
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/shared':
         specifier: file:../../packages/shared
         version: link:../../packages/shared
@@ -77,7 +77,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/nextjs':
         specifier: file:../../packages/nextjs
         version: file:packages/nextjs(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.85.0))
@@ -114,7 +114,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/nuxt':
         specifier: file:../../packages/nuxt
         version: file:packages/nuxt(nuxt@3.21.1(@parcel/watcher@2.5.6)(@types/node@22.19.11)(@vue/compiler-sfc@3.5.28)(cac@6.7.14)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.9.3)(less@4.2.2)(magicast@0.5.2)(rollup@4.59.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(less@4.2.2)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue-tsc@2.2.12(typescript@5.9.3))(yaml@2.8.2))
@@ -142,7 +142,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/react':
         specifier: file:../../packages/react
         version: file:packages/react(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -179,7 +179,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/shared':
         specifier: file:../../packages/shared
         version: link:../../packages/shared
@@ -213,7 +213,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/shared':
         specifier: file:../../packages/shared
         version: link:../../packages/shared
@@ -229,7 +229,7 @@ importers:
     dependencies:
       '@authon/js':
         specifier: file:../../packages/js
-        version: file:packages/js
+        version: link:../../packages/js
       '@authon/shared':
         specifier: file:../../packages/shared
         version: link:../../packages/shared
@@ -300,8 +300,8 @@ importers:
   packages/js:
     dependencies:
       '@authon/shared':
-        specifier: workspace:^
-        version: link:../shared
+        specifier: ^0.3.0
+        version: 0.3.0
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -664,9 +664,6 @@ packages:
     peerDependencies:
       '@angular/core': ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@authon/js@file:packages/js':
-    resolution: {directory: packages/js, type: directory}
-
   '@authon/nextjs@file:packages/nextjs':
     resolution: {directory: packages/nextjs, type: directory}
     peerDependencies:
@@ -682,6 +679,9 @@ packages:
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
+
+  '@authon/shared@0.3.0':
+    resolution: {integrity: sha512-U9OyR6Ay3omhdsTPMLX9QuOKbxTxdvBiA+1syc/Xzuj1Q22J/mcsHqcf3DcZbanhucBLH0PKZw/gOiu4Nr9Fww==}
 
   '@authon/svelte@file:packages/svelte':
     resolution: {directory: packages/svelte, type: directory}
@@ -8588,10 +8588,6 @@ snapshots:
       '@authon/js': link:packages/js
       '@authon/shared': link:packages/shared
 
-  '@authon/js@file:packages/js':
-    dependencies:
-      '@authon/shared': link:packages/shared
-
   '@authon/nextjs@file:packages/nextjs(next@15.5.12(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.85.0))':
     dependencies:
       '@authon/react': link:packages/react
@@ -8611,6 +8607,8 @@ snapshots:
       '@authon/shared': link:packages/shared
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
+
+  '@authon/shared@0.3.0': {}
 
   '@authon/svelte@file:packages/svelte(svelte@5.53.2)':
     dependencies:
