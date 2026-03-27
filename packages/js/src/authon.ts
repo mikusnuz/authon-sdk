@@ -538,6 +538,7 @@ export class Authon {
       this.modal = new ModalRenderer({
         mode: this.config.mode,
         theme: this.config.theme,
+        locale: this.config.locale,
         containerId: this.config.containerId,
         branding: this.branding || undefined,
         captchaSiteKey: this.captchaEnabled ? this.turnstileSiteKey : undefined,
@@ -585,7 +586,7 @@ export class Authon {
         },
         onPasswordlessSubmit: async (email: string) => {
           try {
-            const method = this.branding?.passwordlessMethod ?? 'magic_link';
+            const method = (this.branding as any)?.passwordlessMethod ?? 'magic_link';
             if (method === 'email_otp' || method === 'both') {
               await this.sendEmailOtp(email);
               this.modal?.showOtpInput(email);

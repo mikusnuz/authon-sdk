@@ -1,6 +1,7 @@
 import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
 import { getProviderButtonConfig } from './providers';
+import { getStrings, type TranslationStrings } from './i18n';
 
 function hexToRgba(hex: string, alpha: number): string {
   const h = hex.replace('#', '');
@@ -62,6 +63,9 @@ export class ModalRenderer {
   private turnstileToken: string = '';
   private turnstileWrapper: HTMLDivElement | null = null;
 
+  // i18n
+  private t: TranslationStrings;
+
   // Dev Teleport (test mode)
   private isTestMode: boolean = false;
   private onDevTeleport: ((email: string) => void) | null = null;
@@ -73,6 +77,7 @@ export class ModalRenderer {
     branding?: BrandingConfig;
     captchaSiteKey?: string;
     isTestMode?: boolean;
+    locale?: string;
     onDevTeleport?: (email: string) => void;
     onProviderClick: (provider: OAuthProviderType) => void;
     onEmailSubmit: (email: string, password: string, isSignUp: boolean) => void;
@@ -87,6 +92,7 @@ export class ModalRenderer {
     this.branding = { ...DEFAULT_BRANDING, ...options.branding };
     this.captchaSiteKey = options.captchaSiteKey || '';
     this.isTestMode = options.isTestMode || false;
+    this.t = getStrings(options.locale || 'en');
     this.onDevTeleport = options.onDevTeleport || null;
     this.onProviderClick = options.onProviderClick;
     this.onEmailSubmit = options.onEmailSubmit;
@@ -413,9 +419,9 @@ export class ModalRenderer {
   private buildInnerContent(view: 'signIn' | 'signUp'): string {
     const b = this.branding;
     const isSignUp = view === 'signUp';
-    const title = isSignUp ? 'Create your account' : 'Welcome back';
-    const subtitle = isSignUp ? 'Already have an account?' : "Don't have an account?";
-    const subtitleLink = isSignUp ? 'Sign in' : 'Sign up';
+    const title = isSignUp ? this.t.createAccount : this.t.welcomeBack;
+    const subtitle = isSignUp ? this.t.alreadyHaveAccount : this.t.dontHaveAccount;
+    const subtitleLink = isSignUp ? this.t.signIn : this.t.signUp;
 
     const dark = this.isDark();
 
@@ -441,16 +447,16 @@ export class ModalRenderer {
     const hasVisibleProviders = showProviders && this.enabledProviders.filter((p) => !b.hiddenProviders?.includes(p)).length > 0;
     const divider =
       hasVisibleProviders && b.showDivider !== false && b.showEmailPassword !== false
-        ? `<div class="divider"><span>or</span></div>`
+        ? `<div class="divider"><span>${this.t.or}</span></div>`
         : '';
 
     const emailForm =
       b.showEmailPassword !== false
         ? `<form class="email-form" id="email-form">
-          <input type="email" placeholder="Email address" name="email" required class="input" autocomplete="email" />
-          <input type="password" placeholder="Password" name="password" required class="input" autocomplete="${isSignUp ? 'new-password' : 'current-password'}" />
-          ${isSignUp ? '<p class="password-hint">Must contain uppercase, lowercase, and a number (min 8 chars)</p>' : ''}
-          <button type="submit" class="submit-btn">${isSignUp ? 'Sign up' : 'Sign in'}</button>
+          <input type="email" placeholder="${this.t.emailAddress}" name="email" required class="input" autocomplete="email" />
+          <input type="password" placeholder="${this.t.password}" name="password" required class="input" autocomplete="${isSignUp ? 'new-password' : 'current-password'}" />
+          ${isSignUp ? `<p class="password-hint">${this.t.passwordHint}</p>` : ''}
+          <button type="submit" class="submit-btn">${isSignUp ? this.t.signUp : this.t.signIn}</button>
         </form>`
         : '';
 
@@ -467,7 +473,7 @@ export class ModalRenderer {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
         </svg>
-        <span>Connect Wallet</span>
+        <span>${this.t.connectWallet}</span>
       </button>`);
     }
     if (b.showPasswordless) {
@@ -475,7 +481,7 @@ export class ModalRenderer {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
-        <span>Continue with Magic Link</span>
+        <span>${this.t.magicLink}</span>
       </button>`);
     }
     if (b.showPasskey) {
@@ -483,7 +489,7 @@ export class ModalRenderer {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><path d="M21.7 13.3 19 11"/><path d="m21 15-2.5-1.5"/><path d="m17 17 2.5-1.5"/><path d="M22 9v6a1 1 0 0 1-1 1h-.5"/><circle cx="18" cy="9" r="3"/>
         </svg>
-        <span>Sign in with Passkey</span>
+        <span>${this.t.passkey}</span>
       </button>`);
     }
     const authMethods = methodButtons.length > 0
@@ -529,7 +535,7 @@ export class ModalRenderer {
           <button type="button" id="dev-teleport-btn" class="dev-teleport-btn">Go</button>
         </div>
       </div>` : ''}
-      ${b.showSecuredBy !== false ? `<div class="secured-by">Secured by <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ''}
+      ${b.showSecuredBy !== false ? `<div class="secured-by">${this.t.securedBy} <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ''}
     `;
   }
 

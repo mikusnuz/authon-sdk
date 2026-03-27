@@ -8,7 +8,7 @@ var AuthonMfaRequiredError = class extends Error {
   }
 };
 
-// ../shared/dist/index.js
+// ../../node_modules/.pnpm/@authon+shared@0.3.0/node_modules/@authon/shared/dist/index.js
 var PROVIDER_DISPLAY_NAMES = {
   google: "Google",
   apple: "Apple",
@@ -71,6 +71,394 @@ function getProviderButtonConfig(provider) {
   };
 }
 
+// src/i18n.ts
+var translations = {
+  en: {
+    welcomeBack: "Welcome back",
+    createAccount: "Create your account",
+    alreadyHaveAccount: "Already have an account?",
+    dontHaveAccount: "Don't have an account?",
+    signIn: "Sign in",
+    signUp: "Sign up",
+    or: "or",
+    emailAddress: "Email address",
+    password: "Password",
+    passwordHint: "Must contain uppercase, lowercase, and a number (min 8 chars)",
+    continueWith: "Continue with",
+    connectWallet: "Connect Wallet",
+    magicLink: "Continue with Magic Link",
+    passkey: "Sign in with Passkey",
+    securedBy: "Secured by",
+    backToSignIn: "Back to sign in"
+  },
+  ko: {
+    welcomeBack: "\uB2E4\uC2DC \uC624\uC2E0 \uAC78 \uD658\uC601\uD569\uB2C8\uB2E4",
+    createAccount: "\uACC4\uC815 \uB9CC\uB4E4\uAE30",
+    alreadyHaveAccount: "\uC774\uBBF8 \uACC4\uC815\uC774 \uC788\uC73C\uC2E0\uAC00\uC694?",
+    dontHaveAccount: "\uACC4\uC815\uC774 \uC5C6\uC73C\uC2E0\uAC00\uC694?",
+    signIn: "\uB85C\uADF8\uC778",
+    signUp: "\uD68C\uC6D0\uAC00\uC785",
+    or: "\uB610\uB294",
+    emailAddress: "\uC774\uBA54\uC77C \uC8FC\uC18C",
+    password: "\uBE44\uBC00\uBC88\uD638",
+    passwordHint: "\uB300\uBB38\uC790, \uC18C\uBB38\uC790, \uC22B\uC790 \uD3EC\uD568 (\uCD5C\uC18C 8\uC790)",
+    continueWith: "(\uC73C)\uB85C \uACC4\uC18D\uD558\uAE30",
+    connectWallet: "\uC9C0\uAC11 \uC5F0\uACB0",
+    magicLink: "\uB9E4\uC9C1 \uB9C1\uD06C\uB85C \uACC4\uC18D\uD558\uAE30",
+    passkey: "\uD328\uC2A4\uD0A4\uB85C \uB85C\uADF8\uC778",
+    securedBy: "\uBCF4\uC548 \uC81C\uACF5",
+    backToSignIn: "\uB85C\uADF8\uC778\uC73C\uB85C \uB3CC\uC544\uAC00\uAE30"
+  },
+  ja: {
+    welcomeBack: "\u304A\u304B\u3048\u308A\u306A\u3055\u3044",
+    createAccount: "\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u4F5C\u6210",
+    alreadyHaveAccount: "\u3059\u3067\u306B\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u304A\u6301\u3061\u3067\u3059\u304B\uFF1F",
+    dontHaveAccount: "\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u304A\u6301\u3061\u3067\u306A\u3044\u3067\u3059\u304B\uFF1F",
+    signIn: "\u30ED\u30B0\u30A4\u30F3",
+    signUp: "\u65B0\u898F\u767B\u9332",
+    or: "\u307E\u305F\u306F",
+    emailAddress: "\u30E1\u30FC\u30EB\u30A2\u30C9\u30EC\u30B9",
+    password: "\u30D1\u30B9\u30EF\u30FC\u30C9",
+    passwordHint: "\u5927\u6587\u5B57\u3001\u5C0F\u6587\u5B57\u3001\u6570\u5B57\u3092\u542B\u3080\uFF088\u6587\u5B57\u4EE5\u4E0A\uFF09",
+    continueWith: "\u3067\u7D9A\u884C",
+    connectWallet: "\u30A6\u30A9\u30EC\u30C3\u30C8\u63A5\u7D9A",
+    magicLink: "\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3067\u7D9A\u884C",
+    passkey: "\u30D1\u30B9\u30AD\u30FC\u3067\u30ED\u30B0\u30A4\u30F3",
+    securedBy: "\u30BB\u30AD\u30E5\u30EA\u30C6\u30A3\u63D0\u4F9B",
+    backToSignIn: "\u30ED\u30B0\u30A4\u30F3\u306B\u623B\u308B"
+  },
+  "zh-CN": {
+    welcomeBack: "\u6B22\u8FCE\u56DE\u6765",
+    createAccount: "\u521B\u5EFA\u8D26\u6237",
+    alreadyHaveAccount: "\u5DF2\u6709\u8D26\u6237\uFF1F",
+    dontHaveAccount: "\u6CA1\u6709\u8D26\u6237\uFF1F",
+    signIn: "\u767B\u5F55",
+    signUp: "\u6CE8\u518C",
+    or: "\u6216",
+    emailAddress: "\u90AE\u7BB1\u5730\u5740",
+    password: "\u5BC6\u7801",
+    passwordHint: "\u9700\u5305\u542B\u5927\u5199\u3001\u5C0F\u5199\u5B57\u6BCD\u548C\u6570\u5B57\uFF08\u81F3\u5C118\u4F4D\uFF09",
+    continueWith: "\u7EE7\u7EED\u4F7F\u7528",
+    connectWallet: "\u8FDE\u63A5\u94B1\u5305",
+    magicLink: "\u4F7F\u7528\u9B54\u6CD5\u94FE\u63A5\u7EE7\u7EED",
+    passkey: "\u4F7F\u7528\u901A\u884C\u5BC6\u94A5\u767B\u5F55",
+    securedBy: "\u5B89\u5168\u4FDD\u969C",
+    backToSignIn: "\u8FD4\u56DE\u767B\u5F55"
+  },
+  "zh-TW": {
+    welcomeBack: "\u6B61\u8FCE\u56DE\u4F86",
+    createAccount: "\u5EFA\u7ACB\u5E33\u6236",
+    alreadyHaveAccount: "\u5DF2\u6709\u5E33\u6236\uFF1F",
+    dontHaveAccount: "\u6C92\u6709\u5E33\u6236\uFF1F",
+    signIn: "\u767B\u5165",
+    signUp: "\u8A3B\u518A",
+    or: "\u6216",
+    emailAddress: "\u96FB\u5B50\u90F5\u4EF6",
+    password: "\u5BC6\u78BC",
+    passwordHint: "\u9700\u5305\u542B\u5927\u5BEB\u3001\u5C0F\u5BEB\u5B57\u6BCD\u548C\u6578\u5B57\uFF08\u81F3\u5C118\u4F4D\uFF09",
+    continueWith: "\u7E7C\u7E8C\u4F7F\u7528",
+    connectWallet: "\u9023\u63A5\u9322\u5305",
+    magicLink: "\u4F7F\u7528\u9B54\u6CD5\u9023\u7D50\u7E7C\u7E8C",
+    passkey: "\u4F7F\u7528\u901A\u884C\u91D1\u9470\u767B\u5165",
+    securedBy: "\u5B89\u5168\u4FDD\u969C",
+    backToSignIn: "\u8FD4\u56DE\u767B\u5165"
+  },
+  "pt-BR": {
+    welcomeBack: "Bem-vindo de volta",
+    createAccount: "Crie sua conta",
+    alreadyHaveAccount: "Ja tem uma conta?",
+    dontHaveAccount: "Nao tem uma conta?",
+    signIn: "Entrar",
+    signUp: "Cadastrar",
+    or: "ou",
+    emailAddress: "Endereco de e-mail",
+    password: "Senha",
+    passwordHint: "Deve conter maiusculas, minusculas e numeros (min 8 caracteres)",
+    continueWith: "Continuar com",
+    connectWallet: "Conectar carteira",
+    magicLink: "Continuar com Magic Link",
+    passkey: "Entrar com Passkey",
+    securedBy: "Protegido por",
+    backToSignIn: "Voltar ao login"
+  },
+  es: {
+    welcomeBack: "Bienvenido de nuevo",
+    createAccount: "Crea tu cuenta",
+    alreadyHaveAccount: "Ya tienes una cuenta?",
+    dontHaveAccount: "No tienes una cuenta?",
+    signIn: "Iniciar sesion",
+    signUp: "Registrarse",
+    or: "o",
+    emailAddress: "Correo electronico",
+    password: "Contrasena",
+    passwordHint: "Debe contener mayusculas, minusculas y numeros (min 8 caracteres)",
+    continueWith: "Continuar con",
+    connectWallet: "Conectar billetera",
+    magicLink: "Continuar con Magic Link",
+    passkey: "Iniciar con Passkey",
+    securedBy: "Protegido por",
+    backToSignIn: "Volver al inicio de sesion"
+  },
+  de: {
+    welcomeBack: "Willkommen zuruck",
+    createAccount: "Konto erstellen",
+    alreadyHaveAccount: "Bereits ein Konto?",
+    dontHaveAccount: "Noch kein Konto?",
+    signIn: "Anmelden",
+    signUp: "Registrieren",
+    or: "oder",
+    emailAddress: "E-Mail-Adresse",
+    password: "Passwort",
+    passwordHint: "Gross-/Kleinbuchstaben und Zahl erforderlich (mind. 8 Zeichen)",
+    continueWith: "Weiter mit",
+    connectWallet: "Wallet verbinden",
+    magicLink: "Weiter mit Magic Link",
+    passkey: "Mit Passkey anmelden",
+    securedBy: "Gesichert durch",
+    backToSignIn: "Zuruck zur Anmeldung"
+  },
+  fr: {
+    welcomeBack: "Bon retour",
+    createAccount: "Creez votre compte",
+    alreadyHaveAccount: "Vous avez deja un compte ?",
+    dontHaveAccount: "Vous n'avez pas de compte ?",
+    signIn: "Se connecter",
+    signUp: "S'inscrire",
+    or: "ou",
+    emailAddress: "Adresse e-mail",
+    password: "Mot de passe",
+    passwordHint: "Doit contenir majuscules, minuscules et chiffres (min 8 caracteres)",
+    continueWith: "Continuer avec",
+    connectWallet: "Connecter le portefeuille",
+    magicLink: "Continuer avec Magic Link",
+    passkey: "Se connecter avec Passkey",
+    securedBy: "Securise par",
+    backToSignIn: "Retour a la connexion"
+  },
+  hi: {
+    welcomeBack: "\u0935\u093E\u092A\u0938\u0940 \u092A\u0930 \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
+    createAccount: "\u0905\u092A\u0928\u093E \u0916\u093E\u0924\u093E \u092C\u0928\u093E\u090F\u0902",
+    alreadyHaveAccount: "\u092A\u0939\u0932\u0947 \u0938\u0947 \u0916\u093E\u0924\u093E \u0939\u0948?",
+    dontHaveAccount: "\u0916\u093E\u0924\u093E \u0928\u0939\u0940\u0902 \u0939\u0948?",
+    signIn: "\u0938\u093E\u0907\u0928 \u0907\u0928",
+    signUp: "\u0938\u093E\u0907\u0928 \u0905\u092A",
+    or: "\u092F\u093E",
+    emailAddress: "\u0908\u092E\u0947\u0932 \u092A\u0924\u093E",
+    password: "\u092A\u093E\u0938\u0935\u0930\u094D\u0921",
+    passwordHint: "\u092C\u0921\u093C\u0947, \u091B\u094B\u091F\u0947 \u0905\u0915\u094D\u0937\u0930 \u0914\u0930 \u0938\u0902\u0916\u094D\u092F\u093E \u0906\u0935\u0936\u094D\u092F\u0915 (\u0915\u092E \u0938\u0947 \u0915\u092E 8 \u0905\u0915\u094D\u0937\u0930)",
+    continueWith: "\u0938\u0947 \u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902",
+    connectWallet: "\u0935\u0949\u0932\u0947\u091F \u0915\u0928\u0947\u0915\u094D\u091F \u0915\u0930\u0947\u0902",
+    magicLink: "\u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u0938\u0947 \u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902",
+    passkey: "\u092A\u093E\u0938\u0915\u0940 \u0938\u0947 \u0938\u093E\u0907\u0928 \u0907\u0928",
+    securedBy: "\u0938\u0941\u0930\u0915\u094D\u0937\u093E \u092A\u094D\u0930\u0926\u093E\u0924\u093E",
+    backToSignIn: "\u0938\u093E\u0907\u0928 \u0907\u0928 \u092A\u0930 \u0935\u093E\u092A\u0938 \u091C\u093E\u090F\u0902"
+  },
+  tr: {
+    welcomeBack: "Tekrar hos geldiniz",
+    createAccount: "Hesap olusturun",
+    alreadyHaveAccount: "Zaten bir hesabiniz var mi?",
+    dontHaveAccount: "Hesabiniz yok mu?",
+    signIn: "Giris yap",
+    signUp: "Kaydol",
+    or: "veya",
+    emailAddress: "E-posta adresi",
+    password: "Sifre",
+    passwordHint: "Buyuk, kucuk harf ve rakam icermeli (en az 8 karakter)",
+    continueWith: "ile devam et",
+    connectWallet: "Cuzdan bagla",
+    magicLink: "Magic Link ile devam et",
+    passkey: "Passkey ile giris yap",
+    securedBy: "Guvenlik saglayici",
+    backToSignIn: "Girise don"
+  },
+  id: {
+    welcomeBack: "Selamat datang kembali",
+    createAccount: "Buat akun Anda",
+    alreadyHaveAccount: "Sudah punya akun?",
+    dontHaveAccount: "Belum punya akun?",
+    signIn: "Masuk",
+    signUp: "Daftar",
+    or: "atau",
+    emailAddress: "Alamat email",
+    password: "Kata sandi",
+    passwordHint: "Harus mengandung huruf besar, kecil, dan angka (min 8 karakter)",
+    continueWith: "Lanjutkan dengan",
+    connectWallet: "Hubungkan dompet",
+    magicLink: "Lanjutkan dengan Magic Link",
+    passkey: "Masuk dengan Passkey",
+    securedBy: "Diamankan oleh",
+    backToSignIn: "Kembali ke login"
+  },
+  vi: {
+    welcomeBack: "Chao mung tro lai",
+    createAccount: "Tao tai khoan",
+    alreadyHaveAccount: "Da co tai khoan?",
+    dontHaveAccount: "Chua co tai khoan?",
+    signIn: "Dang nhap",
+    signUp: "Dang ky",
+    or: "hoac",
+    emailAddress: "Dia chi email",
+    password: "Mat khau",
+    passwordHint: "Can chu hoa, chu thuong va so (toi thieu 8 ky tu)",
+    continueWith: "Tiep tuc voi",
+    connectWallet: "Ket noi vi",
+    magicLink: "Tiep tuc voi Magic Link",
+    passkey: "Dang nhap voi Passkey",
+    securedBy: "Bao mat boi",
+    backToSignIn: "Quay lai dang nhap"
+  },
+  th: {
+    welcomeBack: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E01\u0E25\u0E31\u0E1A",
+    createAccount: "\u0E2A\u0E23\u0E49\u0E32\u0E07\u0E1A\u0E31\u0E0D\u0E0A\u0E35",
+    alreadyHaveAccount: "\u0E21\u0E35\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E2D\u0E22\u0E39\u0E48\u0E41\u0E25\u0E49\u0E27?",
+    dontHaveAccount: "\u0E22\u0E31\u0E07\u0E44\u0E21\u0E48\u0E21\u0E35\u0E1A\u0E31\u0E0D\u0E0A\u0E35?",
+    signIn: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A",
+    signUp: "\u0E2A\u0E21\u0E31\u0E04\u0E23\u0E2A\u0E21\u0E32\u0E0A\u0E34\u0E01",
+    or: "\u0E2B\u0E23\u0E37\u0E2D",
+    emailAddress: "\u0E2D\u0E35\u0E40\u0E21\u0E25",
+    password: "\u0E23\u0E2B\u0E31\u0E2A\u0E1C\u0E48\u0E32\u0E19",
+    passwordHint: "\u0E15\u0E49\u0E2D\u0E07\u0E21\u0E35\u0E15\u0E31\u0E27\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E43\u0E2B\u0E0D\u0E48 \u0E15\u0E31\u0E27\u0E1E\u0E34\u0E21\u0E1E\u0E4C\u0E40\u0E25\u0E47\u0E01 \u0E41\u0E25\u0E30\u0E15\u0E31\u0E27\u0E40\u0E25\u0E02 (\u0E2D\u0E22\u0E48\u0E32\u0E07\u0E19\u0E49\u0E2D\u0E22 8 \u0E15\u0E31\u0E27)",
+    continueWith: "\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E14\u0E49\u0E27\u0E22",
+    connectWallet: "\u0E40\u0E0A\u0E37\u0E48\u0E2D\u0E21\u0E15\u0E48\u0E2D\u0E01\u0E23\u0E30\u0E40\u0E1B\u0E4B\u0E32",
+    magicLink: "\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E14\u0E49\u0E27\u0E22 Magic Link",
+    passkey: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22 Passkey",
+    securedBy: "\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E42\u0E14\u0E22",
+    backToSignIn: "\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A"
+  },
+  ru: {
+    welcomeBack: "\u0421 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435\u043C",
+    createAccount: "\u0421\u043E\u0437\u0434\u0430\u0439\u0442\u0435 \u0430\u043A\u043A\u0430\u0443\u043D\u0442",
+    alreadyHaveAccount: "\u0423\u0436\u0435 \u0435\u0441\u0442\u044C \u0430\u043A\u043A\u0430\u0443\u043D\u0442?",
+    dontHaveAccount: "\u041D\u0435\u0442 \u0430\u043A\u043A\u0430\u0443\u043D\u0442\u0430?",
+    signIn: "\u0412\u043E\u0439\u0442\u0438",
+    signUp: "\u0417\u0430\u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0438\u0440\u043E\u0432\u0430\u0442\u044C\u0441\u044F",
+    or: "\u0438\u043B\u0438",
+    emailAddress: "\u042D\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u0430\u044F \u043F\u043E\u0447\u0442\u0430",
+    password: "\u041F\u0430\u0440\u043E\u043B\u044C",
+    passwordHint: "\u0417\u0430\u0433\u043B\u0430\u0432\u043D\u044B\u0435, \u0441\u0442\u0440\u043E\u0447\u043D\u044B\u0435 \u0431\u0443\u043A\u0432\u044B \u0438 \u0446\u0438\u0444\u0440\u044B (\u043C\u0438\u043D. 8 \u0441\u0438\u043C\u0432\u043E\u043B\u043E\u0432)",
+    continueWith: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0441",
+    connectWallet: "\u041F\u043E\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u044C \u043A\u043E\u0448\u0435\u043B\u0435\u043A",
+    magicLink: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0441 Magic Link",
+    passkey: "\u0412\u043E\u0439\u0442\u0438 \u0441 Passkey",
+    securedBy: "\u0417\u0430\u0449\u0438\u0449\u0435\u043D\u043E",
+    backToSignIn: "\u0412\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043A \u0432\u0445\u043E\u0434\u0443"
+  },
+  it: {
+    welcomeBack: "Bentornato",
+    createAccount: "Crea il tuo account",
+    alreadyHaveAccount: "Hai gia un account?",
+    dontHaveAccount: "Non hai un account?",
+    signIn: "Accedi",
+    signUp: "Registrati",
+    or: "o",
+    emailAddress: "Indirizzo email",
+    password: "Password",
+    passwordHint: "Deve contenere maiuscole, minuscole e numeri (min 8 caratteri)",
+    continueWith: "Continua con",
+    connectWallet: "Connetti portafoglio",
+    magicLink: "Continua con Magic Link",
+    passkey: "Accedi con Passkey",
+    securedBy: "Protetto da",
+    backToSignIn: "Torna all'accesso"
+  },
+  pl: {
+    welcomeBack: "Witaj ponownie",
+    createAccount: "Utworz konto",
+    alreadyHaveAccount: "Masz juz konto?",
+    dontHaveAccount: "Nie masz konta?",
+    signIn: "Zaloguj sie",
+    signUp: "Zarejestruj sie",
+    or: "lub",
+    emailAddress: "Adres e-mail",
+    password: "Haslo",
+    passwordHint: "Wielkie, male litery i cyfry (min 8 znakow)",
+    continueWith: "Kontynuuj z",
+    connectWallet: "Polacz portfel",
+    magicLink: "Kontynuuj z Magic Link",
+    passkey: "Zaloguj sie z Passkey",
+    securedBy: "Zabezpieczone przez",
+    backToSignIn: "Powrot do logowania"
+  },
+  nl: {
+    welcomeBack: "Welkom terug",
+    createAccount: "Maak je account aan",
+    alreadyHaveAccount: "Heb je al een account?",
+    dontHaveAccount: "Nog geen account?",
+    signIn: "Inloggen",
+    signUp: "Registreren",
+    or: "of",
+    emailAddress: "E-mailadres",
+    password: "Wachtwoord",
+    passwordHint: "Hoofdletters, kleine letters en cijfers vereist (min 8 tekens)",
+    continueWith: "Doorgaan met",
+    connectWallet: "Portemonnee verbinden",
+    magicLink: "Doorgaan met Magic Link",
+    passkey: "Inloggen met Passkey",
+    securedBy: "Beveiligd door",
+    backToSignIn: "Terug naar inloggen"
+  },
+  ar: {
+    welcomeBack: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0639\u0648\u062F\u062A\u0643",
+    createAccount: "\u0623\u0646\u0634\u0626 \u062D\u0633\u0627\u0628\u0643",
+    alreadyHaveAccount: "\u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628 \u0628\u0627\u0644\u0641\u0639\u0644\u061F",
+    dontHaveAccount: "\u0644\u064A\u0633 \u0644\u062F\u064A\u0643 \u062D\u0633\u0627\u0628\u061F",
+    signIn: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644",
+    signUp: "\u0625\u0646\u0634\u0627\u0621 \u062D\u0633\u0627\u0628",
+    or: "\u0623\u0648",
+    emailAddress: "\u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
+    password: "\u0643\u0644\u0645\u0629 \u0627\u0644\u0645\u0631\u0648\u0631",
+    passwordHint: "\u064A\u062C\u0628 \u0623\u0646 \u062A\u062D\u062A\u0648\u064A \u0639\u0644\u0649 \u0623\u062D\u0631\u0641 \u0643\u0628\u064A\u0631\u0629 \u0648\u0635\u063A\u064A\u0631\u0629 \u0648\u0623\u0631\u0642\u0627\u0645 (8 \u0623\u062D\u0631\u0641 \u0639\u0644\u0649 \u0627\u0644\u0623\u0642\u0644)",
+    continueWith: "\u0627\u0644\u0645\u062A\u0627\u0628\u0639\u0629 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645",
+    connectWallet: "\u0631\u0628\u0637 \u0627\u0644\u0645\u062D\u0641\u0638\u0629",
+    magicLink: "\u0627\u0644\u0645\u062A\u0627\u0628\u0639\u0629 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 Magic Link",
+    passkey: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 Passkey",
+    securedBy: "\u0645\u062D\u0645\u064A \u0628\u0648\u0627\u0633\u0637\u0629",
+    backToSignIn: "\u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644"
+  },
+  sv: {
+    welcomeBack: "Valkommen tillbaka",
+    createAccount: "Skapa ditt konto",
+    alreadyHaveAccount: "Har du redan ett konto?",
+    dontHaveAccount: "Har du inget konto?",
+    signIn: "Logga in",
+    signUp: "Registrera dig",
+    or: "eller",
+    emailAddress: "E-postadress",
+    password: "Losenord",
+    passwordHint: "Stora, sma bokstaver och siffror kravs (minst 8 tecken)",
+    continueWith: "Fortsatt med",
+    connectWallet: "Anslut planbok",
+    magicLink: "Fortsatt med Magic Link",
+    passkey: "Logga in med Passkey",
+    securedBy: "Sakrad av",
+    backToSignIn: "Tillbaka till inloggning"
+  },
+  uk: {
+    welcomeBack: "\u0417 \u043F\u043E\u0432\u0435\u0440\u043D\u0435\u043D\u043D\u044F\u043C",
+    createAccount: "\u0421\u0442\u0432\u043E\u0440\u0456\u0442\u044C \u043E\u0431\u043B\u0456\u043A\u043E\u0432\u0438\u0439 \u0437\u0430\u043F\u0438\u0441",
+    alreadyHaveAccount: "\u0412\u0436\u0435 \u0454 \u043E\u0431\u043B\u0456\u043A\u043E\u0432\u0438\u0439 \u0437\u0430\u043F\u0438\u0441?",
+    dontHaveAccount: "\u041D\u0435\u043C\u0430\u0454 \u043E\u0431\u043B\u0456\u043A\u043E\u0432\u043E\u0433\u043E \u0437\u0430\u043F\u0438\u0441\u0443?",
+    signIn: "\u0423\u0432\u0456\u0439\u0442\u0438",
+    signUp: "\u0417\u0430\u0440\u0435\u0454\u0441\u0442\u0440\u0443\u0432\u0430\u0442\u0438\u0441\u044F",
+    or: "\u0430\u0431\u043E",
+    emailAddress: "\u0415\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u0430 \u043F\u043E\u0448\u0442\u0430",
+    password: "\u041F\u0430\u0440\u043E\u043B\u044C",
+    passwordHint: "\u0412\u0435\u043B\u0438\u043A\u0456, \u043C\u0430\u043B\u0456 \u043B\u0456\u0442\u0435\u0440\u0438 \u0442\u0430 \u0446\u0438\u0444\u0440\u0438 (\u043C\u0456\u043D. 8 \u0441\u0438\u043C\u0432\u043E\u043B\u0456\u0432)",
+    continueWith: "\u041F\u0440\u043E\u0434\u043E\u0432\u0436\u0438\u0442\u0438 \u0437",
+    connectWallet: "\u041F\u0456\u0434\u043A\u043B\u044E\u0447\u0438\u0442\u0438 \u0433\u0430\u043C\u0430\u043D\u0435\u0446\u044C",
+    magicLink: "\u041F\u0440\u043E\u0434\u043E\u0432\u0436\u0438\u0442\u0438 \u0437 Magic Link",
+    passkey: "\u0423\u0432\u0456\u0439\u0442\u0438 \u0437 Passkey",
+    securedBy: "\u0417\u0430\u0445\u0438\u0449\u0435\u043D\u043E",
+    backToSignIn: "\u041F\u043E\u0432\u0435\u0440\u043D\u0443\u0442\u0438\u0441\u044F \u0434\u043E \u0432\u0445\u043E\u0434\u0443"
+  }
+};
+function getStrings(locale) {
+  if (locale in translations) return translations[locale];
+  const lang = locale.split("-")[0].split("_")[0];
+  if (lang in translations) return translations[lang];
+  return translations.en;
+}
+
 // src/modal.ts
 function hexToRgba(hex, alpha) {
   const h = hex.replace("#", "");
@@ -126,6 +514,8 @@ var ModalRenderer = class {
   turnstileWidgetId = null;
   turnstileToken = "";
   turnstileWrapper = null;
+  // i18n
+  t;
   // Dev Teleport (test mode)
   isTestMode = false;
   onDevTeleport = null;
@@ -135,6 +525,7 @@ var ModalRenderer = class {
     this.branding = { ...DEFAULT_BRANDING, ...options.branding };
     this.captchaSiteKey = options.captchaSiteKey || "";
     this.isTestMode = options.isTestMode || false;
+    this.t = getStrings(options.locale || "en");
     this.onDevTeleport = options.onDevTeleport || null;
     this.onProviderClick = options.onProviderClick;
     this.onEmailSubmit = options.onEmailSubmit;
@@ -406,9 +797,9 @@ var ModalRenderer = class {
   buildInnerContent(view) {
     const b = this.branding;
     const isSignUp = view === "signUp";
-    const title = isSignUp ? "Create your account" : "Welcome back";
-    const subtitle = isSignUp ? "Already have an account?" : "Don't have an account?";
-    const subtitleLink = isSignUp ? "Sign in" : "Sign up";
+    const title = isSignUp ? this.t.createAccount : this.t.welcomeBack;
+    const subtitle = isSignUp ? this.t.alreadyHaveAccount : this.t.dontHaveAccount;
+    const subtitleLink = isSignUp ? this.t.signIn : this.t.signUp;
     const dark = this.isDark();
     const showProviders = !isSignUp;
     const providerButtons = showProviders ? this.enabledProviders.filter((p) => !b.hiddenProviders?.includes(p)).map((p) => {
@@ -422,12 +813,12 @@ var ModalRenderer = class {
             </button>`;
     }).join("") : "";
     const hasVisibleProviders = showProviders && this.enabledProviders.filter((p) => !b.hiddenProviders?.includes(p)).length > 0;
-    const divider = hasVisibleProviders && b.showDivider !== false && b.showEmailPassword !== false ? `<div class="divider"><span>or</span></div>` : "";
+    const divider = hasVisibleProviders && b.showDivider !== false && b.showEmailPassword !== false ? `<div class="divider"><span>${this.t.or}</span></div>` : "";
     const emailForm = b.showEmailPassword !== false ? `<form class="email-form" id="email-form">
-          <input type="email" placeholder="Email address" name="email" required class="input" autocomplete="email" />
-          <input type="password" placeholder="Password" name="password" required class="input" autocomplete="${isSignUp ? "new-password" : "current-password"}" />
-          ${isSignUp ? '<p class="password-hint">Must contain uppercase, lowercase, and a number (min 8 chars)</p>' : ""}
-          <button type="submit" class="submit-btn">${isSignUp ? "Sign up" : "Sign in"}</button>
+          <input type="email" placeholder="${this.t.emailAddress}" name="email" required class="input" autocomplete="email" />
+          <input type="password" placeholder="${this.t.password}" name="password" required class="input" autocomplete="${isSignUp ? "new-password" : "current-password"}" />
+          ${isSignUp ? `<p class="password-hint">${this.t.passwordHint}</p>` : ""}
+          <button type="submit" class="submit-btn">${isSignUp ? this.t.signUp : this.t.signIn}</button>
         </form>` : "";
     const hasMethodAbove = showProviders && this.enabledProviders.length > 0 || b.showEmailPassword !== false;
     const hasMethodBelow = b.showWeb3 || b.showPasswordless || b.showPasskey;
@@ -438,7 +829,7 @@ var ModalRenderer = class {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"/>
         </svg>
-        <span>Connect Wallet</span>
+        <span>${this.t.connectWallet}</span>
       </button>`);
     }
     if (b.showPasswordless) {
@@ -446,7 +837,7 @@ var ModalRenderer = class {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
-        <span>Continue with Magic Link</span>
+        <span>${this.t.magicLink}</span>
       </button>`);
     }
     if (b.showPasskey) {
@@ -454,7 +845,7 @@ var ModalRenderer = class {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="10" cy="7" r="4"/><path d="M10.3 15H7a4 4 0 0 0-4 4v2"/><path d="M21.7 13.3 19 11"/><path d="m21 15-2.5-1.5"/><path d="m17 17 2.5-1.5"/><path d="M22 9v6a1 1 0 0 1-1 1h-.5"/><circle cx="18" cy="9" r="3"/>
         </svg>
-        <span>Sign in with Passkey</span>
+        <span>${this.t.passkey}</span>
       </button>`);
     }
     const authMethods = methodButtons.length > 0 ? `<div class="auth-methods">${methodButtons.join("")}</div>` : "";
@@ -490,7 +881,7 @@ var ModalRenderer = class {
           <button type="button" id="dev-teleport-btn" class="dev-teleport-btn">Go</button>
         </div>
       </div>` : ""}
-      ${b.showSecuredBy !== false ? `<div class="secured-by">Secured by <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ""}
+      ${b.showSecuredBy !== false ? `<div class="secured-by">${this.t.securedBy} <a href="https://authon.dev" target="_blank" rel="noopener noreferrer" class="secured-link">Authon</a></div>` : ""}
     `;
   }
   renderTurnstile() {
@@ -2105,6 +2496,7 @@ var Authon = class {
       this.modal = new ModalRenderer({
         mode: this.config.mode,
         theme: this.config.theme,
+        locale: this.config.locale,
         containerId: this.config.containerId,
         branding: this.branding || void 0,
         captchaSiteKey: this.captchaEnabled ? this.turnstileSiteKey : void 0,
@@ -2562,6 +2954,8 @@ export {
   Authon,
   AuthonMfaRequiredError,
   generateQrSvg,
-  getProviderButtonConfig
+  getProviderButtonConfig,
+  getStrings,
+  translations
 };
 //# sourceMappingURL=index.js.map
