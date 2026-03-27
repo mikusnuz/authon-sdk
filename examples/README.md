@@ -14,7 +14,6 @@ Before installing the SDK, create an Authon project and get your API keys:
 
 2. **Get your API keys** from Project Settings → API Keys
    - **Publishable Key** (`pk_live_...` or `pk_test_...`) — safe to use in client-side code
-   - **Secret Key** (`sk_live_...` or `sk_test_...`) — server-side only, never expose to clients
 
 3. **Configure OAuth providers** (optional) in Project Settings → OAuth
    - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
@@ -35,16 +34,6 @@ Before installing the SDK, create an Authon project and get your API keys:
 | Angular | `@authon/angular` | [examples.authon.dev/angular/](https://examples.authon.dev/angular/) | [angular/](./angular/) |
 | Svelte | `@authon/svelte` | [examples.authon.dev/svelte/](https://examples.authon.dev/svelte/) | [svelte/](./svelte/) |
 | Vanilla JS | `@authon/js` | [examples.authon.dev/js/](https://examples.authon.dev/js/) | [vanilla-js/](./vanilla-js/) |
-
-### Backend
-
-| Framework | SDK | Live Demo | Source |
-|-----------|-----|-----------|--------|
-| Express | `@authon/node` | [examples.authon.dev/express/](https://examples.authon.dev/express/) | [node-express/](./node-express/) |
-| Go | `authon-sdk/go` | [examples.authon.dev/go/](https://examples.authon.dev/go/) | [go/](./go/) |
-| FastAPI | `authon` (Python) | [examples.authon.dev/fastapi/](https://examples.authon.dev/fastapi/) | [python-fastapi/](./python-fastapi/) |
-| Flask | `authon` (Python) | [examples.authon.dev/flask/](https://examples.authon.dev/flask/) | [python-flask/](./python-flask/) |
-| Django | `authon` (Python) | [examples.authon.dev/django/](https://examples.authon.dev/django/) | [python-django/](./python-django/) |
 
 ### Mobile (Code Only)
 

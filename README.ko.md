@@ -18,12 +18,6 @@
 | [`@authon/svelte`](./packages/svelte) | [npm](https://www.npmjs.com/package/@authon/svelte) | Svelte 스토어 및 컴포넌트 |
 | [`@authon/angular`](./packages/angular) | [npm](https://www.npmjs.com/package/@authon/angular) | Angular 서비스 및 가드 |
 | [`@authon/react-native`](./packages/react-native) | [npm](https://www.npmjs.com/package/@authon/react-native) | React Native 모바일 SDK |
-| [`@authon/node`](./packages/node) | [npm](https://www.npmjs.com/package/@authon/node) | Node.js 서버 SDK |
-| [`authon` (Python)](./python) | [PyPI](https://pypi.org/project/authon/) | Django, Flask, FastAPI |
-| [`authon-go`](./go) | [Go modules](https://pkg.go.dev/github.com/mikusnuz/authon-sdk/go) | Go net/http 미들웨어 |
-| [`authon` (Dart)](./dart) | [pub.dev](https://pub.dev/packages/authon) | Flutter SDK |
-| [`Authon` (Swift)](./swift) | SPM | iOS/macOS SDK |
-| [`authon-kotlin`](./kotlin) | Maven | Android SDK |
 
 ## 빠른 시작
 
@@ -103,50 +97,6 @@ export async function GET() {
   if (!user) return new Response('Unauthorized', { status: 401 });
   return Response.json({ user });
 }
-```
-
-### Node.js
-
-```bash
-npm install @authon/node
-```
-
-```ts
-import { AuthonBackend, expressMiddleware } from '@authon/node';
-
-// 미들웨어 -- 라우트를 자동으로 보호
-app.use('/api', expressMiddleware({
-  secretKey: process.env.AUTHON_SECRET_KEY!,
-}));
-
-app.get('/api/profile', (req, res) => {
-  res.json({ user: req.auth });
-});
-
-// 직접 클라이언트 사용
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-const user = await authon.verifyToken(accessToken);
-const users = await authon.users.list({ page: 1, limit: 10 });
-const event = authon.webhooks.verify(payload, signature, webhookSecret);
-```
-
-### Python (FastAPI)
-
-```bash
-pip install authon
-```
-
-```python
-from fastapi import FastAPI, Depends
-from authon import AuthonBackend, require_auth, AuthonUser
-
-authon = AuthonBackend(secret_key="sk_live_...")
-app = FastAPI()
-
-@app.get("/api/profile")
-async def profile(user: AuthonUser = Depends(require_auth(authon))):
-    return {"id": user.id, "email": user.email}
 ```
 
 ## 다중 인증 (MFA)

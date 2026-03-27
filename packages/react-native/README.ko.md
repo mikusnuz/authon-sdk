@@ -25,7 +25,7 @@ const storage = {
 
 export default function App() {
   return (
-    <AuthonProvider publishableKey="pk_live_..." apiUrl="https://your-authon-server.com" storage={storage}>
+    <AuthonProvider publishableKey="pk_live_..." storage={storage}>
       <HomeScreen />
     </AuthonProvider>
   );
@@ -61,7 +61,6 @@ await signOut();
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `AUTHON_PUBLISHABLE_KEY` | Yes | 퍼블리셔블 키 |
 
 ## 라이선스

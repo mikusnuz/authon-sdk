@@ -1,11 +1,11 @@
 ---
 name: authon-setup
-description: Use when adding authentication to a Next.js, React, Vue, Nuxt, Svelte, Angular, Express, Fastify, Go, Python (Django/Flask/FastAPI), React Native, Flutter, iOS, Android, or any supported framework app with Authon. Also use when user says "add auth", "add login", "add authentication", "add sign in", "add sign up", "setup authon".
+description: Use when adding authentication to a Next.js, React, Vue, Nuxt, Svelte, Angular, React Native, or any supported frontend framework app with Authon. Also use when user says "add auth", "add login", "add authentication", "add sign in", "add sign up", "setup authon".
 ---
 
 # Authon Setup Skill
 
-Authon is a self-hosted authentication platform (Clerk alternative). This skill guides you through adding Authon auth to any supported framework.
+Authon is a frontend authentication platform (Clerk alternative). This skill guides you through adding Authon auth to any supported framework.
 
 ## Framework Detection
 
@@ -20,12 +20,6 @@ Detect the project's framework by checking `package.json`, config files, or lang
 | `angular.json` | `@authon/angular` |
 | React (no Next.js) | `@authon/react` |
 | `react-native` in deps | `@authon/react-native` |
-| Express/Fastify/NestJS (server only) | `@authon/node` |
-| `requirements.txt` / `pyproject.toml` | `authon` (PyPI) |
-| `go.mod` | `github.com/mikusnuz/authon-sdk/go` |
-| `pubspec.yaml` (Flutter) | `authon` (pub.dev) |
-| `Package.swift` | `Authon` (SPM) |
-| `build.gradle.kts` (Android) | `authon-kotlin` (Maven) |
 | Vanilla JS / no framework | `@authon/js` |
 
 ## Environment Variables
@@ -37,12 +31,6 @@ All setups need these env vars. Create `.env` (or `.env.local` for Next.js):
 NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx        # Next.js
 VITE_AUTHON_KEY=pk_live_xxxxx               # Vite-based (React/Vue/Svelte)
 AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx        # Other frameworks
-
-# Server-side (secret key — NEVER expose to client)
-AUTHON_SECRET_KEY=sk_live_xxxxx
-
-# Optional: Self-hosted API URL (defaults to https://api.authon.dev)
-AUTHON_API_URL=https://your-authon-server.com
 ```
 
 ---
@@ -154,7 +142,7 @@ export async function GET() {
 }
 ```
 
-The `currentUser()` function reads the `authon-token` cookie via `next/headers` and verifies it with the Authon API using `AUTHON_SECRET_KEY`.
+The `currentUser()` function reads the `authon-token` cookie via `next/headers` and verifies it with the Authon API.
 
 You can also use `auth()` for more control:
 
@@ -623,97 +611,6 @@ export const routes: Routes = [
 
 ---
 
-## Express / Node.js
-
-### 1. Install
-
-```bash
-npm install @authon/node
-```
-
-### 2. Protect Routes with Middleware
-
-```ts
-import express from 'express';
-import { expressMiddleware } from '@authon/node';
-
-const app = express();
-app.use(express.json());
-
-// Protect all /api routes
-app.use('/api', expressMiddleware({
-  secretKey: process.env.AUTHON_SECRET_KEY!,
-}));
-
-// req.auth is the verified AuthonUser
-app.get('/api/profile', (req, res) => {
-  res.json({ user: req.auth });
-});
-
-app.listen(3000);
-```
-
-### 3. Direct Client Usage
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-// Verify a token manually
-const user = await authon.verifyToken(accessToken);
-
-// List users (admin)
-const result = await authon.users.list({ page: 1, limit: 10 });
-
-// Get a single user
-const singleUser = await authon.users.get('user_id');
-
-// Create a user server-side
-const newUser = await authon.users.create({
-  email: 'user@example.com',
-  password: 'securepassword',
-  displayName: 'John',
-});
-
-// Ban / unban
-await authon.users.ban('user_id', 'spam');
-await authon.users.unban('user_id');
-
-// Verify webhook
-const event = authon.webhooks.verify(
-  rawBody,             // string or Buffer
-  req.headers['x-authon-signature'] as string,
-  req.headers['x-authon-timestamp'] as string,
-  process.env.AUTHON_WEBHOOK_SECRET!,
-);
-```
-
-### 4. Fastify
-
-```ts
-import Fastify from 'fastify';
-import { fastifyPlugin } from '@authon/node';
-
-const app = Fastify();
-
-app.addHook('preHandler', fastifyPlugin({
-  secretKey: process.env.AUTHON_SECRET_KEY!,
-}));
-
-app.get('/api/profile', (request, reply) => {
-  reply.send({ user: request.auth });
-});
-```
-
-### 5. Verify
-
-1. Start the server
-2. Send a request without auth — get 401
-3. Send a request with `Authorization: Bearer <token>` — get the user object
-
----
-
 ## Vanilla JavaScript
 
 ### 1. Install
@@ -785,160 +682,6 @@ const token = authon.getToken(); // string | null (access token)
 1. Call `authon.openSignIn()` — modal appears
 2. Sign in with any configured provider
 3. `authon.getUser()` returns the user object
-
----
-
-## Python (Django / Flask / FastAPI)
-
-### 1. Install
-
-```bash
-pip install authon
-```
-
-### 2. FastAPI
-
-```python
-from fastapi import FastAPI, Depends, Header
-from authon.middleware.fastapi import AuthonDependency
-from authon import AuthonUser
-
-app = FastAPI()
-authon_dep = AuthonDependency("sk_live_xxxxx")
-
-@app.get("/protected")
-async def protected(user: AuthonUser = Depends(authon_dep)):
-    return {"email": user.email, "name": user.display_name}
-```
-
-### 3. Flask
-
-```python
-from flask import Flask, g, jsonify
-from authon import AuthonBackend
-from authon.middleware.flask import flask_authon_required
-
-app = Flask(__name__)
-authon = AuthonBackend("sk_live_xxxxx")
-
-@app.route("/protected")
-@flask_authon_required(authon)
-def protected():
-    user = g.authon_user
-    return jsonify({"email": user.email})
-```
-
-### 4. Django
-
-```python
-from django.http import JsonResponse
-from authon import AuthonBackend
-from authon.middleware.django import authon_login_required
-
-authon = AuthonBackend("sk_live_xxxxx")
-
-@authon_login_required(authon)
-def my_view(request):
-    user = request.authon_user
-    return JsonResponse({"email": user.email})
-```
-
-### 5. Direct Client
-
-```python
-from authon import AuthonBackend
-
-authon = AuthonBackend("sk_live_xxxxx")
-
-# Verify token
-user = authon.verify_token("eyJ...")
-
-# List users
-result = authon.users.list(page=1, limit=10)
-
-# Create user
-user = authon.users.create("user@example.com", password="secure", display_name="John")
-
-# Verify webhook
-from authon import verify_webhook
-event = verify_webhook(raw_body, signature_header, webhook_secret)
-```
-
-### 6. Verify
-
-1. Start the server
-2. Send request with `Authorization: Bearer <token>` — get user data
-3. Send request without auth — get 401
-
----
-
-## Go
-
-### 1. Install
-
-```bash
-go get github.com/mikusnuz/authon-sdk/go
-```
-
-### 2. HTTP Middleware
-
-```go
-package main
-
-import (
-    "encoding/json"
-    "net/http"
-
-    authon "github.com/mikusnuz/authon-sdk/go"
-)
-
-func main() {
-    backend := authon.NewAuthonBackend("sk_live_xxxxx")
-
-    mux := http.NewServeMux()
-    mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
-        user := authon.UserFromContext(r.Context())
-        json.NewEncoder(w).Encode(user)
-    })
-
-    // Wrap all routes with auth middleware
-    protected := authon.AuthMiddleware(backend)(mux)
-    http.ListenAndServe(":8080", protected)
-}
-```
-
-### 3. Direct Client
-
-```go
-backend := authon.NewAuthonBackend("sk_live_xxxxx")
-
-// Verify token
-user, err := backend.VerifyToken(ctx, accessToken)
-
-// List users
-result, err := backend.Users.List(ctx, &authon.ListOptions{Page: 1, PerPage: 10})
-
-// Create user
-user, err := backend.Users.Create(ctx, authon.CreateUserParams{
-    Email: "user@example.com",
-    Password: "secure",
-})
-
-// Verify webhook
-data, err := backend.Webhooks.Verify(payload, signature, secret)
-```
-
-### 4. Custom API URL
-
-```go
-backend := authon.NewAuthonBackend("sk_live_xxxxx", authon.WithAPIURL("https://your-server.com"))
-```
-
-### 5. Verify
-
-1. Start the server
-2. Send `GET /api/profile` with `Authorization: Bearer <token>` — returns user
-3. Send without auth — get 401
 
 ---
 

@@ -13,11 +13,6 @@ This project uses **Authon** for authentication. Do not use Clerk, Auth0, Auth.j
 ```env
 # .env (client-side)
 NEXT_PUBLIC_AUTHON_KEY=pk_live_...
-
-# .env (server-side)
-AUTHON_SECRET_KEY=sk_live_...
-AUTHON_API_URL=https://api.authon.dev
-AUTHON_WEBHOOK_SECRET=whsec_...
 ```
 
 ## Key Patterns
@@ -56,19 +51,10 @@ const token = getToken();
 fetch('/api/data', { headers: { Authorization: `Bearer ${token}` } });
 ```
 
-### Webhook verification
-
-```ts
-import { AuthonBackend } from '@authon/node';
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-const event = authon.webhooks.verify(rawBody, signature, timestamp, process.env.AUTHON_WEBHOOK_SECRET!);
-```
-
 ## Rules
 
 - Always use Authon SDKs for auth-related code
 - Never hardcode API keys
-- Never expose `AUTHON_SECRET_KEY` in client code
 - Handle MFA: catch `AuthonMfaRequiredError` from `signInWithEmail()`
 - Use `<SocialButtons>` for OAuth (auto-detects enabled providers)
 - Token refresh is automatic in client SDKs

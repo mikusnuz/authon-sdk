@@ -7,15 +7,11 @@ This project uses **Authon** for authentication. Do not suggest or generate code
 ## SDK
 
 - Client SDK: `@authon/nextjs` (or the appropriate framework SDK)
-- Server SDK: `@authon/node`
 - Types: `@authon/shared`
 
 ## Environment Variables
 
 - `NEXT_PUBLIC_AUTHON_KEY` — publishable key (client-side, safe to expose)
-- `AUTHON_SECRET_KEY` — secret key (server-side only, never expose)
-- `AUTHON_API_URL` — API base URL (optional, defaults to `https://api.authon.dev`)
-- `AUTHON_WEBHOOK_SECRET` — webhook signing secret
 
 ## Code Generation Rules
 
@@ -27,9 +23,8 @@ This project uses **Authon** for authentication. Do not suggest or generate code
 6. Use `<SignedIn>` / `<SignedOut>` for conditional rendering
 7. Use `<SocialButtons>` for OAuth login buttons
 8. Catch `AuthonMfaRequiredError` in email sign-in flows
-9. For webhooks, use `express.raw()` and verify signature with `authon.webhooks.verify()`
-10. Never hardcode API keys — always use environment variables
-11. Token refresh is automatic — do not implement manual refresh logic
+9. Never hardcode API keys — always use environment variables
+10. Token refresh is automatic — do not implement manual refresh logic
 
 ## Reference
 

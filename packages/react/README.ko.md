@@ -35,7 +35,7 @@ function App() {
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <AuthonProvider publishableKey="pk_live_..." config={{ apiUrl: 'https://your-authon-server.com' }}>
+  <AuthonProvider publishableKey="pk_live_...">
     <App />
   </AuthonProvider>
 );
@@ -77,7 +77,6 @@ const { signOut } = useAuthon();
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `AUTHON_PUBLISHABLE_KEY` | Yes | 프로젝트 퍼블리셔블 키 |
 
 ## 비교

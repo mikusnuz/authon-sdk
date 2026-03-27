@@ -19,8 +19,7 @@ import { AuthonProvider } from '@authon/nextjs';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html><body>
-      <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}
-        config={{ apiUrl: process.env.NEXT_PUBLIC_AUTHON_API_URL }}>
+      <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
         {children}
       </AuthonProvider>
     </body></html>
@@ -61,9 +60,7 @@ export default authonMiddleware({ publicRoutes: ['/', '/sign-in'] });
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `NEXT_PUBLIC_AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | 퍼블리셔블 키 |
-| `AUTHON_SECRET_KEY` | 서버용 | 서버 시크릿 키 |
 
 ## 라이선스
 

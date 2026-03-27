@@ -14,24 +14,17 @@ Before diving into specific issues, gather information:
 ### 1. Check Environment Variables
 
 ```bash
-# Verify keys are set (don't print the actual values)
+# Verify key is set (don't print the actual value)
 echo "AUTHON_KEY set: $([ -n "$NEXT_PUBLIC_AUTHON_KEY" ] && echo YES || echo NO)"
-echo "SECRET_KEY set: $([ -n "$AUTHON_SECRET_KEY" ] && echo YES || echo NO)"
 ```
 
 In code, verify the key format:
 - Publishable keys start with `pk_live_` or `pk_test_`
-- Secret keys start with `sk_live_` or `sk_test_`
-- Mixing live/test keys will cause authentication failures
 
 ### 2. Verify API URL is Reachable
 
 ```bash
-# Default API URL
 curl -s https://api.authon.dev/health
-
-# Self-hosted
-curl -s https://your-authon-server.com/health
 ```
 
 ### 3. Check Browser Console
@@ -54,7 +47,7 @@ Open DevTools > Network tab. Filter by `authon` or your API domain. Look for:
 ### 5. Verify OAuth Redirect URIs
 
 In the Authon dashboard, check that your OAuth redirect URIs include:
-- `https://api.authon.dev/v1/auth/oauth/redirect` (or your self-hosted equivalent)
+- `https://api.authon.dev/v1/auth/oauth/redirect`
 - For each OAuth provider (Google, GitHub, etc.), the redirect URI in the provider's developer console must match
 
 ---
@@ -77,20 +70,8 @@ The OAuth redirect URI configured in the provider's developer console (Google, G
    ```
    https://api.authon.dev/v1/auth/oauth/redirect
    ```
-   Or for self-hosted:
-   ```
-   https://your-authon-server.com/v1/auth/oauth/redirect
-   ```
 
-3. **If using custom apiUrl**, make sure it matches exactly:
-   ```ts
-   // Client SDK
-   new Authon('pk_live_...', { apiUrl: 'https://your-authon-server.com' });
-
-   // The redirect URI will be: https://your-authon-server.com/v1/auth/oauth/redirect
-   ```
-
-4. **Check for trailing slashes**: `https://api.authon.dev/` vs `https://api.authon.dev` — some providers are strict about this.
+3. **Check for trailing slashes**: `https://api.authon.dev/` vs `https://api.authon.dev` — some providers are strict about this.
 
 ---
 
@@ -106,13 +87,11 @@ The Authon API server's CORS configuration doesn't include your domain. The SDK 
 
 ### Fix
 
-1. **Self-hosted Authon**: Add your frontend domain to the CORS whitelist in the Authon server configuration.
+1. **Authon Dashboard**: Add your domain under Project Settings > Domains.
 
-2. **Authon Cloud**: Add your domain in the Authon dashboard under Project Settings > Domains.
+2. **Common mistake — wrong protocol**: `http://localhost:3000` and `https://localhost:3000` are different origins. Make sure the exact origin is whitelisted.
 
-3. **Common mistake — wrong protocol**: `http://localhost:3000` and `https://localhost:3000` are different origins. Make sure the exact origin is whitelisted.
-
-4. **Common mistake — port mismatch**: `https://myapp.com` and `https://myapp.com:443` may be treated differently. Whitelist without the port for standard ports.
+3. **Common mistake — port mismatch**: `https://myapp.com` and `https://myapp.com:443` may be treated differently. Whitelist without the port for standard ports.
 
 5. **Verify all request headers**: The SDK sends:
    - `x-api-key` (publishable key)
@@ -343,19 +322,7 @@ The webhook verification uses HMAC-SHA256. Common issues:
 
 3. **Signed payload**: The HMAC is computed over `${timestamp}.${body}` (timestamp + dot + raw body). Both the `x-authon-timestamp` header and the raw body must be included.
 
-4. **Python webhook verification**: Uses `sha256=<hex>` prefix format:
-   ```python
-   from authon import verify_webhook
-   event = verify_webhook(raw_body, signature_header, webhook_secret)
-   ```
-
-5. **Go webhook verification**: Pass raw payload bytes:
-   ```go
-   data, err := backend.Webhooks.Verify(payload, signature, secret)
-   ```
-   Note: Go uses simple HMAC-SHA256 without the timestamp prefix.
-
-6. **Timing-safe comparison**: All SDK implementations use timing-safe comparison (`timingSafeEqual` in Node, `hmac.compare_digest` in Python, `hmac.Equal` in Go). Do not implement your own string comparison.
+4. **Timing-safe comparison**: The SDK uses timing-safe comparison (`timingSafeEqual`). Do not implement your own string comparison.
 
 ---
 
@@ -467,15 +434,11 @@ When MFA is enabled, `signInWithEmail` throws `AuthonMfaRequiredError` instead o
 - Server-side API routes can't verify tokens
 
 ### Root Cause
-`currentUser()` reads the `authon-token` cookie via `next/headers` and verifies it with the Authon API using `AUTHON_SECRET_KEY`.
+`currentUser()` reads the `authon-token` cookie via `next/headers` and verifies it with the Authon API.
 
 ### Fix
 
-1. **Check `AUTHON_SECRET_KEY`**: This env var (NOT `NEXT_PUBLIC_`) must be set in the server environment. It's used to verify tokens via the API.
-
-2. **Check `AUTHON_API_URL`**: If self-hosted, set this env var. Default is `https://api.authon.dev`.
-
-3. **Cookie not set**: The `authon-token` cookie must be set by the client-side auth flow. Check that:
+1. **Cookie not set**: The `authon-token` cookie must be set by the client-side auth flow. Check that:
    - The sign-in flow completes successfully on the client
    - The Authon API's response includes `Set-Cookie` headers
    - The cookie domain/path matches your app

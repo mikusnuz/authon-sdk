@@ -17,7 +17,7 @@ npm install @authon/svelte
 <script lang="ts">
   import { initAuthon } from '@authon/svelte';
   import { onDestroy } from 'svelte';
-  const authon = initAuthon('pk_live_...', { apiUrl: 'https://your-authon-server.com' });
+  const authon = initAuthon('pk_live_...');
   onDestroy(() => authon.destroy());
 </script>
 <slot />
@@ -42,7 +42,6 @@ npm install @authon/svelte
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `PUBLIC_AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | 퍼블리셔블 키 |
 
 ## 라이선스

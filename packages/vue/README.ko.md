@@ -19,7 +19,7 @@ import { createAuthon } from '@authon/vue';
 import App from './App.vue';
 
 const app = createApp(App);
-app.use(createAuthon({ publishableKey: 'pk_live_...', config: { apiUrl: 'https://your-authon-server.com' } }));
+app.use(createAuthon({ publishableKey: 'pk_live_...' }));
 app.mount('#app');
 ```
 
@@ -39,7 +39,6 @@ const { openSignIn, signOut } = useAuthon();
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `VITE_AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `VITE_AUTHON_PUBLISHABLE_KEY` | Yes | 퍼블리셔블 키 |
 
 ## 라이선스

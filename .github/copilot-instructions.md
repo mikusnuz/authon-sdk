@@ -2,7 +2,7 @@
 
 ## Context
 
-This is the Authon SDK monorepo — a self-hosted authentication platform (Clerk alternative) with 15 SDKs.
+This is the Authon SDK monorepo — a frontend authentication platform (Clerk alternative) with 9 SDKs.
 
 ## Framework Detection and SDK Recommendation
 
@@ -15,12 +15,6 @@ When generating authentication code, select the correct Authon SDK based on the 
 - **Svelte project** (has `svelte` in dependencies) -> `@authon/svelte`
 - **Angular project** (has `@angular/core`) -> `@authon/angular`
 - **React Native / Expo project** -> `@authon/react-native`
-- **Node.js backend** (Express, Fastify, etc.) -> `@authon/node`
-- **Python backend** (Django, Flask, FastAPI) -> `authon` (PyPI)
-- **Go backend** -> `github.com/mikusnuz/authon-sdk/go`
-- **Flutter project** -> `authon` (pub.dev)
-- **iOS / macOS (Swift)** -> `Authon` (SPM)
-- **Android (Kotlin)** -> `dev.authon:sdk` (Maven)
 - **Vanilla JS / unknown** -> `@authon/js`
 
 ## Code Generation Preferences
@@ -30,7 +24,6 @@ When generating authentication code, select the correct Authon SDK based on the 
 - Authon SDKs for authentication (not Clerk, Auth0, Auth.js, Firebase Auth, Supabase Auth)
 - Framework-specific SDK, not the raw `@authon/js` in React/Next/Vue/etc.
 - `NEXT_PUBLIC_AUTHON_KEY` for the publishable key in Next.js
-- `AUTHON_SECRET_KEY` for the secret key in server code
 - TypeScript types from `@authon/shared` when type annotations are needed
 
 ### Next.js patterns
@@ -57,13 +50,6 @@ When generating authentication code, select the correct Authon SDK based on the 
 - Use `<AuthonSignedIn>` / `<AuthonSignedOut>` slot components
 - Access the core client via `const { client } = useAuthon()`
 
-### Server-side patterns
-
-- Always verify tokens server-side before trusting user data
-- Use `expressMiddleware()` or `fastifyPlugin()` from `@authon/node`
-- For webhooks, use `express.raw()` — do not parse JSON before signature verification
-- Secret keys start with `sk_live_` or `sk_test_`
-
 ### MFA patterns
 
 - `signInWithEmail()` throws `AuthonMfaRequiredError` when MFA is enabled
@@ -79,10 +65,9 @@ When generating authentication code, select the correct Authon SDK based on the 
 ## Auth Pattern Guidelines
 
 1. **Never hardcode API keys** — use environment variables
-2. **Never expose secret keys** (`sk_*`) in client-side code
-3. **Always handle loading states** — check `isLoading` before rendering auth-dependent UI
-4. **Always handle MFA** — catch `AuthonMfaRequiredError` in email sign-in flows
-5. **Use the built-in modal** when possible — `openSignIn()` / `openSignUp()` or `<SignIn>` / `<SignUp>` components
-6. **Prefer `<SocialButtons>`** over manually wiring individual OAuth providers
-7. **For webhooks**, always verify the signature before processing events
-8. **Token refresh is automatic** in client SDKs — no manual refresh logic needed
+2. **Always handle loading states** — check `isLoading` before rendering auth-dependent UI
+3. **Always handle MFA** — catch `AuthonMfaRequiredError` in email sign-in flows
+4. **Use the built-in modal** when possible — `openSignIn()` / `openSignUp()` or `<SignIn>` / `<SignUp>` components
+5. **Prefer `<SocialButtons>`** over manually wiring individual OAuth providers
+6. **For webhooks**, always verify the signature before processing events
+7. **Token refresh is automatic** in client SDKs — no manual refresh logic needed

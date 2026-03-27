@@ -23,9 +23,7 @@ npm install @authon/js
   <script type="module">
     import { Authon } from '@authon/js';
 
-    const authon = new Authon('pk_live_YOUR_PUBLISHABLE_KEY', {
-      apiUrl: 'https://your-authon-server.com',
-    });
+    const authon = new Authon('pk_live_YOUR_PUBLISHABLE_KEY');
 
     document.getElementById('sign-in-btn').addEventListener('click', () => {
       authon.openSignIn();
@@ -80,7 +78,6 @@ await authon.signOut();
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `AUTHON_PUBLISHABLE_KEY` | Yes | 프로젝트 퍼블리셔블 키 |
 
 ## 비교

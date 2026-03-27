@@ -44,7 +44,6 @@ npm install @authon/react   # For React SPA
 - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 - CLERK_SECRET_KEY=sk_live_xxxxx
 + NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
-+ AUTHON_SECRET_KEY=sk_live_xxxxx
 ```
 
 ### Step 3: Replace Provider
@@ -141,75 +140,7 @@ Import path change:
 + const { userId, user, getToken } = await auth();
 ```
 
-### Step 8: Update Backend API (if using @clerk/clerk-sdk-node)
-
-```diff
-- import { clerkClient } from '@clerk/clerk-sdk-node';
-+ import { AuthonBackend } from '@authon/node';
-+ const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-  // Verify token
-- const user = await clerkClient.users.getUser(userId);
-+ const user = await authon.verifyToken(accessToken);
-
-  // List users
-- const users = await clerkClient.users.getUserList();
-+ const { data: users } = await authon.users.list();
-
-  // Update user
-- await clerkClient.users.updateUser(userId, { firstName: 'John' });
-+ await authon.users.update(userId, { displayName: 'John' });
-
-  // Delete user
-- await clerkClient.users.deleteUser(userId);
-+ await authon.users.delete(userId);
-
-  // Ban / Unban
-+ await authon.users.ban(userId, 'reason');
-+ await authon.users.unban(userId);
-```
-
-### Step 9: Migrate User Data
-
-Use the Authon backend API to import existing users:
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-// For each Clerk user, create in Authon
-for (const clerkUser of clerkUsers) {
-  await authon.users.create({
-    email: clerkUser.emailAddresses[0]?.emailAddress,
-    displayName: `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim(),
-    externalId: clerkUser.id,  // Keep Clerk ID as reference
-    avatarUrl: clerkUser.imageUrl,
-    emailVerified: clerkUser.emailAddresses[0]?.verification?.status === 'verified',
-    publicMetadata: clerkUser.publicMetadata,
-    privateMetadata: clerkUser.privateMetadata,
-  });
-}
-```
-
-### Step 10: Update Webhooks
-
-```diff
-// Clerk webhook
-- import { Webhook } from 'svix';
-- const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET!);
-- const evt = wh.verify(body, headers);
-
-// Authon webhook
-+ import { AuthonBackend } from '@authon/node';
-+ const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-+ const event = authon.webhooks.verify(
-+   rawBody,
-+   req.headers['x-authon-signature'],
-+   req.headers['x-authon-timestamp'],
-+   process.env.AUTHON_WEBHOOK_SECRET!,
-+ );
-```
+### Step 8: Update Webhooks
 
 Webhook event mapping:
 
@@ -241,7 +172,6 @@ npm install @authon/nextjs
 - GOOGLE_CLIENT_ID=xxxxx
 - GOOGLE_CLIENT_SECRET=xxxxx
 + NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
-+ AUTHON_SECRET_KEY=sk_live_xxxxx
 ```
 
 Note: OAuth provider credentials (Google, GitHub, etc.) are now configured in the Authon dashboard, not in env vars.
@@ -331,24 +261,6 @@ Auth.js often uses Prisma/Drizzle adapters for session storage. Authon handles s
 - Session/Account/VerificationToken tables (if Auth.js created them)
 - The adapter configuration in your auth config
 
-### Step 9: Migrate Users
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-for (const nextAuthUser of existingUsers) {
-  await authon.users.create({
-    email: nextAuthUser.email,
-    displayName: nextAuthUser.name,
-    avatarUrl: nextAuthUser.image,
-    emailVerified: !!nextAuthUser.emailVerified,
-    externalId: nextAuthUser.id,
-  });
-}
-```
-
 ---
 
 ## Migration: Auth0 to Authon
@@ -363,10 +275,6 @@ npm install @authon/nextjs
 # React SPA
 npm uninstall @auth0/auth0-react
 npm install @authon/react
-
-# Node.js server
-npm uninstall auth0 express-openid-connect
-npm install @authon/node
 ```
 
 ### Step 2: Update Environment Variables
@@ -378,7 +286,6 @@ npm install @authon/node
 - AUTH0_CLIENT_ID=xxxxx
 - AUTH0_CLIENT_SECRET=xxxxx
 + NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
-+ AUTHON_SECRET_KEY=sk_live_xxxxx
 ```
 
 ### Step 3: Replace Provider (Next.js)
@@ -461,37 +368,6 @@ These are not needed with Authon.
   }
 ```
 
-### Step 8: Replace Node.js Server Auth
-
-```diff
-- const { auth } = require('express-openid-connect');
-- app.use(auth({ ... }));
-+ import { expressMiddleware } from '@authon/node';
-+ app.use('/api', expressMiddleware({ secretKey: process.env.AUTHON_SECRET_KEY! }));
-```
-
-### Step 9: Migrate Users
-
-Use the Auth0 Management API to export users, then import to Authon:
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-for (const auth0User of exportedUsers) {
-  await authon.users.create({
-    email: auth0User.email,
-    displayName: auth0User.name || auth0User.nickname,
-    avatarUrl: auth0User.picture,
-    emailVerified: auth0User.email_verified,
-    externalId: auth0User.user_id,
-    publicMetadata: auth0User.user_metadata,
-    privateMetadata: auth0User.app_metadata,
-  });
-}
-```
-
 ---
 
 ## Migration: Firebase Auth to Authon
@@ -501,7 +377,6 @@ for (const auth0User of exportedUsers) {
 ```bash
 npm uninstall firebase firebase-admin
 npm install @authon/react  # or @authon/nextjs for Next.js
-npm install @authon/node   # for server-side
 ```
 
 ### Step 2: Update Environment Variables
@@ -511,7 +386,6 @@ npm install @authon/node   # for server-side
 - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxxxx
 - FIREBASE_SERVICE_ACCOUNT=xxxxx
 + NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
-+ AUTHON_SECRET_KEY=sk_live_xxxxx
 ```
 
 ### Step 3: Replace Client-Side Auth
@@ -542,40 +416,6 @@ npm install @authon/node   # for server-side
   }
 ```
 
-### Step 4: Replace Server-Side Verification
-
-```diff
-- import admin from 'firebase-admin';
-- admin.initializeApp();
-- const decodedToken = await admin.auth().verifyIdToken(idToken);
-+ import { AuthonBackend } from '@authon/node';
-+ const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-+ const user = await authon.verifyToken(accessToken);
-```
-
-### Step 5: Migrate Users
-
-Export Firebase users using the Admin SDK, then import:
-
-```ts
-import admin from 'firebase-admin';
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-const listResult = await admin.auth().listUsers();
-for (const fbUser of listResult.users) {
-  await authon.users.create({
-    email: fbUser.email!,
-    displayName: fbUser.displayName || undefined,
-    avatarUrl: fbUser.photoURL || undefined,
-    emailVerified: fbUser.emailVerified,
-    phone: fbUser.phoneNumber || undefined,
-    externalId: fbUser.uid,
-  });
-}
-```
-
 ---
 
 ## Migration: Supabase Auth to Authon
@@ -585,7 +425,6 @@ for (const fbUser of listResult.users) {
 ```bash
 npm uninstall @supabase/supabase-js @supabase/ssr @supabase/auth-helpers-nextjs
 npm install @authon/nextjs  # or @authon/react
-npm install @authon/node    # for server
 ```
 
 ### Step 2: Update Environment Variables
@@ -595,7 +434,6 @@ npm install @authon/node    # for server
 - NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxx
 - SUPABASE_SERVICE_ROLE_KEY=xxxxx
 + NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
-+ AUTHON_SECRET_KEY=sk_live_xxxxx
 ```
 
 ### Step 3: Replace Client-Side Auth
@@ -643,28 +481,6 @@ npm install @authon/node    # for server
 + const user = await currentUser();
 ```
 
-### Step 5: Migrate Users
-
-Export from Supabase `auth.users` table, then import:
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-for (const supaUser of supabaseUsers) {
-  await authon.users.create({
-    email: supaUser.email!,
-    displayName: supaUser.raw_user_meta_data?.full_name,
-    avatarUrl: supaUser.raw_user_meta_data?.avatar_url,
-    emailVerified: !!supaUser.email_confirmed_at,
-    phone: supaUser.phone || undefined,
-    externalId: supaUser.id,
-    publicMetadata: supaUser.raw_user_meta_data,
-  });
-}
-```
-
 ---
 
 ## Migration: Custom Session/Passport to Authon
@@ -673,91 +489,19 @@ for (const supaUser of supabaseUsers) {
 
 ```bash
 npm uninstall express-session passport passport-local passport-google-oauth20 connect-mongo
-npm install @authon/node    # Server
-npm install @authon/react   # Client (if applicable)
+npm install @authon/react   # or @authon/nextjs for Next.js
 ```
 
-### Step 2: Replace Express Session Middleware
-
-```diff
-- import session from 'express-session';
-- import passport from 'passport';
-- import { Strategy as LocalStrategy } from 'passport-local';
--
-- app.use(session({ secret: 'xxx', resave: false, saveUninitialized: false }));
-- app.use(passport.initialize());
-- app.use(passport.session());
--
-- passport.use(new LocalStrategy(async (username, password, done) => {
--   const user = await db.users.findByEmail(username);
--   if (!user || !bcrypt.compareSync(password, user.hash)) return done(null, false);
--   return done(null, user);
-- }));
-+ import { expressMiddleware } from '@authon/node';
-+
-+ // Protect API routes — verifies Bearer token
-+ app.use('/api', expressMiddleware({
-+   secretKey: process.env.AUTHON_SECRET_KEY!,
-+ }));
-```
-
-### Step 3: Replace Login Endpoint
-
-```diff
-- app.post('/login', passport.authenticate('local'), (req, res) => {
--   res.json({ user: req.user });
-- });
-// Client-side: Users now sign in via Authon modal (openSignIn())
-// The modal handles email/password, OAuth, MFA, etc.
-// No server-side login endpoint needed
-```
-
-### Step 4: Replace Auth Check in Routes
-
-```diff
-- function ensureAuthenticated(req, res, next) {
--   if (req.isAuthenticated()) return next();
--   res.status(401).json({ error: 'Not authenticated' });
-- }
-- app.get('/api/profile', ensureAuthenticated, (req, res) => {
--   res.json({ user: req.user });
-- });
-+ // expressMiddleware already handles auth check
-+ app.get('/api/profile', (req, res) => {
-+   res.json({ user: req.auth });  // req.auth is AuthonUser
-+ });
-```
-
-### Step 5: Migrate Users
-
-```ts
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-for (const legacyUser of existingUsers) {
-  await authon.users.create({
-    email: legacyUser.email,
-    displayName: legacyUser.name,
-    externalId: legacyUser.id.toString(),
-    emailVerified: legacyUser.verified,
-    // Note: passwords cannot be migrated — users will need to reset
-    // or use magic link / OAuth on first Authon sign-in
-  });
-}
-```
+Users now sign in via the Authon modal (`openSignIn()`). The modal handles email/password, OAuth, MFA, etc. No server-side session middleware is needed.
 
 ---
 
 ## Post-Migration Checklist
 
-1. **Environment variables**: All old auth env vars removed, Authon vars set
-2. **Middleware**: Authon middleware protecting correct routes
+1. **Environment variables**: All old auth env vars removed, Authon publishable key set
+2. **Middleware**: Authon middleware protecting correct routes (Next.js)
 3. **Provider wrap**: Root component wrapped in `<AuthonProvider>`
 4. **Sign in flow**: Modal opens and authenticates correctly
-5. **Server-side**: `currentUser()` / `auth()` / `verifyToken()` working
-6. **Webhooks**: Updated to use Authon webhook format (`x-authon-signature`, `x-authon-timestamp`)
-7. **User data**: All users migrated with `externalId` mapping
-8. **OAuth providers**: Re-configured in Authon dashboard with same redirect URIs
-9. **Old packages**: Fully removed from `package.json`
-10. **Database**: Removed old session/account tables if using Auth.js adapters
+5. **OAuth providers**: Re-configured in Authon dashboard with same redirect URIs
+6. **Old packages**: Fully removed from `package.json`
+7. **Database**: Removed old session/account tables if using Auth.js adapters

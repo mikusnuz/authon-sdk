@@ -18,7 +18,7 @@ import { provideAuthon } from '@authon/angular';
 
 export const appConfig = {
   providers: [
-    ...provideAuthon({ publishableKey: 'pk_live_...', config: { apiUrl: 'https://your-authon-server.com' } }),
+    ...provideAuthon({ publishableKey: 'pk_live_...' }),
   ],
 };
 ```
@@ -41,7 +41,6 @@ const user = this.authon.user;
 
 | 변수 | 필수 | 설명 |
 |------|------|------|
-| `AUTHON_API_URL` | Yes | Authon 서버 URL |
 | `AUTHON_PUBLISHABLE_KEY` | Yes | 퍼블리셔블 키 |
 
 ## 라이선스
