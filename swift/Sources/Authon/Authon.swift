@@ -525,6 +525,10 @@ public final class Authon: ObservableObject {
         return sessionManager.getAccessToken()
     }
 
+    public func getRefreshToken() -> String? {
+        return sessionManager.getRefreshToken()
+    }
+
     // MARK: - Events
 
     @discardableResult

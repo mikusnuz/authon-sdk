@@ -97,6 +97,10 @@ final class SessionManager {
         return tokens?.accessToken
     }
 
+    func getRefreshToken() -> String? {
+        return tokens?.refreshToken
+    }
+
     func isAuthenticated() -> Bool {
         guard let tokens else { return false }
         // expiresAt is in milliseconds
