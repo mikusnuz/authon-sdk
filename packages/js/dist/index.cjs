@@ -22,6 +22,7 @@ var index_exports = {};
 __export(index_exports, {
   Authon: () => Authon,
   AuthonMfaRequiredError: () => AuthonMfaRequiredError,
+  ProfileRenderer: () => ProfileRenderer,
   generateQrSvg: () => generateQrSvg,
   getProviderButtonConfig: () => getProviderButtonConfig,
   getStrings: () => getStrings,
@@ -120,7 +121,13 @@ var translations = {
     magicLink: "Continue with Magic Link",
     passkey: "Sign in with Passkey",
     securedBy: "Secured by",
-    backToSignIn: "Back to sign in"
+    backToSignIn: "Back to sign in",
+    profile: "Profile",
+    editProfile: "Edit Profile",
+    displayName: "Display Name",
+    save: "Save",
+    signOut: "Sign Out",
+    sessions: "Active Sessions"
   },
   ko: {
     welcomeBack: "\uB2E4\uC2DC \uC624\uC2E0 \uAC78 \uD658\uC601\uD569\uB2C8\uB2E4",
@@ -138,7 +145,13 @@ var translations = {
     magicLink: "\uB9E4\uC9C1 \uB9C1\uD06C\uB85C \uACC4\uC18D\uD558\uAE30",
     passkey: "\uD328\uC2A4\uD0A4\uB85C \uB85C\uADF8\uC778",
     securedBy: "\uBCF4\uC548 \uC81C\uACF5",
-    backToSignIn: "\uB85C\uADF8\uC778\uC73C\uB85C \uB3CC\uC544\uAC00\uAE30"
+    backToSignIn: "\uB85C\uADF8\uC778\uC73C\uB85C \uB3CC\uC544\uAC00\uAE30",
+    profile: "\uD504\uB85C\uD544",
+    editProfile: "\uD504\uB85C\uD544 \uD3B8\uC9D1",
+    displayName: "\uD45C\uC2DC \uC774\uB984",
+    save: "\uC800\uC7A5",
+    signOut: "\uB85C\uADF8\uC544\uC6C3",
+    sessions: "\uD65C\uC131 \uC138\uC158"
   },
   ja: {
     welcomeBack: "\u304A\u304B\u3048\u308A\u306A\u3055\u3044",
@@ -156,7 +169,13 @@ var translations = {
     magicLink: "\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3067\u7D9A\u884C",
     passkey: "\u30D1\u30B9\u30AD\u30FC\u3067\u30ED\u30B0\u30A4\u30F3",
     securedBy: "\u30BB\u30AD\u30E5\u30EA\u30C6\u30A3\u63D0\u4F9B",
-    backToSignIn: "\u30ED\u30B0\u30A4\u30F3\u306B\u623B\u308B"
+    backToSignIn: "\u30ED\u30B0\u30A4\u30F3\u306B\u623B\u308B",
+    profile: "\u30D7\u30ED\u30D5\u30A3\u30FC\u30EB",
+    editProfile: "\u30D7\u30ED\u30D5\u30A3\u30FC\u30EB\u7DE8\u96C6",
+    displayName: "\u8868\u793A\u540D",
+    save: "\u4FDD\u5B58",
+    signOut: "\u30B5\u30A4\u30F3\u30A2\u30A6\u30C8",
+    sessions: "\u30A2\u30AF\u30C6\u30A3\u30D6\u30BB\u30C3\u30B7\u30E7\u30F3"
   },
   "zh-CN": {
     welcomeBack: "\u6B22\u8FCE\u56DE\u6765",
@@ -174,7 +193,13 @@ var translations = {
     magicLink: "\u4F7F\u7528\u9B54\u6CD5\u94FE\u63A5\u7EE7\u7EED",
     passkey: "\u4F7F\u7528\u901A\u884C\u5BC6\u94A5\u767B\u5F55",
     securedBy: "\u5B89\u5168\u4FDD\u969C",
-    backToSignIn: "\u8FD4\u56DE\u767B\u5F55"
+    backToSignIn: "\u8FD4\u56DE\u767B\u5F55",
+    profile: "\u4E2A\u4EBA\u8D44\u6599",
+    editProfile: "\u7F16\u8F91\u8D44\u6599",
+    displayName: "\u663E\u793A\u540D\u79F0",
+    save: "\u4FDD\u5B58",
+    signOut: "\u9000\u51FA\u767B\u5F55",
+    sessions: "\u6D3B\u8DC3\u4F1A\u8BDD"
   },
   "zh-TW": {
     welcomeBack: "\u6B61\u8FCE\u56DE\u4F86",
@@ -192,7 +217,13 @@ var translations = {
     magicLink: "\u4F7F\u7528\u9B54\u6CD5\u9023\u7D50\u7E7C\u7E8C",
     passkey: "\u4F7F\u7528\u901A\u884C\u91D1\u9470\u767B\u5165",
     securedBy: "\u5B89\u5168\u4FDD\u969C",
-    backToSignIn: "\u8FD4\u56DE\u767B\u5165"
+    backToSignIn: "\u8FD4\u56DE\u767B\u5165",
+    profile: "\u500B\u4EBA\u8CC7\u6599",
+    editProfile: "\u7DE8\u8F2F\u8CC7\u6599",
+    displayName: "\u986F\u793A\u540D\u7A31",
+    save: "\u5132\u5B58",
+    signOut: "\u767B\u51FA",
+    sessions: "\u6D3B\u8E8D\u5DE5\u4F5C\u968E\u6BB5"
   },
   "pt-BR": {
     welcomeBack: "Bem-vindo de volta",
@@ -210,7 +241,13 @@ var translations = {
     magicLink: "Continuar com Magic Link",
     passkey: "Entrar com Passkey",
     securedBy: "Protegido por",
-    backToSignIn: "Voltar ao login"
+    backToSignIn: "Voltar ao login",
+    profile: "Perfil",
+    editProfile: "Editar perfil",
+    displayName: "Nome de exibicao",
+    save: "Salvar",
+    signOut: "Sair",
+    sessions: "Sessoes ativas"
   },
   es: {
     welcomeBack: "Bienvenido de nuevo",
@@ -228,7 +265,13 @@ var translations = {
     magicLink: "Continuar con Magic Link",
     passkey: "Iniciar con Passkey",
     securedBy: "Protegido por",
-    backToSignIn: "Volver al inicio de sesion"
+    backToSignIn: "Volver al inicio de sesion",
+    profile: "Perfil",
+    editProfile: "Editar perfil",
+    displayName: "Nombre de visualizacion",
+    save: "Guardar",
+    signOut: "Cerrar sesion",
+    sessions: "Sesiones activas"
   },
   de: {
     welcomeBack: "Willkommen zuruck",
@@ -246,7 +289,13 @@ var translations = {
     magicLink: "Weiter mit Magic Link",
     passkey: "Mit Passkey anmelden",
     securedBy: "Gesichert durch",
-    backToSignIn: "Zuruck zur Anmeldung"
+    backToSignIn: "Zuruck zur Anmeldung",
+    profile: "Profil",
+    editProfile: "Profil bearbeiten",
+    displayName: "Anzeigename",
+    save: "Speichern",
+    signOut: "Abmelden",
+    sessions: "Aktive Sitzungen"
   },
   fr: {
     welcomeBack: "Bon retour",
@@ -264,7 +313,13 @@ var translations = {
     magicLink: "Continuer avec Magic Link",
     passkey: "Se connecter avec Passkey",
     securedBy: "Securise par",
-    backToSignIn: "Retour a la connexion"
+    backToSignIn: "Retour a la connexion",
+    profile: "Profil",
+    editProfile: "Modifier le profil",
+    displayName: "Nom d'affichage",
+    save: "Enregistrer",
+    signOut: "Se deconnecter",
+    sessions: "Sessions actives"
   },
   hi: {
     welcomeBack: "\u0935\u093E\u092A\u0938\u0940 \u092A\u0930 \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
@@ -282,7 +337,13 @@ var translations = {
     magicLink: "\u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u0938\u0947 \u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902",
     passkey: "\u092A\u093E\u0938\u0915\u0940 \u0938\u0947 \u0938\u093E\u0907\u0928 \u0907\u0928",
     securedBy: "\u0938\u0941\u0930\u0915\u094D\u0937\u093E \u092A\u094D\u0930\u0926\u093E\u0924\u093E",
-    backToSignIn: "\u0938\u093E\u0907\u0928 \u0907\u0928 \u092A\u0930 \u0935\u093E\u092A\u0938 \u091C\u093E\u090F\u0902"
+    backToSignIn: "\u0938\u093E\u0907\u0928 \u0907\u0928 \u092A\u0930 \u0935\u093E\u092A\u0938 \u091C\u093E\u090F\u0902",
+    profile: "\u092A\u094D\u0930\u094B\u092B\u093C\u093E\u0907\u0932",
+    editProfile: "\u092A\u094D\u0930\u094B\u092B\u093C\u093E\u0907\u0932 \u0938\u0902\u092A\u093E\u0926\u093F\u0924 \u0915\u0930\u0947\u0902",
+    displayName: "\u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0928\u093E\u092E",
+    save: "\u0938\u0939\u0947\u091C\u0947\u0902",
+    signOut: "\u0938\u093E\u0907\u0928 \u0906\u0909\u091F",
+    sessions: "\u0938\u0915\u094D\u0930\u093F\u092F \u0938\u0924\u094D\u0930"
   },
   tr: {
     welcomeBack: "Tekrar hos geldiniz",
@@ -300,7 +361,13 @@ var translations = {
     magicLink: "Magic Link ile devam et",
     passkey: "Passkey ile giris yap",
     securedBy: "Guvenlik saglayici",
-    backToSignIn: "Girise don"
+    backToSignIn: "Girise don",
+    profile: "Profil",
+    editProfile: "Profili duzenle",
+    displayName: "Goruntu adi",
+    save: "Kaydet",
+    signOut: "Cikis yap",
+    sessions: "Aktif oturumlar"
   },
   id: {
     welcomeBack: "Selamat datang kembali",
@@ -318,7 +385,13 @@ var translations = {
     magicLink: "Lanjutkan dengan Magic Link",
     passkey: "Masuk dengan Passkey",
     securedBy: "Diamankan oleh",
-    backToSignIn: "Kembali ke login"
+    backToSignIn: "Kembali ke login",
+    profile: "Profil",
+    editProfile: "Edit profil",
+    displayName: "Nama tampilan",
+    save: "Simpan",
+    signOut: "Keluar",
+    sessions: "Sesi aktif"
   },
   vi: {
     welcomeBack: "Chao mung tro lai",
@@ -336,7 +409,13 @@ var translations = {
     magicLink: "Tiep tuc voi Magic Link",
     passkey: "Dang nhap voi Passkey",
     securedBy: "Bao mat boi",
-    backToSignIn: "Quay lai dang nhap"
+    backToSignIn: "Quay lai dang nhap",
+    profile: "Ho so",
+    editProfile: "Chinh sua ho so",
+    displayName: "Ten hien thi",
+    save: "Luu",
+    signOut: "Dang xuat",
+    sessions: "Phien dang nhap hoat dong"
   },
   th: {
     welcomeBack: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E01\u0E25\u0E31\u0E1A",
@@ -354,7 +433,13 @@ var translations = {
     magicLink: "\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E14\u0E49\u0E27\u0E22 Magic Link",
     passkey: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22 Passkey",
     securedBy: "\u0E23\u0E31\u0E01\u0E29\u0E32\u0E04\u0E27\u0E32\u0E21\u0E1B\u0E25\u0E2D\u0E14\u0E20\u0E31\u0E22\u0E42\u0E14\u0E22",
-    backToSignIn: "\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A"
+    backToSignIn: "\u0E01\u0E25\u0E31\u0E1A\u0E44\u0E1B\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A",
+    profile: "\u0E42\u0E1B\u0E23\u0E44\u0E1F\u0E25\u0E4C",
+    editProfile: "\u0E41\u0E01\u0E49\u0E44\u0E02\u0E42\u0E1B\u0E23\u0E44\u0E1F\u0E25\u0E4C",
+    displayName: "\u0E0A\u0E37\u0E48\u0E2D\u0E17\u0E35\u0E48\u0E41\u0E2A\u0E14\u0E07",
+    save: "\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01",
+    signOut: "\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E23\u0E30\u0E1A\u0E1A",
+    sessions: "\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19\u0E17\u0E35\u0E48\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48"
   },
   ru: {
     welcomeBack: "\u0421 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435\u043C",
@@ -372,7 +457,13 @@ var translations = {
     magicLink: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0441 Magic Link",
     passkey: "\u0412\u043E\u0439\u0442\u0438 \u0441 Passkey",
     securedBy: "\u0417\u0430\u0449\u0438\u0449\u0435\u043D\u043E",
-    backToSignIn: "\u0412\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043A \u0432\u0445\u043E\u0434\u0443"
+    backToSignIn: "\u0412\u0435\u0440\u043D\u0443\u0442\u044C\u0441\u044F \u043A \u0432\u0445\u043E\u0434\u0443",
+    profile: "\u041F\u0440\u043E\u0444\u0438\u043B\u044C",
+    editProfile: "\u0420\u0435\u0434\u0430\u043A\u0442\u0438\u0440\u043E\u0432\u0430\u0442\u044C \u043F\u0440\u043E\u0444\u0438\u043B\u044C",
+    displayName: "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u043C\u043E\u0435 \u0438\u043C\u044F",
+    save: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C",
+    signOut: "\u0412\u044B\u0439\u0442\u0438",
+    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0441\u0435\u0430\u043D\u0441\u044B"
   },
   it: {
     welcomeBack: "Bentornato",
@@ -390,7 +481,13 @@ var translations = {
     magicLink: "Continua con Magic Link",
     passkey: "Accedi con Passkey",
     securedBy: "Protetto da",
-    backToSignIn: "Torna all'accesso"
+    backToSignIn: "Torna all'accesso",
+    profile: "Profilo",
+    editProfile: "Modifica profilo",
+    displayName: "Nome visualizzato",
+    save: "Salva",
+    signOut: "Esci",
+    sessions: "Sessioni attive"
   },
   pl: {
     welcomeBack: "Witaj ponownie",
@@ -408,7 +505,13 @@ var translations = {
     magicLink: "Kontynuuj z Magic Link",
     passkey: "Zaloguj sie z Passkey",
     securedBy: "Zabezpieczone przez",
-    backToSignIn: "Powrot do logowania"
+    backToSignIn: "Powrot do logowania",
+    profile: "Profil",
+    editProfile: "Edytuj profil",
+    displayName: "Nazwa wyswietlana",
+    save: "Zapisz",
+    signOut: "Wyloguj sie",
+    sessions: "Aktywne sesje"
   },
   nl: {
     welcomeBack: "Welkom terug",
@@ -426,7 +529,13 @@ var translations = {
     magicLink: "Doorgaan met Magic Link",
     passkey: "Inloggen met Passkey",
     securedBy: "Beveiligd door",
-    backToSignIn: "Terug naar inloggen"
+    backToSignIn: "Terug naar inloggen",
+    profile: "Profiel",
+    editProfile: "Profiel bewerken",
+    displayName: "Weergavenaam",
+    save: "Opslaan",
+    signOut: "Uitloggen",
+    sessions: "Actieve sessies"
   },
   ar: {
     welcomeBack: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0639\u0648\u062F\u062A\u0643",
@@ -444,7 +553,13 @@ var translations = {
     magicLink: "\u0627\u0644\u0645\u062A\u0627\u0628\u0639\u0629 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 Magic Link",
     passkey: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 Passkey",
     securedBy: "\u0645\u062D\u0645\u064A \u0628\u0648\u0627\u0633\u0637\u0629",
-    backToSignIn: "\u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644"
+    backToSignIn: "\u0627\u0644\u0639\u0648\u062F\u0629 \u0644\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644",
+    profile: "\u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062E\u0635\u064A",
+    editProfile: "\u062A\u0639\u062F\u064A\u0644 \u0627\u0644\u0645\u0644\u0641 \u0627\u0644\u0634\u062E\u0635\u064A",
+    displayName: "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0631\u0648\u0636",
+    save: "\u062D\u0641\u0638",
+    signOut: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062E\u0631\u0648\u062C",
+    sessions: "\u0627\u0644\u062C\u0644\u0633\u0627\u062A \u0627\u0644\u0646\u0634\u0637\u0629"
   },
   sv: {
     welcomeBack: "Valkommen tillbaka",
@@ -462,7 +577,13 @@ var translations = {
     magicLink: "Fortsatt med Magic Link",
     passkey: "Logga in med Passkey",
     securedBy: "Sakrad av",
-    backToSignIn: "Tillbaka till inloggning"
+    backToSignIn: "Tillbaka till inloggning",
+    profile: "Profil",
+    editProfile: "Redigera profil",
+    displayName: "Visningsnamn",
+    save: "Spara",
+    signOut: "Logga ut",
+    sessions: "Aktiva sessioner"
   },
   uk: {
     welcomeBack: "\u0417 \u043F\u043E\u0432\u0435\u0440\u043D\u0435\u043D\u043D\u044F\u043C",
@@ -480,7 +601,13 @@ var translations = {
     magicLink: "\u041F\u0440\u043E\u0434\u043E\u0432\u0436\u0438\u0442\u0438 \u0437 Magic Link",
     passkey: "\u0423\u0432\u0456\u0439\u0442\u0438 \u0437 Passkey",
     securedBy: "\u0417\u0430\u0445\u0438\u0449\u0435\u043D\u043E",
-    backToSignIn: "\u041F\u043E\u0432\u0435\u0440\u043D\u0443\u0442\u0438\u0441\u044F \u0434\u043E \u0432\u0445\u043E\u0434\u0443"
+    backToSignIn: "\u041F\u043E\u0432\u0435\u0440\u043D\u0443\u0442\u0438\u0441\u044F \u0434\u043E \u0432\u0445\u043E\u0434\u0443",
+    profile: "\u041F\u0440\u043E\u0444\u0456\u043B\u044C",
+    editProfile: "\u0420\u0435\u0434\u0430\u0433\u0443\u0432\u0430\u0442\u0438 \u043F\u0440\u043E\u0444\u0456\u043B\u044C",
+    displayName: "\u0412\u0456\u0434\u043E\u0431\u0440\u0430\u0436\u0443\u0432\u0430\u043D\u0435 \u0456\u043C'\u044F",
+    save: "\u0417\u0431\u0435\u0440\u0435\u0433\u0442\u0438",
+    signOut: "\u0412\u0438\u0439\u0442\u0438",
+    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u0456 \u0441\u0435\u0430\u043D\u0441\u0438"
   }
 };
 function getStrings(locale) {
@@ -1604,6 +1731,676 @@ var ModalRenderer = class {
   }
 };
 
+// src/profile.ts
+function hexToRgba2(hex, alpha) {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return "\u2014";
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const minutes = Math.floor(diff / 6e4);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+function parseUserAgent(ua) {
+  if (!ua) return "Unknown device";
+  if (/iPhone|iPad/.test(ua)) return "iOS";
+  if (/Android/.test(ua)) return "Android";
+  if (/Windows/.test(ua)) return "Windows";
+  if (/Macintosh|Mac OS/.test(ua)) return "macOS";
+  if (/Linux/.test(ua)) return "Linux";
+  return "Unknown device";
+}
+var ProfileRenderer = class {
+  shadowRoot = null;
+  hostElement = null;
+  containerElement = null;
+  containerId = null;
+  mode;
+  theme;
+  branding;
+  themeObserver = null;
+  mediaQueryListener = null;
+  t;
+  user;
+  sessions;
+  isEditMode = false;
+  onSave;
+  onSignOut;
+  onRevokeSession;
+  onClose;
+  escHandler = null;
+  constructor(options) {
+    this.mode = options.mode;
+    this.theme = options.theme || "auto";
+    this.branding = { ...DEFAULT_BRANDING, ...options.branding };
+    this.t = getStrings(options.locale || "en");
+    this.user = options.user;
+    this.sessions = options.sessions || [];
+    this.onSave = options.onSave;
+    this.onSignOut = options.onSignOut;
+    this.onRevokeSession = options.onRevokeSession;
+    this.onClose = options.onClose;
+    if (options.mode === "embedded" && options.containerId) {
+      this.containerId = options.containerId;
+    }
+  }
+  resolveContainerElement() {
+    if (this.mode !== "embedded" || !this.containerId) return null;
+    const next = document.getElementById(this.containerId);
+    if (this.containerElement !== next) {
+      this.hostElement?.remove();
+      this.hostElement = null;
+      this.shadowRoot = null;
+    }
+    this.containerElement = next;
+    return next;
+  }
+  open() {
+    this.resolveContainerElement();
+    if (this.hostElement && !this.hostElement.isConnected) {
+      this.hostElement = null;
+      this.shadowRoot = null;
+    }
+    if (this.shadowRoot && this.hostElement) {
+      this.rerender();
+    } else {
+      this.isEditMode = false;
+      this.render();
+    }
+  }
+  close() {
+    this.stopThemeObserver();
+    if (this.escHandler) {
+      document.removeEventListener("keydown", this.escHandler);
+      this.escHandler = null;
+    }
+    if (this.hostElement) {
+      this.hostElement.remove();
+      this.hostElement = null;
+      this.shadowRoot = null;
+    }
+    const liveContainer = this.resolveContainerElement();
+    if (liveContainer) {
+      liveContainer.replaceChildren();
+    }
+  }
+  updateUser(user) {
+    this.user = user;
+    if (this.shadowRoot) this.rerender();
+  }
+  updateSessions(sessions) {
+    this.sessions = sessions;
+    if (this.shadowRoot) this.rerender();
+  }
+  setTheme(theme) {
+    this.theme = theme;
+    this.updateThemeCSS();
+    if (theme === "auto") {
+      this.startThemeObserver();
+    } else {
+      this.stopThemeObserver();
+    }
+  }
+  showSaving() {
+    if (!this.shadowRoot) return;
+    const btn = this.shadowRoot.getElementById("profile-save-btn");
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "...";
+    }
+  }
+  showSaveError(message) {
+    if (!this.shadowRoot) return;
+    const btn = this.shadowRoot.getElementById("profile-save-btn");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = this.t.save;
+    }
+    this.showInlineError("profile-error", message);
+  }
+  showInlineError(id, message) {
+    if (!this.shadowRoot) return;
+    this.shadowRoot.getElementById(id)?.remove();
+    const errEl = document.createElement("div");
+    errEl.id = id;
+    errEl.className = "error-msg";
+    errEl.textContent = message;
+    this.shadowRoot.querySelector(".profile-actions")?.appendChild(errEl);
+  }
+  updateThemeCSS() {
+    if (!this.shadowRoot) return;
+    const styleEl = this.shadowRoot.getElementById("authon-profile-theme-style");
+    if (styleEl) styleEl.textContent = this.buildCSS();
+  }
+  startThemeObserver() {
+    this.stopThemeObserver();
+    if (typeof document === "undefined" || typeof window === "undefined") return;
+    this.themeObserver = new MutationObserver(() => this.updateThemeCSS());
+    this.themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme", "class"]
+    });
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    this.mediaQueryListener = () => this.updateThemeCSS();
+    mq.addEventListener("change", this.mediaQueryListener);
+  }
+  stopThemeObserver() {
+    if (this.themeObserver) {
+      this.themeObserver.disconnect();
+      this.themeObserver = null;
+    }
+    if (this.mediaQueryListener) {
+      window.matchMedia("(prefers-color-scheme: dark)").removeEventListener("change", this.mediaQueryListener);
+      this.mediaQueryListener = null;
+    }
+  }
+  isDark() {
+    if (this.theme === "dark") return true;
+    if (this.theme === "light") return false;
+    if (typeof document !== "undefined") {
+      const html = document.documentElement;
+      if (html.classList.contains("dark") || html.getAttribute("data-theme") === "dark") return true;
+      if (html.classList.contains("light") || html.getAttribute("data-theme") === "light") return false;
+    }
+    return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  render() {
+    const host = document.createElement("div");
+    host.setAttribute("data-authon-profile", "");
+    this.hostElement = host;
+    if (this.mode === "popup") {
+      document.body.appendChild(host);
+    } else {
+      const container = this.resolveContainerElement();
+      if (!container) {
+        this.hostElement = null;
+        throw new Error(`Authon profile container "#${this.containerId}" not found`);
+      }
+      container.replaceChildren();
+      container.appendChild(host);
+    }
+    this.shadowRoot = host.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = this.buildShell();
+    this.attachEvents();
+    if (this.mode === "popup") {
+      this.escHandler = (e) => {
+        if (e.key === "Escape") {
+          this.onClose();
+          this.close();
+        }
+      };
+      document.addEventListener("keydown", this.escHandler);
+    }
+    if (this.theme === "auto") this.startThemeObserver();
+  }
+  rerender() {
+    if (!this.shadowRoot) return;
+    const inner = this.shadowRoot.getElementById("profile-inner");
+    if (!inner) return;
+    inner.style.opacity = "0";
+    inner.style.transform = "translateY(-4px)";
+    setTimeout(() => {
+      inner.innerHTML = this.buildInnerContent();
+      this.attachInnerEvents();
+      void inner.offsetHeight;
+      inner.style.opacity = "1";
+      inner.style.transform = "translateY(0)";
+    }, 120);
+  }
+  buildShell() {
+    const popupWrapper = this.mode === "popup" ? `<div class="backdrop" id="profile-backdrop"></div>` : "";
+    return `
+      <style id="authon-profile-theme-style">${this.buildCSS()}</style>
+      ${popupWrapper}
+      <div class="profile-container" role="dialog" aria-modal="true" aria-label="${this.t.profile}">
+        <div id="profile-inner" class="profile-inner">
+          ${this.buildInnerContent()}
+        </div>
+      </div>
+    `;
+  }
+  buildInnerContent() {
+    const u = this.user;
+    const initials = (u.displayName || u.email || "?").split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
+    const avatarHtml = u.avatarUrl ? `<img class="avatar-img" src="${u.avatarUrl}" alt="${u.displayName || ""}" />` : `<div class="avatar-placeholder">${initials}</div>`;
+    const closeBtn = this.mode === "popup" ? `<button class="close-btn" id="profile-close-btn" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </button>` : "";
+    if (this.isEditMode) {
+      return this.buildEditContent(avatarHtml, closeBtn);
+    }
+    return this.buildViewContent(avatarHtml, closeBtn, u);
+  }
+  buildViewContent(avatarHtml, closeBtn, u) {
+    const sessionsHtml = this.sessions.length > 0 ? `<div class="section">
+          <div class="section-label">${this.t.sessions}</div>
+          <div class="sessions-list">
+            ${this.sessions.map((s) => `
+              <div class="session-item" data-session-id="${s.id}">
+                <div class="session-info">
+                  <span class="session-device">${parseUserAgent(s.userAgent)}</span>
+                  <span class="session-meta">${s.ipAddress || ""} &middot; ${formatRelativeTime(s.lastActiveAt)}</span>
+                </div>
+                <button class="session-revoke-btn" data-session-id="${s.id}" aria-label="Revoke session">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                    <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+            `).join("")}
+          </div>
+        </div>` : "";
+    return `
+      <div class="profile-header">
+        <div class="avatar-wrap">${avatarHtml}</div>
+        <div class="header-text">
+          <div class="display-name">${u.displayName || "\u2014"}</div>
+          <div class="email">${u.email || "\u2014"}</div>
+        </div>
+        ${closeBtn}
+      </div>
+
+      <div class="section">
+        <div class="field-row">
+          <span class="field-label">${this.t.emailAddress}</span>
+          <span class="field-value readonly">${u.email || "\u2014"}</span>
+        </div>
+        <div class="field-row">
+          <span class="field-label">${this.t.displayName}</span>
+          <span class="field-value">${u.displayName || "\u2014"}</span>
+        </div>
+      </div>
+
+      ${sessionsHtml}
+
+      <div class="profile-actions">
+        <button class="edit-btn" id="profile-edit-btn">${this.t.editProfile}</button>
+        <button class="signout-btn" id="profile-signout-btn">${this.t.signOut}</button>
+      </div>
+    `;
+  }
+  buildEditContent(avatarHtml, closeBtn) {
+    const u = this.user;
+    return `
+      <div class="profile-header">
+        <div class="avatar-wrap">${avatarHtml}</div>
+        <div class="header-text">
+          <div class="display-name">${this.t.editProfile}</div>
+          <div class="email">${u.email || "\u2014"}</div>
+        </div>
+        ${closeBtn}
+      </div>
+
+      <div class="section">
+        <div class="field-group">
+          <label class="field-label" for="profile-displayname-input">${this.t.displayName}</label>
+          <input
+            id="profile-displayname-input"
+            class="input"
+            type="text"
+            value="${u.displayName || ""}"
+            placeholder="${this.t.displayName}"
+            autocomplete="name"
+          />
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="profile-avatar-input">Avatar URL</label>
+          <input
+            id="profile-avatar-input"
+            class="input"
+            type="url"
+            value="${u.avatarUrl || ""}"
+            placeholder="https://..."
+            autocomplete="off"
+          />
+        </div>
+        <div class="field-group">
+          <label class="field-label">${this.t.emailAddress}</label>
+          <input class="input readonly" type="email" value="${u.email || ""}" disabled />
+        </div>
+      </div>
+
+      <div class="profile-actions">
+        <button class="save-btn" id="profile-save-btn">${this.t.save}</button>
+        <button class="cancel-btn" id="profile-cancel-btn">Cancel</button>
+      </div>
+    `;
+  }
+  buildCSS() {
+    const b = this.branding;
+    const dark = this.isDark();
+    const bg = dark ? b.darkBg || "#0f172a" : b.lightBg || "#ffffff";
+    const text = dark ? b.darkText || "#f1f5f9" : b.lightText || "#111827";
+    const mutedText = dark ? "#94a3b8" : "#6b7280";
+    const dimText = dark ? "#64748b" : "#9ca3af";
+    const borderColor = dark ? "#334155" : "#d1d5db";
+    const dividerColor = dark ? "#334155" : "#e5e7eb";
+    const inputBg = dark ? "#1e293b" : "#ffffff";
+    const sectionBg = dark ? "#1e293b" : "#f9fafb";
+    const sessionItemBg = dark ? "#263148" : "#f3f4f6";
+    return `
+      :host {
+        --authon-primary-start: ${b.primaryColorStart || "#7c3aed"};
+        --authon-primary-end: ${b.primaryColorEnd || "#4f46e5"};
+        --authon-bg: ${bg};
+        --authon-text: ${text};
+        --authon-muted: ${mutedText};
+        --authon-dim: ${dimText};
+        --authon-border: ${borderColor};
+        --authon-divider: ${dividerColor};
+        --authon-input-bg: ${inputBg};
+        --authon-section-bg: ${sectionBg};
+        --authon-session-bg: ${sessionItemBg};
+        --authon-backdrop-bg: rgba(0,0,0,${dark ? "0.7" : "0.5"});
+        --authon-radius: ${b.borderRadius ?? 12}px;
+        --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-family: var(--authon-font);
+        color: var(--authon-text);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      .backdrop {
+        position: fixed; inset: 0; z-index: 99998;
+        background: var(--authon-backdrop-bg); backdrop-filter: blur(4px);
+        animation: fadeIn 0.2s ease;
+      }
+
+      .profile-container {
+        ${this.mode === "popup" ? "position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 99999; max-height: 90vh; overflow-y: auto;" : ""}
+        background: var(--authon-bg);
+        color: var(--authon-text);
+        border: 1px solid var(--authon-border);
+        border-radius: var(--authon-radius);
+        padding: 24px;
+        width: 380px; max-width: 100%;
+        ${this.mode === "popup" ? `box-shadow: 0 25px 50px -12px rgba(0,0,0,${dark ? "0.5" : "0.25"}); animation: slideIn 0.3s ease;` : ""}
+      }
+
+      .profile-inner {
+        transition: opacity 0.12s ease, transform 0.12s ease;
+      }
+
+      .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 20px;
+        position: relative;
+      }
+
+      .avatar-wrap { flex-shrink: 0; }
+
+      .avatar-img {
+        width: 52px; height: 52px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--authon-border);
+      }
+
+      .avatar-placeholder {
+        width: 52px; height: 52px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--authon-primary-start), var(--authon-primary-end));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 18px; font-weight: 700; color: #fff;
+        flex-shrink: 0;
+      }
+
+      .header-text { flex: 1; min-width: 0; }
+
+      .display-name {
+        font-size: 16px; font-weight: 600;
+        color: var(--authon-text);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .email {
+        font-size: 13px; color: var(--authon-muted);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        margin-top: 2px;
+      }
+
+      .close-btn {
+        position: absolute; top: 0; right: 0;
+        background: none; border: none;
+        color: var(--authon-muted); cursor: pointer;
+        padding: 4px; border-radius: 6px;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s, background 0.15s;
+      }
+      .close-btn:hover { color: var(--authon-text); background: var(--authon-divider); }
+
+      .section {
+        background: var(--authon-section-bg);
+        border: 1px solid var(--authon-border);
+        border-radius: calc(var(--authon-radius) * 0.67);
+        padding: 12px 14px;
+        margin-bottom: 12px;
+        display: flex; flex-direction: column; gap: 10px;
+      }
+
+      .section-label {
+        font-size: 11px; font-weight: 600;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--authon-dim); margin-bottom: 2px;
+      }
+
+      .field-row {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      }
+
+      .field-label {
+        font-size: 12px; color: var(--authon-muted); flex-shrink: 0;
+      }
+
+      .field-value {
+        font-size: 13px; color: var(--authon-text);
+        text-align: right; min-width: 0;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .field-value.readonly { color: var(--authon-dim); }
+
+      .field-group {
+        display: flex; flex-direction: column; gap: 4px;
+      }
+
+      .input {
+        width: 100%; padding: 9px 12px;
+        background: var(--authon-input-bg);
+        color: var(--authon-text);
+        border: 1px solid var(--authon-border);
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 13px; font-family: var(--authon-font);
+        outline: none; transition: border-color 0.15s;
+      }
+      .input::placeholder { color: var(--authon-dim); }
+      .input:focus { border-color: var(--authon-primary-start); box-shadow: 0 0 0 3px ${hexToRgba2(b.primaryColorStart || "#7c3aed", 0.15)}; }
+      .input.readonly, .input:disabled { color: var(--authon-dim); cursor: not-allowed; background: var(--authon-section-bg); }
+
+      .sessions-list { display: flex; flex-direction: column; gap: 6px; }
+
+      .session-item {
+        display: flex; align-items: center; justify-content: space-between;
+        background: var(--authon-session-bg);
+        border-radius: calc(var(--authon-radius) * 0.5);
+        padding: 8px 10px; gap: 8px;
+      }
+
+      .session-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
+      .session-device {
+        font-size: 13px; font-weight: 500; color: var(--authon-text);
+      }
+
+      .session-meta {
+        font-size: 11px; color: var(--authon-dim);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      .session-revoke-btn {
+        background: none; border: none;
+        color: var(--authon-dim); cursor: pointer;
+        padding: 4px; border-radius: 4px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        transition: color 0.15s, background 0.15s;
+      }
+      .session-revoke-btn:hover { color: #ef4444; background: rgba(239,68,68,0.1); }
+
+      .profile-actions {
+        display: flex; flex-direction: column; gap: 8px;
+        margin-top: 4px;
+      }
+
+      .edit-btn {
+        width: 100%; padding: 10px;
+        background: linear-gradient(135deg, var(--authon-primary-start), var(--authon-primary-end));
+        color: #fff; border: none;
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 14px; font-weight: 600; cursor: pointer;
+        font-family: var(--authon-font); transition: opacity 0.15s;
+      }
+      .edit-btn:hover { opacity: 0.9; }
+
+      .save-btn {
+        width: 100%; padding: 10px;
+        background: linear-gradient(135deg, var(--authon-primary-start), var(--authon-primary-end));
+        color: #fff; border: none;
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 14px; font-weight: 600; cursor: pointer;
+        font-family: var(--authon-font); transition: opacity 0.15s;
+      }
+      .save-btn:hover { opacity: 0.9; }
+      .save-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+      .cancel-btn {
+        width: 100%; padding: 10px;
+        background: none;
+        color: var(--authon-muted);
+        border: 1px solid var(--authon-border);
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 14px; font-weight: 500; cursor: pointer;
+        font-family: var(--authon-font); transition: background 0.15s, color 0.15s;
+      }
+      .cancel-btn:hover { background: var(--authon-divider); color: var(--authon-text); }
+
+      .signout-btn {
+        width: 100%; padding: 10px;
+        background: none;
+        color: #ef4444;
+        border: 1px solid rgba(239,68,68,0.3);
+        border-radius: calc(var(--authon-radius) * 0.5);
+        font-size: 14px; font-weight: 500; cursor: pointer;
+        font-family: var(--authon-font); transition: background 0.15s;
+      }
+      .signout-btn:hover { background: rgba(239,68,68,0.08); }
+
+      .error-msg {
+        padding: 8px 12px;
+        background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3);
+        border-radius: calc(var(--authon-radius) * 0.33);
+        font-size: 13px; color: #ef4444; text-align: center;
+        animation: fadeIn 0.15s ease;
+      }
+
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes slideIn { from { opacity: 0; transform: translate(-50%, calc(-50% - 8px)); } to { opacity: 1; transform: translate(-50%, -50%); } }
+    `;
+  }
+  attachEvents() {
+    this.attachBackdropEvent();
+    this.attachInnerEvents();
+  }
+  attachBackdropEvent() {
+    if (!this.shadowRoot || this.mode !== "popup") return;
+    const backdrop = this.shadowRoot.getElementById("profile-backdrop");
+    if (backdrop) {
+      backdrop.addEventListener("click", () => {
+        this.onClose();
+        this.close();
+      });
+    }
+  }
+  attachInnerEvents() {
+    if (!this.shadowRoot) return;
+    const closeBtn = this.shadowRoot.getElementById("profile-close-btn");
+    closeBtn?.addEventListener("click", () => {
+      this.onClose();
+      this.close();
+    });
+    const editBtn = this.shadowRoot.getElementById("profile-edit-btn");
+    editBtn?.addEventListener("click", () => {
+      this.isEditMode = true;
+      this.rerender();
+    });
+    const cancelBtn = this.shadowRoot.getElementById("profile-cancel-btn");
+    cancelBtn?.addEventListener("click", () => {
+      this.isEditMode = false;
+      this.rerender();
+    });
+    const saveBtn = this.shadowRoot.getElementById("profile-save-btn");
+    saveBtn?.addEventListener("click", async () => {
+      const nameInput = this.shadowRoot.getElementById("profile-displayname-input");
+      const avatarInput = this.shadowRoot.getElementById("profile-avatar-input");
+      const displayName = nameInput?.value.trim();
+      const avatarUrl = avatarInput?.value.trim();
+      this.showSaving();
+      this.shadowRoot.getElementById("profile-error")?.remove();
+      try {
+        await this.onSave({
+          displayName: displayName || void 0,
+          avatarUrl: avatarUrl || void 0
+        });
+        this.isEditMode = false;
+        this.rerender();
+      } catch (err) {
+        this.showSaveError(err instanceof Error ? err.message : "Save failed");
+      }
+    });
+    const signOutBtn = this.shadowRoot.getElementById("profile-signout-btn");
+    signOutBtn?.addEventListener("click", async () => {
+      if (signOutBtn instanceof HTMLButtonElement) {
+        signOutBtn.disabled = true;
+        signOutBtn.textContent = "...";
+      }
+      try {
+        await this.onSignOut();
+        this.close();
+      } catch (_) {
+        if (signOutBtn instanceof HTMLButtonElement) {
+          signOutBtn.disabled = false;
+          signOutBtn.textContent = this.t.signOut;
+        }
+      }
+    });
+    this.shadowRoot.querySelectorAll(".session-revoke-btn").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const sessionId = btn.dataset.sessionId;
+        if (!sessionId) return;
+        btn.disabled = true;
+        try {
+          await this.onRevokeSession(sessionId);
+          this.sessions = this.sessions.filter((s) => s.id !== sessionId);
+          this.rerender();
+        } catch (_) {
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+};
+
 // src/session.ts
 var SessionManager = class {
   accessToken = null;
@@ -2133,6 +2930,7 @@ var Authon = class {
   config;
   session;
   modal = null;
+  profile = null;
   listeners = /* @__PURE__ */ new Map();
   branding = null;
   providers = [];
@@ -2166,9 +2964,56 @@ var Authon = class {
     await this.ensureInitialized();
     this.getModal().open("signUp");
   }
+  async openProfile() {
+    const user = this.getUser();
+    if (!user) throw new Error("Must be signed in to open profile");
+    const token = this.session.getToken();
+    let sessions = [];
+    if (token) {
+      try {
+        sessions = await this.listSessions();
+      } catch (_) {
+      }
+    }
+    if (!this.profile) {
+      this.profile = new ProfileRenderer({
+        mode: this.config.mode,
+        theme: this.config.theme,
+        locale: this.config.locale,
+        containerId: this.config.containerId,
+        branding: this.branding || void 0,
+        user,
+        sessions,
+        onSave: async (data) => {
+          const updated = await this.updateProfile(data);
+          this.profile?.updateUser(updated);
+        },
+        onSignOut: async () => {
+          await this.signOut();
+          this.profile = null;
+        },
+        onRevokeSession: async (sessionId) => {
+          await this.revokeSession(sessionId);
+        },
+        onClose: () => {
+          this.profile?.close();
+          this.profile = null;
+        }
+      });
+    } else {
+      this.profile.updateUser(user);
+      this.profile.updateSessions(sessions);
+    }
+    this.profile.open();
+  }
+  closeProfile() {
+    this.profile?.close();
+    this.profile = null;
+  }
   /** Update theme at runtime without destroying form state */
   setTheme(theme) {
     this.getModal().setTheme(theme);
+    this.profile?.setTheme(theme);
   }
   async signInWithOAuth(provider, options) {
     await this.ensureInitialized();
@@ -2481,6 +3326,8 @@ var Authon = class {
   }
   destroy() {
     this.modal?.close();
+    this.profile?.close();
+    this.profile = null;
     this.session.destroy();
     this.listeners.clear();
   }
@@ -2985,6 +3832,7 @@ var Authon = class {
 0 && (module.exports = {
   Authon,
   AuthonMfaRequiredError,
+  ProfileRenderer,
   generateQrSvg,
   getProviderButtonConfig,
   getStrings,

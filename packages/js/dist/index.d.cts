@@ -32,6 +32,7 @@ declare class Authon {
     private config;
     private session;
     private modal;
+    private profile;
     private listeners;
     private branding;
     private providers;
@@ -43,6 +44,8 @@ declare class Authon {
     getProviders(): Promise<OAuthProviderType[]>;
     openSignIn(): Promise<void>;
     openSignUp(): Promise<void>;
+    openProfile(): Promise<void>;
+    closeProfile(): void;
     /** Update theme at runtime without destroying form state */
     setTheme(theme: 'light' | 'dark' | 'auto'): void;
     signInWithOAuth(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void>;
@@ -176,6 +179,12 @@ declare const translations: {
         readonly passkey: "Sign in with Passkey";
         readonly securedBy: "Secured by";
         readonly backToSignIn: "Back to sign in";
+        readonly profile: "Profile";
+        readonly editProfile: "Edit Profile";
+        readonly displayName: "Display Name";
+        readonly save: "Save";
+        readonly signOut: "Sign Out";
+        readonly sessions: "Active Sessions";
     };
     readonly ko: {
         readonly welcomeBack: "다시 오신 걸 환영합니다";
@@ -194,6 +203,12 @@ declare const translations: {
         readonly passkey: "패스키로 로그인";
         readonly securedBy: "보안 제공";
         readonly backToSignIn: "로그인으로 돌아가기";
+        readonly profile: "프로필";
+        readonly editProfile: "프로필 편집";
+        readonly displayName: "표시 이름";
+        readonly save: "저장";
+        readonly signOut: "로그아웃";
+        readonly sessions: "활성 세션";
     };
     readonly ja: {
         readonly welcomeBack: "おかえりなさい";
@@ -212,6 +227,12 @@ declare const translations: {
         readonly passkey: "パスキーでログイン";
         readonly securedBy: "セキュリティ提供";
         readonly backToSignIn: "ログインに戻る";
+        readonly profile: "プロフィール";
+        readonly editProfile: "プロフィール編集";
+        readonly displayName: "表示名";
+        readonly save: "保存";
+        readonly signOut: "サインアウト";
+        readonly sessions: "アクティブセッション";
     };
     readonly 'zh-CN': {
         readonly welcomeBack: "欢迎回来";
@@ -230,6 +251,12 @@ declare const translations: {
         readonly passkey: "使用通行密钥登录";
         readonly securedBy: "安全保障";
         readonly backToSignIn: "返回登录";
+        readonly profile: "个人资料";
+        readonly editProfile: "编辑资料";
+        readonly displayName: "显示名称";
+        readonly save: "保存";
+        readonly signOut: "退出登录";
+        readonly sessions: "活跃会话";
     };
     readonly 'zh-TW': {
         readonly welcomeBack: "歡迎回來";
@@ -248,6 +275,12 @@ declare const translations: {
         readonly passkey: "使用通行金鑰登入";
         readonly securedBy: "安全保障";
         readonly backToSignIn: "返回登入";
+        readonly profile: "個人資料";
+        readonly editProfile: "編輯資料";
+        readonly displayName: "顯示名稱";
+        readonly save: "儲存";
+        readonly signOut: "登出";
+        readonly sessions: "活躍工作階段";
     };
     readonly 'pt-BR': {
         readonly welcomeBack: "Bem-vindo de volta";
@@ -266,6 +299,12 @@ declare const translations: {
         readonly passkey: "Entrar com Passkey";
         readonly securedBy: "Protegido por";
         readonly backToSignIn: "Voltar ao login";
+        readonly profile: "Perfil";
+        readonly editProfile: "Editar perfil";
+        readonly displayName: "Nome de exibicao";
+        readonly save: "Salvar";
+        readonly signOut: "Sair";
+        readonly sessions: "Sessoes ativas";
     };
     readonly es: {
         readonly welcomeBack: "Bienvenido de nuevo";
@@ -284,6 +323,12 @@ declare const translations: {
         readonly passkey: "Iniciar con Passkey";
         readonly securedBy: "Protegido por";
         readonly backToSignIn: "Volver al inicio de sesion";
+        readonly profile: "Perfil";
+        readonly editProfile: "Editar perfil";
+        readonly displayName: "Nombre de visualizacion";
+        readonly save: "Guardar";
+        readonly signOut: "Cerrar sesion";
+        readonly sessions: "Sesiones activas";
     };
     readonly de: {
         readonly welcomeBack: "Willkommen zuruck";
@@ -302,6 +347,12 @@ declare const translations: {
         readonly passkey: "Mit Passkey anmelden";
         readonly securedBy: "Gesichert durch";
         readonly backToSignIn: "Zuruck zur Anmeldung";
+        readonly profile: "Profil";
+        readonly editProfile: "Profil bearbeiten";
+        readonly displayName: "Anzeigename";
+        readonly save: "Speichern";
+        readonly signOut: "Abmelden";
+        readonly sessions: "Aktive Sitzungen";
     };
     readonly fr: {
         readonly welcomeBack: "Bon retour";
@@ -320,6 +371,12 @@ declare const translations: {
         readonly passkey: "Se connecter avec Passkey";
         readonly securedBy: "Securise par";
         readonly backToSignIn: "Retour a la connexion";
+        readonly profile: "Profil";
+        readonly editProfile: "Modifier le profil";
+        readonly displayName: "Nom d'affichage";
+        readonly save: "Enregistrer";
+        readonly signOut: "Se deconnecter";
+        readonly sessions: "Sessions actives";
     };
     readonly hi: {
         readonly welcomeBack: "वापसी पर स्वागत है";
@@ -338,6 +395,12 @@ declare const translations: {
         readonly passkey: "पासकी से साइन इन";
         readonly securedBy: "सुरक्षा प्रदाता";
         readonly backToSignIn: "साइन इन पर वापस जाएं";
+        readonly profile: "प्रोफ़ाइल";
+        readonly editProfile: "प्रोफ़ाइल संपादित करें";
+        readonly displayName: "प्रदर्शन नाम";
+        readonly save: "सहेजें";
+        readonly signOut: "साइन आउट";
+        readonly sessions: "सक्रिय सत्र";
     };
     readonly tr: {
         readonly welcomeBack: "Tekrar hos geldiniz";
@@ -356,6 +419,12 @@ declare const translations: {
         readonly passkey: "Passkey ile giris yap";
         readonly securedBy: "Guvenlik saglayici";
         readonly backToSignIn: "Girise don";
+        readonly profile: "Profil";
+        readonly editProfile: "Profili duzenle";
+        readonly displayName: "Goruntu adi";
+        readonly save: "Kaydet";
+        readonly signOut: "Cikis yap";
+        readonly sessions: "Aktif oturumlar";
     };
     readonly id: {
         readonly welcomeBack: "Selamat datang kembali";
@@ -374,6 +443,12 @@ declare const translations: {
         readonly passkey: "Masuk dengan Passkey";
         readonly securedBy: "Diamankan oleh";
         readonly backToSignIn: "Kembali ke login";
+        readonly profile: "Profil";
+        readonly editProfile: "Edit profil";
+        readonly displayName: "Nama tampilan";
+        readonly save: "Simpan";
+        readonly signOut: "Keluar";
+        readonly sessions: "Sesi aktif";
     };
     readonly vi: {
         readonly welcomeBack: "Chao mung tro lai";
@@ -392,6 +467,12 @@ declare const translations: {
         readonly passkey: "Dang nhap voi Passkey";
         readonly securedBy: "Bao mat boi";
         readonly backToSignIn: "Quay lai dang nhap";
+        readonly profile: "Ho so";
+        readonly editProfile: "Chinh sua ho so";
+        readonly displayName: "Ten hien thi";
+        readonly save: "Luu";
+        readonly signOut: "Dang xuat";
+        readonly sessions: "Phien dang nhap hoat dong";
     };
     readonly th: {
         readonly welcomeBack: "ยินดีต้อนรับกลับ";
@@ -410,6 +491,12 @@ declare const translations: {
         readonly passkey: "เข้าสู่ระบบด้วย Passkey";
         readonly securedBy: "รักษาความปลอดภัยโดย";
         readonly backToSignIn: "กลับไปเข้าสู่ระบบ";
+        readonly profile: "โปรไฟล์";
+        readonly editProfile: "แก้ไขโปรไฟล์";
+        readonly displayName: "ชื่อที่แสดง";
+        readonly save: "บันทึก";
+        readonly signOut: "ออกจากระบบ";
+        readonly sessions: "เซสชันที่ใช้งานอยู่";
     };
     readonly ru: {
         readonly welcomeBack: "С возвращением";
@@ -428,6 +515,12 @@ declare const translations: {
         readonly passkey: "Войти с Passkey";
         readonly securedBy: "Защищено";
         readonly backToSignIn: "Вернуться к входу";
+        readonly profile: "Профиль";
+        readonly editProfile: "Редактировать профиль";
+        readonly displayName: "Отображаемое имя";
+        readonly save: "Сохранить";
+        readonly signOut: "Выйти";
+        readonly sessions: "Активные сеансы";
     };
     readonly it: {
         readonly welcomeBack: "Bentornato";
@@ -446,6 +539,12 @@ declare const translations: {
         readonly passkey: "Accedi con Passkey";
         readonly securedBy: "Protetto da";
         readonly backToSignIn: "Torna all'accesso";
+        readonly profile: "Profilo";
+        readonly editProfile: "Modifica profilo";
+        readonly displayName: "Nome visualizzato";
+        readonly save: "Salva";
+        readonly signOut: "Esci";
+        readonly sessions: "Sessioni attive";
     };
     readonly pl: {
         readonly welcomeBack: "Witaj ponownie";
@@ -464,6 +563,12 @@ declare const translations: {
         readonly passkey: "Zaloguj sie z Passkey";
         readonly securedBy: "Zabezpieczone przez";
         readonly backToSignIn: "Powrot do logowania";
+        readonly profile: "Profil";
+        readonly editProfile: "Edytuj profil";
+        readonly displayName: "Nazwa wyswietlana";
+        readonly save: "Zapisz";
+        readonly signOut: "Wyloguj sie";
+        readonly sessions: "Aktywne sesje";
     };
     readonly nl: {
         readonly welcomeBack: "Welkom terug";
@@ -482,6 +587,12 @@ declare const translations: {
         readonly passkey: "Inloggen met Passkey";
         readonly securedBy: "Beveiligd door";
         readonly backToSignIn: "Terug naar inloggen";
+        readonly profile: "Profiel";
+        readonly editProfile: "Profiel bewerken";
+        readonly displayName: "Weergavenaam";
+        readonly save: "Opslaan";
+        readonly signOut: "Uitloggen";
+        readonly sessions: "Actieve sessies";
     };
     readonly ar: {
         readonly welcomeBack: "مرحبًا بعودتك";
@@ -500,6 +611,12 @@ declare const translations: {
         readonly passkey: "تسجيل الدخول باستخدام Passkey";
         readonly securedBy: "محمي بواسطة";
         readonly backToSignIn: "العودة لتسجيل الدخول";
+        readonly profile: "الملف الشخصي";
+        readonly editProfile: "تعديل الملف الشخصي";
+        readonly displayName: "الاسم المعروض";
+        readonly save: "حفظ";
+        readonly signOut: "تسجيل الخروج";
+        readonly sessions: "الجلسات النشطة";
     };
     readonly sv: {
         readonly welcomeBack: "Valkommen tillbaka";
@@ -518,6 +635,12 @@ declare const translations: {
         readonly passkey: "Logga in med Passkey";
         readonly securedBy: "Sakrad av";
         readonly backToSignIn: "Tillbaka till inloggning";
+        readonly profile: "Profil";
+        readonly editProfile: "Redigera profil";
+        readonly displayName: "Visningsnamn";
+        readonly save: "Spara";
+        readonly signOut: "Logga ut";
+        readonly sessions: "Aktiva sessioner";
     };
     readonly uk: {
         readonly welcomeBack: "З поверненням";
@@ -536,6 +659,12 @@ declare const translations: {
         readonly passkey: "Увійти з Passkey";
         readonly securedBy: "Захищено";
         readonly backToSignIn: "Повернутися до входу";
+        readonly profile: "Профіль";
+        readonly editProfile: "Редагувати профіль";
+        readonly displayName: "Відображуване ім'я";
+        readonly save: "Зберегти";
+        readonly signOut: "Вийти";
+        readonly sessions: "Активні сеанси";
     };
 };
 interface TranslationStrings {
@@ -555,7 +684,73 @@ interface TranslationStrings {
     passkey: string;
     securedBy: string;
     backToSignIn: string;
+    profile: string;
+    editProfile: string;
+    displayName: string;
+    save: string;
+    signOut: string;
+    sessions: string;
 }
 declare function getStrings(locale: string): TranslationStrings;
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, type ProviderButtonConfig, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+declare class ProfileRenderer {
+    private shadowRoot;
+    private hostElement;
+    private containerElement;
+    private containerId;
+    private mode;
+    private theme;
+    private branding;
+    private themeObserver;
+    private mediaQueryListener;
+    private t;
+    private user;
+    private sessions;
+    private isEditMode;
+    private onSave;
+    private onSignOut;
+    private onRevokeSession;
+    private onClose;
+    private escHandler;
+    constructor(options: {
+        mode: 'popup' | 'embedded';
+        theme?: 'light' | 'dark' | 'auto';
+        containerId?: string;
+        branding?: BrandingConfig;
+        locale?: string;
+        user: AuthonUser;
+        sessions?: SessionInfo[];
+        onSave: (data: {
+            displayName?: string;
+            avatarUrl?: string;
+        }) => Promise<void>;
+        onSignOut: () => Promise<void>;
+        onRevokeSession: (sessionId: string) => Promise<void>;
+        onClose: () => void;
+    });
+    private resolveContainerElement;
+    open(): void;
+    close(): void;
+    updateUser(user: AuthonUser): void;
+    updateSessions(sessions: SessionInfo[]): void;
+    setTheme(theme: 'light' | 'dark' | 'auto'): void;
+    showSaving(): void;
+    showSaveError(message: string): void;
+    private showInlineError;
+    private updateThemeCSS;
+    private startThemeObserver;
+    private stopThemeObserver;
+    private isDark;
+    private render;
+    private rerender;
+    private buildShell;
+    private buildInnerContent;
+    private buildViewContent;
+    private buildEditContent;
+    private buildCSS;
+    private attachEvents;
+    private attachBackdropEvent;
+    private attachInnerEvents;
+}
+
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, ProfileRenderer, type ProviderButtonConfig, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };

@@ -28,6 +28,7 @@ import type {
 } from './types';
 import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
+import { ProfileRenderer } from './profile';
 import { SessionManager } from './session';
 import { generateQrSvg } from './qrcode';
 
@@ -44,6 +45,7 @@ export class Authon {
   };
   private session: SessionManager;
   private modal: ModalRenderer | null = null;
+  private profile: ProfileRenderer | null = null;
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
   private branding: BrandingConfig | null = null;
   private providers: OAuthProviderType[] = [];
@@ -83,9 +85,62 @@ export class Authon {
     this.getModal().open('signUp');
   }
 
+  async openProfile(): Promise<void> {
+    const user = this.getUser();
+    if (!user) throw new Error('Must be signed in to open profile');
+
+    const token = this.session.getToken();
+    let sessions: import('@authon/shared').SessionInfo[] = [];
+    if (token) {
+      try {
+        sessions = await this.listSessions();
+      } catch (_) {
+        // non-fatal: show profile without sessions
+      }
+    }
+
+    if (!this.profile) {
+      this.profile = new ProfileRenderer({
+        mode: this.config.mode,
+        theme: this.config.theme,
+        locale: this.config.locale,
+        containerId: this.config.containerId,
+        branding: this.branding || undefined,
+        user,
+        sessions,
+        onSave: async (data) => {
+          const updated = await this.updateProfile(data);
+          this.profile?.updateUser(updated);
+        },
+        onSignOut: async () => {
+          await this.signOut();
+          this.profile = null;
+        },
+        onRevokeSession: async (sessionId: string) => {
+          await this.revokeSession(sessionId);
+        },
+        onClose: () => {
+          this.profile?.close();
+          this.profile = null;
+        },
+      });
+    } else {
+      this.profile.updateUser(user);
+      this.profile.updateSessions(sessions);
+    }
+
+    this.profile.open();
+  }
+
+  closeProfile(): void {
+    this.profile?.close();
+    this.profile = null;
+  }
+
   /** Update theme at runtime without destroying form state */
   setTheme(theme: 'light' | 'dark' | 'auto'): void {
     this.getModal().setTheme(theme);
+    this.profile?.setTheme(theme);
   }
 
   async signInWithOAuth(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void> {
@@ -487,6 +542,8 @@ export class Authon {
 
   destroy(): void {
     this.modal?.close();
+    this.profile?.close();
+    this.profile = null;
     this.session.destroy();
     this.listeners.clear();
   }
