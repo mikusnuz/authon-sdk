@@ -236,6 +236,7 @@ export class ModalRenderer {
   showError(message: string): void {
     if (!this.shadowRoot) return;
     this.clearError();
+    this.setSubmitLoading(false);
     const errorEl = this.shadowRoot.getElementById('email-form');
     if (errorEl) {
       const errDiv = document.createElement('div');
@@ -243,6 +244,22 @@ export class ModalRenderer {
       errDiv.className = 'error-msg';
       errDiv.textContent = message;
       errorEl.appendChild(errDiv);
+    }
+  }
+
+  setSubmitLoading(loading: boolean): void {
+    if (!this.shadowRoot) return;
+    const btn = this.shadowRoot.querySelector('.submit-btn') as HTMLButtonElement | null;
+    if (!btn) return;
+    if (loading) {
+      btn.dataset.originalText = btn.textContent || '';
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 14 14" style="animation:spin 0.8s linear infinite"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/><path d="M7 2a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>';
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+    } else {
+      btn.innerHTML = btn.dataset.originalText || 'Continue';
+      btn.disabled = false;
+      btn.style.opacity = '1';
     }
   }
 
@@ -1291,6 +1308,7 @@ export class ModalRenderer {
     if (form) {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
+        this.setSubmitLoading(true);
         const formData = new FormData(form);
         this.onEmailSubmit(
           formData.get('email') as string,

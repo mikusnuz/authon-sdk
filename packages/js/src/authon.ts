@@ -637,6 +637,7 @@ export class Authon {
             this.signUpWithEmail(email, password, { turnstileToken })
               .then((result) => {
                 if ('needsVerification' in result && result.needsVerification) {
+                  this.modal?.setSubmitLoading(false);
                   this.modal?.showVerificationInput(email, async (code: string) => {
                     try {
                       await this.verifyEmail(email, code);
@@ -654,6 +655,7 @@ export class Authon {
               })
               .catch((err) => {
                 this.modal?.resetTurnstile?.();
+                this.modal?.setSubmitLoading(false);
                 const msg = err instanceof Error ? err.message : String(err);
                 this.modal?.showError(msg || 'Authentication failed');
                 this.emit('error', err instanceof Error ? err : new Error(msg));
@@ -662,6 +664,7 @@ export class Authon {
             this.signInWithEmail(email, password, turnstileToken)
               .then((result) => {
                 if ('needsVerification' in result && result.needsVerification) {
+                  this.modal?.setSubmitLoading(false);
                   this.modal?.showVerificationInput(email, async (code: string) => {
                     try {
                       await this.verifyEmail(email, code);
@@ -679,6 +682,7 @@ export class Authon {
               })
               .catch((err) => {
                 this.modal?.resetTurnstile?.();
+                this.modal?.setSubmitLoading(false);
                 const msg = err instanceof Error ? err.message : String(err);
                 this.modal?.showError(msg || 'Authentication failed');
                 this.emit('error', err instanceof Error ? err : new Error(msg));

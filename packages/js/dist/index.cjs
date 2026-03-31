@@ -809,6 +809,7 @@ var ModalRenderer = class {
   showError(message) {
     if (!this.shadowRoot) return;
     this.clearError();
+    this.setSubmitLoading(false);
     const errorEl = this.shadowRoot.getElementById("email-form");
     if (errorEl) {
       const errDiv = document.createElement("div");
@@ -816,6 +817,21 @@ var ModalRenderer = class {
       errDiv.className = "error-msg";
       errDiv.textContent = message;
       errorEl.appendChild(errDiv);
+    }
+  }
+  setSubmitLoading(loading) {
+    if (!this.shadowRoot) return;
+    const btn = this.shadowRoot.querySelector(".submit-btn");
+    if (!btn) return;
+    if (loading) {
+      btn.dataset.originalText = btn.textContent || "";
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 14 14" style="animation:spin 0.8s linear infinite"><circle cx="7" cy="7" r="5" fill="none" stroke="currentColor" stroke-width="2" opacity="0.3"/><path d="M7 2a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span>';
+      btn.disabled = true;
+      btn.style.opacity = "0.7";
+    } else {
+      btn.innerHTML = btn.dataset.originalText || "Continue";
+      btn.disabled = false;
+      btn.style.opacity = "1";
     }
   }
   showBanner(message, type = "error") {
@@ -1726,6 +1742,7 @@ var ModalRenderer = class {
     if (form) {
       form.addEventListener("submit", (e) => {
         e.preventDefault();
+        this.setSubmitLoading(true);
         const formData = new FormData(form);
         this.onEmailSubmit(
           formData.get("email"),
@@ -3460,6 +3477,7 @@ var Authon = class {
           if (isSignUp) {
             this.signUpWithEmail(email, password, { turnstileToken }).then((result) => {
               if ("needsVerification" in result && result.needsVerification) {
+                this.modal?.setSubmitLoading(false);
                 this.modal?.showVerificationInput(email, async (code) => {
                   try {
                     await this.verifyEmail(email, code);
@@ -3476,6 +3494,7 @@ var Authon = class {
               }
             }).catch((err) => {
               this.modal?.resetTurnstile?.();
+              this.modal?.setSubmitLoading(false);
               const msg = err instanceof Error ? err.message : String(err);
               this.modal?.showError(msg || "Authentication failed");
               this.emit("error", err instanceof Error ? err : new Error(msg));
@@ -3483,6 +3502,7 @@ var Authon = class {
           } else {
             this.signInWithEmail(email, password, turnstileToken).then((result) => {
               if ("needsVerification" in result && result.needsVerification) {
+                this.modal?.setSubmitLoading(false);
                 this.modal?.showVerificationInput(email, async (code) => {
                   try {
                     await this.verifyEmail(email, code);
@@ -3499,6 +3519,7 @@ var Authon = class {
               }
             }).catch((err) => {
               this.modal?.resetTurnstile?.();
+              this.modal?.setSubmitLoading(false);
               const msg = err instanceof Error ? err.message : String(err);
               this.modal?.showError(msg || "Authentication failed");
               this.emit("error", err instanceof Error ? err : new Error(msg));
