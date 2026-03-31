@@ -148,13 +148,17 @@ export class Authon {
     await this.startOAuthFlow(provider, options);
   }
 
-  async signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser> {
+  async signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser | { needsVerification: true; email: string }> {
     const body: Record<string, string> = { email, password };
     if (turnstileToken) body.turnstileToken = turnstileToken;
-    const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string }>(
+    const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string; needsVerification?: boolean; email?: string }>(
       '/v1/auth/signin',
       body,
     );
+    if (res.needsVerification) {
+      this.emit('verificationRequired', res.email);
+      return { needsVerification: true, email: res.email! };
+    }
     if (res.mfaRequired && res.mfaToken) {
       this.emit('mfaRequired', res.mfaToken);
       throw new AuthonMfaRequiredError(res.mfaToken);
@@ -656,7 +660,23 @@ export class Authon {
               });
           } else {
             this.signInWithEmail(email, password, turnstileToken)
-              .then(() => this.modal?.close())
+              .then((result) => {
+                if ('needsVerification' in result && result.needsVerification) {
+                  this.modal?.showVerificationInput(email, async (code: string) => {
+                    try {
+                      await this.verifyEmail(email, code);
+                      this.modal?.close();
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : String(err);
+                      this.modal?.showError(msg || 'Verification failed');
+                    }
+                  }, async () => {
+                    await this.resendVerificationCode(email);
+                  });
+                } else {
+                  this.modal?.close();
+                }
+              })
               .catch((err) => {
                 this.modal?.resetTurnstile?.();
                 const msg = err instanceof Error ? err.message : String(err);

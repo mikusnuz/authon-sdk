@@ -49,7 +49,10 @@ declare class Authon {
     /** Update theme at runtime without destroying form state */
     setTheme(theme: 'light' | 'dark' | 'auto'): void;
     signInWithOAuth(provider: OAuthProviderType, options?: OAuthSignInOptions): Promise<void>;
-    signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser>;
+    signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser | {
+        needsVerification: true;
+        email: string;
+    }>;
     signUpWithEmail(email: string, password: string, meta?: {
         displayName?: string;
         turnstileToken?: string;

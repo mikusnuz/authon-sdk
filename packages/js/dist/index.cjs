@@ -3073,6 +3073,10 @@ var Authon = class {
       "/v1/auth/signin",
       body
     );
+    if (res.needsVerification) {
+      this.emit("verificationRequired", res.email);
+      return { needsVerification: true, email: res.email };
+    }
     if (res.mfaRequired && res.mfaToken) {
       this.emit("mfaRequired", res.mfaToken);
       throw new AuthonMfaRequiredError(res.mfaToken);
@@ -3477,7 +3481,23 @@ var Authon = class {
               this.emit("error", err instanceof Error ? err : new Error(msg));
             });
           } else {
-            this.signInWithEmail(email, password, turnstileToken).then(() => this.modal?.close()).catch((err) => {
+            this.signInWithEmail(email, password, turnstileToken).then((result) => {
+              if ("needsVerification" in result && result.needsVerification) {
+                this.modal?.showVerificationInput(email, async (code) => {
+                  try {
+                    await this.verifyEmail(email, code);
+                    this.modal?.close();
+                  } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    this.modal?.showError(msg || "Verification failed");
+                  }
+                }, async () => {
+                  await this.resendVerificationCode(email);
+                });
+              } else {
+                this.modal?.close();
+              }
+            }).catch((err) => {
               this.modal?.resetTurnstile?.();
               const msg = err instanceof Error ? err.message : String(err);
               this.modal?.showError(msg || "Authentication failed");
