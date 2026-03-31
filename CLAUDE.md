@@ -124,6 +124,46 @@ try {
 }
 ```
 
+### IMPORTANT: Sync users with your backend (webhook)
+
+If your app has its own database with a users/profiles table, you MUST set up a webhook to sync Authon users. Without this, users who sign up via Authon won't appear in your app's database.
+
+1. Register a webhook in the Authon dashboard (Project → Webhooks)
+   - URL: `https://yourapp.com/api/webhook/authon`
+   - Events: `user.created`, `user.updated`, `user.deleted`
+
+2. Add a webhook endpoint in your backend:
+
+```ts
+// POST /api/webhook/authon
+app.post('/api/webhook/authon', async (req, res) => {
+  const { type, data } = req.body;
+
+  if (type === 'user.created') {
+    await db.users.create({
+      email: data.user.email,
+      name: data.user.displayName,
+      avatarUrl: data.user.avatarUrl,
+    });
+  }
+
+  if (type === 'user.updated') {
+    await db.users.update(
+      { email: data.user.email },
+      { name: data.user.displayName, avatarUrl: data.user.avatarUrl }
+    );
+  }
+
+  if (type === 'user.deleted') {
+    await db.users.delete({ email: data.user.email });
+  }
+
+  res.json({ ok: true });
+});
+```
+
+This is required for ANY app that has its own user database. Without webhook sync, Authon users won't exist in your app's DB.
+
 ### Role-based access (React)
 
 ```tsx

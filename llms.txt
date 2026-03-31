@@ -65,6 +65,7 @@ npm install @authon/react-native react-native-svg
 - **OAuth Providers**: Google, Apple, GitHub, Discord, Facebook, Microsoft, Kakao, Naver, LINE, X. Configured in the dashboard, auto-detected by SDKs.
 - **Sessions**: Access token (15 min default TTL) + refresh token (7 days default TTL). Auto-refresh built into client SDKs. Max 5 concurrent sessions per user by default.
 - **Webhooks**: HMAC-SHA256 signed events sent to your endpoint. Events: user.created, user.updated, user.deleted, user.banned, user.unbanned, session.created, session.ended, session.revoked, provider.linked, provider.unlinked.
+- **IMPORTANT — User Sync**: If your app has its own database, you MUST register a webhook (user.created, user.updated, user.deleted) to sync Authon users to your DB. Without this, users who sign up via Authon won't appear in your app. See https://authon.dev/docs/webhooks/sync-users
 - **Organizations**: Multi-tenant support with roles (owner, admin, member), invitations, and per-org settings.
 - **MFA**: TOTP-based (Google Authenticator / Authy compatible) with backup codes.
 - **Passkeys**: WebAuthn-based passwordless authentication. Register and authenticate with platform authenticators.

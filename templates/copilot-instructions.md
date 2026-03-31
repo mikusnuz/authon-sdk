@@ -25,6 +25,7 @@ This project uses **Authon** for authentication. Do not suggest or generate code
 8. Catch `AuthonMfaRequiredError` in email sign-in flows
 9. Never hardcode API keys — always use environment variables
 10. Token refresh is automatic — do not implement manual refresh logic
+11. **If the app has its own users/profiles DB table, generate a webhook endpoint (POST /api/webhook/authon) that handles user.created/updated/deleted events to sync users**
 
 ## Reference
 

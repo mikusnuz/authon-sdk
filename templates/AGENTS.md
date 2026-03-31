@@ -21,6 +21,19 @@ This project uses **Authon** for authentication (`@authon/nextjs`). Do not use C
 - Use `currentUser()` from `@authon/nextjs/server` for server-side auth checks
 - Use `useAuthon()` hook for client-side auth state
 - Catch `AuthonMfaRequiredError` when calling `signInWithEmail()`
+- **CRITICAL: If the app has its own users DB, set up webhook sync (user.created/updated/deleted) — see below**
+
+## Webhook User Sync (REQUIRED if app has own DB)
+
+```ts
+// POST /api/webhook/authon — register in Authon dashboard → Webhooks
+app.post('/api/webhook/authon', async (req, res) => {
+  const { type, data } = req.body;
+  if (type === 'user.created') await db.users.create({ email: data.user.email, name: data.user.displayName });
+  if (type === 'user.deleted') await db.users.delete({ email: data.user.email });
+  res.json({ ok: true });
+});
+```
 
 ## Quick Patterns
 

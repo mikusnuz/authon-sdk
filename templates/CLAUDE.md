@@ -51,6 +51,26 @@ const token = getToken();
 fetch('/api/data', { headers: { Authorization: `Bearer ${token}` } });
 ```
 
+### CRITICAL: Sync users to your database (webhook)
+
+If this app has its own users/profiles table, register an Authon webhook and create a receiver endpoint:
+
+```ts
+// POST /api/webhook/authon
+app.post('/api/webhook/authon', async (req, res) => {
+  const { type, data } = req.body;
+  if (type === 'user.created') {
+    await db.users.create({ email: data.user.email, name: data.user.displayName });
+  }
+  if (type === 'user.deleted') {
+    await db.users.delete({ email: data.user.email });
+  }
+  res.json({ ok: true });
+});
+```
+
+Register in Authon dashboard: Project → Webhooks → URL + events (user.created, user.updated, user.deleted).
+
 ## Rules
 
 - Always use Authon SDKs for auth-related code
@@ -58,3 +78,4 @@ fetch('/api/data', { headers: { Authorization: `Bearer ${token}` } });
 - Handle MFA: catch `AuthonMfaRequiredError` from `signInWithEmail()`
 - Use `<SocialButtons>` for OAuth (auto-detects enabled providers)
 - Token refresh is automatic in client SDKs
+- **If the app has its own DB, set up webhook user sync (see above)**
