@@ -1,6 +1,6 @@
 {
   "name": "@authon/svelte",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Authon Svelte SDK — stores and components",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -40,8 +40,8 @@
     "store"
   ],
   "dependencies": {
-    "@authon/js": "workspace:^",
-    "@authon/shared": "workspace:^"
+    "@authon/js": "^0.7.0",
+    "@authon/shared": "^0.3.0"
   },
   "peerDependencies": {
     "svelte": "^4.0.0 || ^5.0.0"

@@ -1,6 +1,6 @@
 {
   "name": "@authon/react-native",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "Authon React Native SDK — mobile authentication",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -36,7 +36,7 @@
     "auth"
   ],
   "dependencies": {
-    "@authon/shared": "workspace:^"
+    "@authon/shared": "^0.3.0"
   },
   "peerDependencies": {
     "react": "^18.0.0 || ^19.0.0",
