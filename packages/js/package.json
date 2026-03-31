@@ -1,6 +1,6 @@
 {
   "name": "@authon/js",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "description": "Authon core browser SDK — ShadowDOM login modal, OAuth, session management",
   "type": "module",
   "main": "./dist/index.cjs",

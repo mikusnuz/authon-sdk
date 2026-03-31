@@ -639,13 +639,8 @@ export class Authon {
                 if ('needsVerification' in result && result.needsVerification) {
                   this.modal?.setSubmitLoading(false);
                   this.modal?.showVerificationInput(email, async (code: string) => {
-                    try {
-                      await this.verifyEmail(email, code);
-                      this.modal?.close();
-                    } catch (err) {
-                      const msg = err instanceof Error ? err.message : String(err);
-                      this.modal?.showError(msg || 'Verification failed');
-                    }
+                    await this.verifyEmail(email, code);
+                    this.modal?.close();
                   }, async () => {
                     await this.resendVerificationCode(email);
                   });
@@ -666,13 +661,8 @@ export class Authon {
                 if ('needsVerification' in result && result.needsVerification) {
                   this.modal?.setSubmitLoading(false);
                   this.modal?.showVerificationInput(email, async (code: string) => {
-                    try {
-                      await this.verifyEmail(email, code);
-                      this.modal?.close();
-                    } catch (err) {
-                      const msg = err instanceof Error ? err.message : String(err);
-                      this.modal?.showError(msg || 'Verification failed');
-                    }
+                    await this.verifyEmail(email, code);
+                    this.modal?.close();
                   }, async () => {
                     await this.resendVerificationCode(email);
                   });

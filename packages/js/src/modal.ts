@@ -303,6 +303,7 @@ export class ModalRenderer {
         <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${email}</p>
       </div>
       <div class="email-form" id="verify-form">
+        <div id="verify-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#ef4444;text-align:center;margin-bottom:4px"></div>
         <input type="text" id="verify-code" class="input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;font-size:20px;letter-spacing:0.2em;font-family:ui-monospace,monospace" />
         <button type="button" id="verify-submit" class="submit-btn">${this.t.signIn}</button>
       </div>
@@ -320,12 +321,25 @@ export class ModalRenderer {
       codeInput.value = codeInput.value.replace(/\D/g, '').slice(0, 6);
     });
 
+    const verifyError = this.shadowRoot.getElementById('verify-error');
     submitBtn?.addEventListener('click', async () => {
       const code = codeInput?.value?.trim();
       if (!code || code.length < 6) return;
+      if (verifyError) { verifyError.style.display = 'none'; }
       submitBtn.textContent = '...';
       (submitBtn as HTMLButtonElement).disabled = true;
-      await onVerify(code);
+      try {
+        await onVerify(code);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (verifyError) {
+          verifyError.textContent = msg || 'Verification failed';
+          verifyError.style.display = 'block';
+        }
+        submitBtn.textContent = this.t.signIn;
+        (submitBtn as HTMLButtonElement).disabled = false;
+        if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+      }
     });
 
     codeInput?.addEventListener('keydown', (e) => {

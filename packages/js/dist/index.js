@@ -834,6 +834,7 @@ var ModalRenderer = class {
         <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${email}</p>
       </div>
       <div class="email-form" id="verify-form">
+        <div id="verify-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#ef4444;text-align:center;margin-bottom:4px"></div>
         <input type="text" id="verify-code" class="input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;font-size:20px;letter-spacing:0.2em;font-family:ui-monospace,monospace" />
         <button type="button" id="verify-submit" class="submit-btn">${this.t.signIn}</button>
       </div>
@@ -848,12 +849,30 @@ var ModalRenderer = class {
     codeInput?.addEventListener("input", () => {
       codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 6);
     });
+    const verifyError = this.shadowRoot.getElementById("verify-error");
     submitBtn?.addEventListener("click", async () => {
       const code = codeInput?.value?.trim();
       if (!code || code.length < 6) return;
+      if (verifyError) {
+        verifyError.style.display = "none";
+      }
       submitBtn.textContent = "...";
       submitBtn.disabled = true;
-      await onVerify(code);
+      try {
+        await onVerify(code);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (verifyError) {
+          verifyError.textContent = msg || "Verification failed";
+          verifyError.style.display = "block";
+        }
+        submitBtn.textContent = this.t.signIn;
+        submitBtn.disabled = false;
+        if (codeInput) {
+          codeInput.value = "";
+          codeInput.focus();
+        }
+      }
     });
     codeInput?.addEventListener("keydown", (e) => {
       if (e.key === "Enter") submitBtn?.click();
@@ -3447,13 +3466,8 @@ var Authon = class {
               if ("needsVerification" in result && result.needsVerification) {
                 this.modal?.setSubmitLoading(false);
                 this.modal?.showVerificationInput(email, async (code) => {
-                  try {
-                    await this.verifyEmail(email, code);
-                    this.modal?.close();
-                  } catch (err) {
-                    const msg = err instanceof Error ? err.message : String(err);
-                    this.modal?.showError(msg || "Verification failed");
-                  }
+                  await this.verifyEmail(email, code);
+                  this.modal?.close();
                 }, async () => {
                   await this.resendVerificationCode(email);
                 });
@@ -3472,13 +3486,8 @@ var Authon = class {
               if ("needsVerification" in result && result.needsVerification) {
                 this.modal?.setSubmitLoading(false);
                 this.modal?.showVerificationInput(email, async (code) => {
-                  try {
-                    await this.verifyEmail(email, code);
-                    this.modal?.close();
-                  } catch (err) {
-                    const msg = err instanceof Error ? err.message : String(err);
-                    this.modal?.showError(msg || "Verification failed");
-                  }
+                  await this.verifyEmail(email, code);
+                  this.modal?.close();
                 }, async () => {
                   await this.resendVerificationCode(email);
                 });
