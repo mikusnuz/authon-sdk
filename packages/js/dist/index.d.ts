@@ -53,7 +53,12 @@ declare class Authon {
     signUpWithEmail(email: string, password: string, meta?: {
         displayName?: string;
         turnstileToken?: string;
-    }): Promise<AuthonUser>;
+    }): Promise<AuthonUser | {
+        needsVerification: true;
+        email: string;
+    }>;
+    verifyEmail(email: string, code: string): Promise<AuthonUser>;
+    resendVerificationCode(email: string): Promise<void>;
     signOut(): Promise<void>;
     getUser(): AuthonUser | null;
     getToken(): string | null;

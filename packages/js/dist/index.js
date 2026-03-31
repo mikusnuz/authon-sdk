@@ -805,6 +805,53 @@ var ModalRenderer = class {
     if (!this.shadowRoot) return;
     this.shadowRoot.getElementById("authon-error-msg")?.remove();
   }
+  showVerificationInput(email, onVerify, onResend) {
+    if (!this.shadowRoot) return;
+    const inner = this.shadowRoot.querySelector(".modal-inner");
+    if (!inner) return;
+    inner.innerHTML = `
+      <div style="text-align:center;padding:8px 0">
+        <div style="width:48px;height:48px;border-radius:12px;background:color-mix(in srgb, var(--authon-primary-start) 15%, transparent);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--authon-primary-start)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        </div>
+        <h2 class="title" style="font-size:20px;margin-bottom:4px">${this.t.welcomeBack.includes("Welcome") ? "Check your email" : this.t.welcomeBack}</h2>
+        <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${email}</p>
+      </div>
+      <div class="email-form" id="verify-form">
+        <input type="text" id="verify-code" class="input" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="text-align:center;font-size:20px;letter-spacing:0.2em;font-family:ui-monospace,monospace" />
+        <button type="button" id="verify-submit" class="submit-btn">${this.t.signIn}</button>
+      </div>
+      <p style="text-align:center;margin-top:12px;font-size:12px;color:var(--authon-dim)">
+        <a href="#" id="resend-link" style="color:var(--authon-primary-start);text-decoration:none;font-weight:500">${this.t.backToSignIn.includes("Back") ? "Resend code" : this.t.backToSignIn}</a>
+      </p>
+    `;
+    const codeInput = this.shadowRoot.getElementById("verify-code");
+    const submitBtn = this.shadowRoot.getElementById("verify-submit");
+    const resendLink = this.shadowRoot.getElementById("resend-link");
+    codeInput?.focus();
+    codeInput?.addEventListener("input", () => {
+      codeInput.value = codeInput.value.replace(/\D/g, "").slice(0, 6);
+    });
+    submitBtn?.addEventListener("click", async () => {
+      const code = codeInput?.value?.trim();
+      if (!code || code.length < 6) return;
+      submitBtn.textContent = "...";
+      submitBtn.disabled = true;
+      await onVerify(code);
+    });
+    codeInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") submitBtn?.click();
+    });
+    resendLink?.addEventListener("click", async (e) => {
+      e.preventDefault();
+      resendLink.textContent = "...";
+      await onResend();
+      resendLink.textContent = "Sent!";
+      setTimeout(() => {
+        resendLink.textContent = "Resend code";
+      }, 2e3);
+    });
+  }
   showLoading() {
     if (!this.shadowRoot) return;
     this.hideLoading();
@@ -3003,14 +3050,27 @@ var Authon = class {
     return res.user;
   }
   async signUpWithEmail(email, password, meta) {
-    const tokens = await this.apiPost("/v1/auth/signup", {
+    const res = await this.apiPost("/v1/auth/signup", {
       email,
       password,
       ...meta
     });
-    this.session.setSession(tokens);
-    this.emit("signedIn", tokens.user);
-    return tokens.user;
+    if (res.needsVerification) {
+      this.emit("verificationRequired", res.email);
+      return { needsVerification: true, email: res.email };
+    }
+    this.session.setSession(res);
+    this.emit("signedIn", res.user);
+    return res.user;
+  }
+  async verifyEmail(email, code) {
+    const res = await this.apiPost("/v1/auth/verify-email", { email, code });
+    this.session.setSession(res);
+    this.emit("signedIn", res.user);
+    return res.user;
+  }
+  async resendVerificationCode(email) {
+    await this.apiPost("/v1/auth/resend-code", { email });
   }
   async signOut() {
     await this.session.signOut();
@@ -3361,13 +3421,37 @@ var Authon = class {
         onEmailSubmit: (email, password, isSignUp) => {
           this.modal?.clearError();
           const turnstileToken = this.modal?.getTurnstileToken?.() || void 0;
-          const promise = isSignUp ? this.signUpWithEmail(email, password, { turnstileToken }) : this.signInWithEmail(email, password, turnstileToken);
-          promise.then(() => this.modal?.close()).catch((err) => {
-            this.modal?.resetTurnstile?.();
-            const msg = err instanceof Error ? err.message : String(err);
-            this.modal?.showError(msg || "Authentication failed");
-            this.emit("error", err instanceof Error ? err : new Error(msg));
-          });
+          if (isSignUp) {
+            this.signUpWithEmail(email, password, { turnstileToken }).then((result) => {
+              if ("needsVerification" in result && result.needsVerification) {
+                this.modal?.showVerificationInput(email, async (code) => {
+                  try {
+                    await this.verifyEmail(email, code);
+                    this.modal?.close();
+                  } catch (err) {
+                    const msg = err instanceof Error ? err.message : String(err);
+                    this.modal?.showError(msg || "Verification failed");
+                  }
+                }, async () => {
+                  await this.resendVerificationCode(email);
+                });
+              } else {
+                this.modal?.close();
+              }
+            }).catch((err) => {
+              this.modal?.resetTurnstile?.();
+              const msg = err instanceof Error ? err.message : String(err);
+              this.modal?.showError(msg || "Authentication failed");
+              this.emit("error", err instanceof Error ? err : new Error(msg));
+            });
+          } else {
+            this.signInWithEmail(email, password, turnstileToken).then(() => this.modal?.close()).catch((err) => {
+              this.modal?.resetTurnstile?.();
+              const msg = err instanceof Error ? err.message : String(err);
+              this.modal?.showError(msg || "Authentication failed");
+              this.emit("error", err instanceof Error ? err : new Error(msg));
+            });
+          }
         },
         onClose: () => this.modal?.close(),
         onWeb3WalletSelect: async (walletId) => {

@@ -168,15 +168,30 @@ export class Authon {
     email: string,
     password: string,
     meta?: { displayName?: string; turnstileToken?: string },
-  ): Promise<AuthonUser> {
-    const tokens = await this.apiPost<AuthTokens>('/v1/auth/signup', {
+  ): Promise<AuthonUser | { needsVerification: true; email: string }> {
+    const res = await this.apiPost<AuthTokens & { needsVerification?: boolean; email?: string }>('/v1/auth/signup', {
       email,
       password,
       ...meta,
     });
-    this.session.setSession(tokens);
-    this.emit('signedIn', tokens.user);
-    return tokens.user;
+    if (res.needsVerification) {
+      this.emit('verificationRequired', res.email);
+      return { needsVerification: true, email: res.email! };
+    }
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  async verifyEmail(email: string, code: string): Promise<AuthonUser> {
+    const res = await this.apiPost<AuthTokens>('/v1/auth/verify-email', { email, code });
+    this.session.setSession(res);
+    this.emit('signedIn', res.user);
+    return res.user;
+  }
+
+  async resendVerificationCode(email: string): Promise<void> {
+    await this.apiPost<{ sent: true }>('/v1/auth/resend-code', { email });
   }
 
   async signOut(): Promise<void> {
@@ -614,17 +629,41 @@ export class Authon {
         onEmailSubmit: (email, password, isSignUp) => {
           this.modal?.clearError();
           const turnstileToken = this.modal?.getTurnstileToken?.() || undefined;
-          const promise = isSignUp
-            ? this.signUpWithEmail(email, password, { turnstileToken })
-            : this.signInWithEmail(email, password, turnstileToken);
-          promise
-            .then(() => this.modal?.close())
-            .catch((err) => {
-              this.modal?.resetTurnstile?.();
-              const msg = err instanceof Error ? err.message : String(err);
-              this.modal?.showError(msg || 'Authentication failed');
-              this.emit('error', err instanceof Error ? err : new Error(msg));
-            });
+          if (isSignUp) {
+            this.signUpWithEmail(email, password, { turnstileToken })
+              .then((result) => {
+                if ('needsVerification' in result && result.needsVerification) {
+                  this.modal?.showVerificationInput(email, async (code: string) => {
+                    try {
+                      await this.verifyEmail(email, code);
+                      this.modal?.close();
+                    } catch (err) {
+                      const msg = err instanceof Error ? err.message : String(err);
+                      this.modal?.showError(msg || 'Verification failed');
+                    }
+                  }, async () => {
+                    await this.resendVerificationCode(email);
+                  });
+                } else {
+                  this.modal?.close();
+                }
+              })
+              .catch((err) => {
+                this.modal?.resetTurnstile?.();
+                const msg = err instanceof Error ? err.message : String(err);
+                this.modal?.showError(msg || 'Authentication failed');
+                this.emit('error', err instanceof Error ? err : new Error(msg));
+              });
+          } else {
+            this.signInWithEmail(email, password, turnstileToken)
+              .then(() => this.modal?.close())
+              .catch((err) => {
+                this.modal?.resetTurnstile?.();
+                const msg = err instanceof Error ? err.message : String(err);
+                this.modal?.showError(msg || 'Authentication failed');
+                this.emit('error', err instanceof Error ? err : new Error(msg));
+              });
+          }
         },
         onClose: () => this.modal?.close(),
         onWeb3WalletSelect: async (walletId: string) => {
