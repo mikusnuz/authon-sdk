@@ -86,12 +86,13 @@ public final class Authon: ObservableObject {
                         isSignedIn = true
                         sessionManager.scheduleRefresh()
                     } catch {
-                        sessionManager.clearKeychain()
+                        // /me failed after refresh — keep tokens for retry, don't destroy session
                         user = nil
                         isSignedIn = false
                     }
                 } else {
-                    sessionManager.clearKeychain()
+                    // refresh() returned nil — could be network error or invalid token
+                    // Do NOT clear keychain — preserve refreshToken for retry on next app activate
                     user = nil
                     isSignedIn = false
                 }
