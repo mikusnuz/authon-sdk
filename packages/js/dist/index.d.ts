@@ -65,6 +65,10 @@ declare class Authon {
     signOut(): Promise<void>;
     getUser(): AuthonUser | null;
     getToken(): string | null;
+    /** Check if the current access token is valid (JWT exp not passed) */
+    isTokenValid(): boolean;
+    /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
+    ensureValidToken(): Promise<boolean>;
     on<K extends AuthonEventType>(event: K, listener: AuthonEvents[K]): () => void;
     setupMfa(): Promise<MfaSetupResponse & {
         qrCodeSvg: string;

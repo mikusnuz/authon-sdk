@@ -2500,6 +2500,16 @@ var SessionManager = class {
   getToken() {
     return this.accessToken;
   }
+  isTokenValid() {
+    if (!this.accessToken) return false;
+    try {
+      const [, payload] = this.accessToken.split(".");
+      const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+      return decoded.exp > Math.floor(Date.now() / 1e3);
+    } catch {
+      return false;
+    }
+  }
   getUser() {
     return this.user;
   }
@@ -3121,6 +3131,16 @@ var Authon = class {
   }
   getToken() {
     return this.session.getToken();
+  }
+  /** Check if the current access token is valid (JWT exp not passed) */
+  isTokenValid() {
+    return this.session.isTokenValid();
+  }
+  /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
+  async ensureValidToken() {
+    if (this.session.getToken()) return true;
+    const result = await this.session.refresh();
+    return result !== null;
   }
   on(event, listener) {
     if (!this.listeners.has(event)) this.listeners.set(event, /* @__PURE__ */ new Set());

@@ -51,6 +51,17 @@ export class SessionManager {
     return this.accessToken;
   }
 
+  isTokenValid(): boolean {
+    if (!this.accessToken) return false;
+    try {
+      const [, payload] = this.accessToken.split('.');
+      const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return decoded.exp > Math.floor(Date.now() / 1000);
+    } catch {
+      return false;
+    }
+  }
+
   getUser(): AuthonUser | null {
     return this.user;
   }

@@ -211,6 +211,18 @@ export class Authon {
     return this.session.getToken();
   }
 
+  /** Check if the current access token is valid (JWT exp not passed) */
+  isTokenValid(): boolean {
+    return this.session.isTokenValid();
+  }
+
+  /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
+  async ensureValidToken(): Promise<boolean> {
+    if (this.session.getToken()) return true;
+    const result = await this.session.refresh();
+    return result !== null;
+  }
+
   on<K extends AuthonEventType>(event: K, listener: AuthonEvents[K]): () => void {
     if (!this.listeners.has(event)) this.listeners.set(event, new Set());
     const set = this.listeners.get(event)!;

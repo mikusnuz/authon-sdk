@@ -544,6 +544,16 @@ public final class Authon: ObservableObject {
         return sessionManager.getAccessToken()
     }
 
+    public func isTokenValid() -> Bool {
+        return sessionManager.isAuthenticated()
+    }
+
+    /// Check token validity and auto-refresh if expired. Returns true if a valid token is available after the call.
+    public func ensureValidToken() async -> Bool {
+        if sessionManager.isAuthenticated() { return true }
+        return await refreshSession()
+    }
+
     public func getRefreshToken() -> String? {
         return sessionManager.getRefreshToken()
     }
