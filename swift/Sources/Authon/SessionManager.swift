@@ -12,7 +12,7 @@ final class SessionManager {
     private static let keychainAccount = "tokens"
 
     private var tokens: TokenPair?
-    private var refreshTimer: Timer?
+    private var refreshWorkItem: DispatchWorkItem?
     private let api: AuthonAPI
     private let onRefreshed: (TokenPair, AuthonUser) -> Void
     private let onExpired: () -> Void
@@ -138,8 +138,8 @@ final class SessionManager {
     // MARK: - Auto-Refresh
 
     func scheduleRefresh() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
+        refreshWorkItem?.cancel()
+        refreshWorkItem = nil
 
         guard let tokens else { return }
 
@@ -155,9 +155,11 @@ final class SessionManager {
             return
         }
 
-        refreshTimer = Timer.scheduledTimer(withTimeInterval: refreshInSec, repeats: false) { [weak self] _ in
+        let workItem = DispatchWorkItem { [weak self] in
             self?.performRefresh()
         }
+        self.refreshWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + refreshInSec, execute: workItem)
     }
 
     private func performRefresh() {
@@ -196,8 +198,8 @@ final class SessionManager {
                     )
                     self.saveToKeychain(self.tokens!)
                 }
-                self.refreshTimer?.invalidate()
-                self.refreshTimer = nil
+                self.refreshWorkItem?.cancel()
+                self.refreshWorkItem = nil
                 self.onExpired()
             }
         }
@@ -240,8 +242,8 @@ final class SessionManager {
     // MARK: - Destroy
 
     func destroy() {
-        refreshTimer?.invalidate()
-        refreshTimer = nil
+        refreshWorkItem?.cancel()
+        refreshWorkItem = nil
         tokens = nil
         NotificationCenter.default.removeObserver(self)
     }
