@@ -544,10 +544,6 @@ public final class Authon: ObservableObject {
         return sessionManager.getAccessToken()
     }
 
-    public func isTokenValid() -> Bool {
-        return sessionManager.isAuthenticated()
-    }
-
     public func getRefreshToken() -> String? {
         return sessionManager.getRefreshToken()
     }
