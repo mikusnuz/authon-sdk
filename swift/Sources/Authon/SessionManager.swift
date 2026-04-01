@@ -187,8 +187,15 @@ final class SessionManager {
                 self.scheduleRefresh()
                 self.onRefreshed(newPair, response.user)
             } catch {
-                self.tokens = nil
-                self.clearKeychain()
+                // Don't clear refreshToken — keep it for retry on next app activate
+                if let existing = self.tokens {
+                    self.tokens = TokenPair(
+                        accessToken: existing.accessToken,
+                        refreshToken: existing.refreshToken,
+                        expiresAt: 0 // mark as expired but keep refreshToken
+                    )
+                    self.saveToKeychain(self.tokens!)
+                }
                 self.refreshTimer?.invalidate()
                 self.refreshTimer = nil
                 self.onExpired()
