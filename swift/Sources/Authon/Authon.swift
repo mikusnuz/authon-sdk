@@ -48,9 +48,13 @@ public final class Authon: ObservableObject {
         expiredHandler = { [weak self] in
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                self.user = nil
-                self.isSignedIn = false
-                self.events.emit(.signedOut)
+                // Try one more refresh before giving up
+                let recovered = await self.refreshSession()
+                if !recovered {
+                    self.user = nil
+                    self.isSignedIn = false
+                    self.events.emit(.signedOut)
+                }
             }
         }
     }
@@ -552,6 +556,7 @@ public final class Authon: ObservableObject {
                 )
                 user = fetchedUser
                 isSignedIn = true
+                sessionManager.scheduleRefresh() // Re-arm next auto-refresh
                 return true
             } catch {
                 return false
