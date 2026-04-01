@@ -544,6 +544,22 @@ public final class Authon: ObservableObject {
         return sessionManager.getRefreshToken()
     }
 
+    public func refreshSession() async -> Bool {
+        if let refreshed = await sessionManager.refresh() {
+            do {
+                let fetchedUser: AuthonUser = try await api.requestAuth(
+                    "GET", "/v1/auth/me", accessToken: refreshed.accessToken
+                )
+                user = fetchedUser
+                isSignedIn = true
+                return true
+            } catch {
+                return false
+            }
+        }
+        return false
+    }
+
     // MARK: - Events
 
     @discardableResult
