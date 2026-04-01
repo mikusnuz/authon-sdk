@@ -114,14 +114,18 @@ export class SessionManager {
         body: JSON.stringify({ refreshToken: this.refreshToken }),
       });
       if (!res.ok) {
-        this.clearSession();
+        // 401 = refresh token is permanently invalid → clear session
+        // Other errors (500, network) = temporary → preserve tokens for retry
+        if (res.status === 401) {
+          this.clearSession();
+        }
         return null;
       }
       const tokens: AuthTokens = await res.json();
       this.setSession(tokens);
       return tokens;
     } catch {
-      this.clearSession();
+      // Network error — do NOT clear session, preserve tokens for retry
       return null;
     }
   }

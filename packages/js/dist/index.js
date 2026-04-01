@@ -2556,14 +2556,15 @@ var SessionManager = class {
         body: JSON.stringify({ refreshToken: this.refreshToken })
       });
       if (!res.ok) {
-        this.clearSession();
+        if (res.status === 401) {
+          this.clearSession();
+        }
         return null;
       }
       const tokens = await res.json();
       this.setSession(tokens);
       return tokens;
     } catch {
-      this.clearSession();
       return null;
     }
   }
