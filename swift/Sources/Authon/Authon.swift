@@ -62,8 +62,8 @@ public final class Authon: ObservableObject {
         defer { isLoading = false; isLoaded = true }
 
         // Load tokens from keychain
-        if let stored = sessionManager.loadFromKeychain(), sessionManager.isAuthenticated() {
-            // Try to refresh/validate
+        if let stored = sessionManager.loadFromKeychain(), sessionManager.hasTokens() {
+            // Try to validate current token
             do {
                 let fetchedUser: AuthonUser = try await api.requestAuth(
                     "GET", "/v1/auth/me", accessToken: stored.accessToken
@@ -72,10 +72,25 @@ public final class Authon: ObservableObject {
                 isSignedIn = true
                 sessionManager.scheduleRefresh()
             } catch {
-                // Token invalid, clear
-                sessionManager.clearKeychain()
-                user = nil
-                isSignedIn = false
+                // Token expired, try refresh
+                if let refreshed = await sessionManager.refresh() {
+                    do {
+                        let fetchedUser: AuthonUser = try await api.requestAuth(
+                            "GET", "/v1/auth/me", accessToken: refreshed.accessToken
+                        )
+                        user = fetchedUser
+                        isSignedIn = true
+                        sessionManager.scheduleRefresh()
+                    } catch {
+                        sessionManager.clearKeychain()
+                        user = nil
+                        isSignedIn = false
+                    }
+                } else {
+                    sessionManager.clearKeychain()
+                    user = nil
+                    isSignedIn = false
+                }
             }
         }
 

@@ -107,6 +107,34 @@ final class SessionManager {
         return tokens.expiresAt > Date().timeIntervalSince1970 * 1000
     }
 
+    func hasTokens() -> Bool {
+        return tokens != nil
+    }
+
+    func refresh() async -> TokenPair? {
+        guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return nil }
+        do {
+            struct RefreshBody: Encodable {
+                let refreshToken: String
+            }
+            let response: ApiAuthResponse = try await api.request(
+                "POST",
+                "/v1/auth/token/refresh",
+                body: RefreshBody(refreshToken: refreshToken)
+            )
+            let newPair = TokenPair(
+                accessToken: response.accessToken,
+                refreshToken: response.refreshToken,
+                expiresAt: Date().timeIntervalSince1970 * 1000 + Double(response.expiresIn) * 1000
+            )
+            tokens = newPair
+            saveToKeychain(newPair)
+            return newPair
+        } catch {
+            return nil
+        }
+    }
+
     // MARK: - Auto-Refresh
 
     func scheduleRefresh() {
