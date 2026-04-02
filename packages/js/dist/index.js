@@ -2558,13 +2558,16 @@ var SessionManager = class {
       if (!res.ok) {
         if (res.status === 401) {
           this.clearSession();
+          return null;
         }
+        this.scheduleRefresh(70);
         return null;
       }
       const tokens = await res.json();
       this.setSession(tokens);
       return tokens;
     } catch {
+      this.scheduleRefresh(70);
       return null;
     }
   }
