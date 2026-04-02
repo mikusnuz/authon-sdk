@@ -21,7 +21,12 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     func authenticate(provider: OAuthProvider) async throws -> ApiAuthResponse {
         #if os(macOS) || os(iOS)
         if provider == .apple {
-            return try await authenticateWithNativeApple()
+            do {
+                return try await authenticateWithNativeApple()
+            } catch {
+                // Native Apple Sign In failed (Debug build, sandbox, etc.) — fallback to web OAuth
+                return try await authenticateWithWebOAuth(provider: .apple)
+            }
         }
         #endif
         return try await authenticateWithWebOAuth(provider: provider)
