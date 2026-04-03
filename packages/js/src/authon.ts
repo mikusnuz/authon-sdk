@@ -218,7 +218,7 @@ export class Authon {
 
   /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
   async ensureValidToken(): Promise<boolean> {
-    if (this.session.getToken()) return true;
+    if (this.session.isTokenValid()) return true;
     const result = await this.session.refresh();
     return result !== null;
   }

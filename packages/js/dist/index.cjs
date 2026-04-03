@@ -3174,7 +3174,7 @@ var Authon = class {
   }
   /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
   async ensureValidToken() {
-    if (this.session.getToken()) return true;
+    if (this.session.isTokenValid()) return true;
     const result = await this.session.refresh();
     return result !== null;
   }

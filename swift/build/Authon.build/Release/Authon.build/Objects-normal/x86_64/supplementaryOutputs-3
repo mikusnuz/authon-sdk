@@ -1,0 +1,12 @@
+{
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/AnyCodable.swift" : {
+    "abi-baseline-json" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon.abi.json",
+    "const-values" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon-primary.swiftconstvalues",
+    "dependencies" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon-primary.d",
+    "diagnostics" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon-primary.dia",
+    "objc-header" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon-Swift.h",
+    "swiftdoc" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon.swiftdoc",
+    "swiftmodule" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon.swiftmodule",
+    "swiftsourceinfo" : "/Users/jskim/Desktop/vibe/authon-sdk/swift/build/Authon.build/Release/Authon.build/Objects-normal/x86_64/Authon.swiftsourceinfo"
+  }
+}
