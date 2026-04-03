@@ -1,4 +1,0 @@
-module Authon {
-header "Authon-Swift.h"
-export *
-}
