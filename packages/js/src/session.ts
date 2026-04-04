@@ -8,6 +8,9 @@ export class SessionManager {
   private apiUrl: string;
   private publishableKey: string;
   private storageKey: string;
+  private refreshRetryCount = 0;
+  private static readonly MAX_REFRESH_RETRIES = 3;
+  private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
 
   constructor(publishableKey: string, apiUrl: string) {
     this.publishableKey = publishableKey;
@@ -115,21 +118,31 @@ export class SessionManager {
       });
       if (!res.ok) {
         if (res.status === 401) {
-          // Refresh token permanently invalid
+          this.refreshRetryCount = 0;
           this.clearSession();
           return null;
         }
-        // Server error (500 etc) — retry in 10 seconds
-        this.scheduleRefresh(70); // 70 - 60 = 10s retry
+        this.retryRefresh();
         return null;
       }
       const tokens: AuthTokens = await res.json();
+      this.refreshRetryCount = 0;
       this.setSession(tokens);
       return tokens;
     } catch {
-      // Network error — retry in 10 seconds
-      this.scheduleRefresh(70);
+      this.retryRefresh();
       return null;
+    }
+  }
+
+  private retryRefresh(): void {
+    if (this.refreshRetryCount < SessionManager.MAX_REFRESH_RETRIES) {
+      const delay = SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, SessionManager.RETRY_DELAYS.length - 1)];
+      this.refreshRetryCount++;
+      this.scheduleRefresh(delay + 60); // scheduleRefresh subtracts 60
+    } else {
+      this.refreshRetryCount = 0;
+      this.clearSession();
     }
   }
 

@@ -2485,7 +2485,7 @@ var ProfileRenderer = class {
 };
 
 // src/session.ts
-var SessionManager = class {
+var SessionManager = class _SessionManager {
   accessToken = null;
   refreshToken = null;
   user = null;
@@ -2493,6 +2493,10 @@ var SessionManager = class {
   apiUrl;
   publishableKey;
   storageKey;
+  refreshRetryCount = 0;
+  static MAX_REFRESH_RETRIES = 3;
+  static RETRY_DELAYS = [3, 10, 30];
+  // seconds
   constructor(publishableKey, apiUrl) {
     this.publishableKey = publishableKey;
     this.apiUrl = apiUrl;
@@ -2589,18 +2593,30 @@ var SessionManager = class {
       });
       if (!res.ok) {
         if (res.status === 401) {
+          this.refreshRetryCount = 0;
           this.clearSession();
           return null;
         }
-        this.scheduleRefresh(70);
+        this.retryRefresh();
         return null;
       }
       const tokens = await res.json();
+      this.refreshRetryCount = 0;
       this.setSession(tokens);
       return tokens;
     } catch {
-      this.scheduleRefresh(70);
+      this.retryRefresh();
       return null;
+    }
+  }
+  retryRefresh() {
+    if (this.refreshRetryCount < _SessionManager.MAX_REFRESH_RETRIES) {
+      const delay = _SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, _SessionManager.RETRY_DELAYS.length - 1)];
+      this.refreshRetryCount++;
+      this.scheduleRefresh(delay + 60);
+    } else {
+      this.refreshRetryCount = 0;
+      this.clearSession();
     }
   }
   async signOut() {
