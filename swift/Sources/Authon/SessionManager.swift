@@ -15,6 +15,9 @@ final class SessionManager {
     private var refreshWorkItem: DispatchWorkItem?
     private let api: AuthonAPI
     private let onRefreshed: (TokenPair, AuthonUser) -> Void
+    private var refreshRetryCount = 0
+    private static let maxRefreshRetries = 3
+    private static let retryDelays: [TimeInterval] = [3, 10, 30]
     private let onExpired: () -> Void
 
     init(api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
@@ -186,10 +189,11 @@ final class SessionManager {
                 )
                 self.tokens = newPair
                 self.saveToKeychain(newPair)
+                self.refreshRetryCount = 0
                 self.scheduleRefresh()
                 self.onRefreshed(newPair, response.user)
             } catch {
-                // Don't clear refreshToken — keep it for retry on next app activate
+                // Don't clear refreshToken — keep it for retry
                 if let existing = self.tokens {
                     self.tokens = TokenPair(
                         accessToken: existing.accessToken,
@@ -198,9 +202,19 @@ final class SessionManager {
                     )
                     self.saveToKeychain(self.tokens!)
                 }
-                self.refreshWorkItem?.cancel()
-                self.refreshWorkItem = nil
-                self.onExpired()
+                // Retry with exponential backoff (3s, 10s, 30s) before giving up
+                if self.refreshRetryCount < Self.maxRefreshRetries {
+                    let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
+                    self.refreshRetryCount += 1
+                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                        self?.performRefresh()
+                    }
+                } else {
+                    self.refreshRetryCount = 0
+                    self.refreshWorkItem?.cancel()
+                    self.refreshWorkItem = nil
+                    self.onExpired()
+                }
             }
         }
     }
