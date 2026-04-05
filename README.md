@@ -12,7 +12,7 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 | Package | Version | Description | npm |
 |---------|---------|-------------|-----|
 | [`@authon/shared`](./packages/shared) | 0.3.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
-| [`@authon/js`](./packages/js) | 0.7.10 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/js`](./packages/js) | 0.7.11 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
 | [`@authon/react`](./packages/react) | 0.3.2 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
 | [`@authon/nextjs`](./packages/nextjs) | 0.3.0 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
 | [`@authon/vue`](./packages/vue) | 0.3.3 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |

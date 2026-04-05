@@ -18,6 +18,7 @@ final class SessionManager {
     private var refreshRetryCount = 0
     private static let maxRefreshRetries = 3
     private static let retryDelays: [TimeInterval] = [3, 10, 30]
+    private var refreshInFlight: Task<TokenPair?, Never>?
     private let onExpired: () -> Void
 
     init(api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
@@ -115,27 +116,38 @@ final class SessionManager {
     }
 
     func refresh() async -> TokenPair? {
-        guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return nil }
-        do {
-            struct RefreshBody: Encodable {
-                let refreshToken: String
-            }
-            let response: ApiAuthResponse = try await api.request(
-                "POST",
-                "/v1/auth/token/refresh",
-                body: RefreshBody(refreshToken: refreshToken)
-            )
-            let newPair = TokenPair(
-                accessToken: response.accessToken,
-                refreshToken: response.refreshToken,
-                expiresAt: Date().timeIntervalSince1970 * 1000 + Double(response.expiresIn) * 1000
-            )
-            tokens = newPair
-            saveToKeychain(newPair)
-            return newPair
-        } catch {
-            return nil
+        // Single-flight: if refresh is already in progress, wait for that result
+        if let existing = refreshInFlight {
+            return await existing.value
         }
+        guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return nil }
+        let task = Task<TokenPair?, Never> { [weak self] in
+            guard let self else { return nil }
+            do {
+                struct RefreshBody: Encodable {
+                    let refreshToken: String
+                }
+                let response: ApiAuthResponse = try await self.api.request(
+                    "POST",
+                    "/v1/auth/token/refresh",
+                    body: RefreshBody(refreshToken: refreshToken)
+                )
+                let newPair = TokenPair(
+                    accessToken: response.accessToken,
+                    refreshToken: response.refreshToken,
+                    expiresAt: Date().timeIntervalSince1970 * 1000 + Double(response.expiresIn) * 1000
+                )
+                self.tokens = newPair
+                self.saveToKeychain(newPair)
+                return newPair
+            } catch {
+                return nil
+            }
+        }
+        refreshInFlight = task
+        let result = await task.value
+        refreshInFlight = nil
+        return result
     }
 
     // MARK: - Auto-Refresh
@@ -166,6 +178,9 @@ final class SessionManager {
     }
 
     private func performRefresh() {
+        // Skip if refresh is already in flight
+        if refreshInFlight != nil { return }
+
         guard let refreshToken = tokens?.refreshToken else {
             onExpired()
             return

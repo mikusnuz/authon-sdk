@@ -9,6 +9,7 @@ export class SessionManager {
   private publishableKey: string;
   private storageKey: string;
   private refreshRetryCount = 0;
+  private refreshInFlight: Promise<AuthTokens | null> | null = null;
   private static readonly MAX_REFRESH_RETRIES = 3;
   private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
 
@@ -102,6 +103,21 @@ export class SessionManager {
   }
 
   async refresh(): Promise<AuthTokens | null> {
+    // Single-flight: if refresh is already in progress, return that promise
+    if (this.refreshInFlight) return this.refreshInFlight;
+
+    if (!this.refreshToken) {
+      this.clearSession();
+      return null;
+    }
+
+    this.refreshInFlight = this._doRefresh();
+    const result = await this.refreshInFlight;
+    this.refreshInFlight = null;
+    return result;
+  }
+
+  private async _doRefresh(): Promise<AuthTokens | null> {
     if (!this.refreshToken) {
       this.clearSession();
       return null;

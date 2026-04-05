@@ -2494,6 +2494,7 @@ var SessionManager = class _SessionManager {
   publishableKey;
   storageKey;
   refreshRetryCount = 0;
+  refreshInFlight = null;
   static MAX_REFRESH_RETRIES = 3;
   static RETRY_DELAYS = [3, 10, 30];
   // seconds
@@ -2577,6 +2578,17 @@ var SessionManager = class _SessionManager {
     this.refreshTimer = setTimeout(() => this.refresh(), refreshIn);
   }
   async refresh() {
+    if (this.refreshInFlight) return this.refreshInFlight;
+    if (!this.refreshToken) {
+      this.clearSession();
+      return null;
+    }
+    this.refreshInFlight = this._doRefresh();
+    const result = await this.refreshInFlight;
+    this.refreshInFlight = null;
+    return result;
+  }
+  async _doRefresh() {
     if (!this.refreshToken) {
       this.clearSession();
       return null;
