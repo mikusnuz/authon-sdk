@@ -1,3 +1,0 @@
-module Authon {
-    header "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/include/Authon-Swift.h"
-}
