@@ -66,8 +66,8 @@ final class SessionManager {
         // Delete any existing item first
         let deleteQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.keychainService,
-            kSecAttrAccount as String: Self.keychainAccount
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount
         ]
         SecItemDelete(deleteQuery as CFDictionary)
 
@@ -85,8 +85,8 @@ final class SessionManager {
     func clearKeychain() {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.keychainService,
-            kSecAttrAccount as String: Self.keychainAccount
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount
         ]
         SecItemDelete(query as CFDictionary)
     }
