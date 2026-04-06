@@ -65,6 +65,7 @@ export class Authon {
       appearance: config?.appearance,
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl);
+    this.session.setOnSessionCleared(() => this.emit('signedOut'));
     this.consumeRedirectResultFromUrl();
   }
 

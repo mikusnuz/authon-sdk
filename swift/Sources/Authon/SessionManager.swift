@@ -8,8 +8,8 @@ import AppKit
 #endif
 
 final class SessionManager {
-    private static let keychainService = "dev.authon.sdk"
-    private static let keychainAccount = "tokens"
+    private let keychainService: String
+    private let keychainAccount: String
 
     private var tokens: TokenPair?
     private var refreshWorkItem: DispatchWorkItem?
@@ -21,7 +21,9 @@ final class SessionManager {
     private var refreshInFlight: Task<TokenPair?, Never>?
     private let onExpired: () -> Void
 
-    init(api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
+    init(publishableKey: String, api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
+        self.keychainService = "dev.authon.sdk"
+        self.keychainAccount = "tokens_\(publishableKey.prefix(16))"
         self.api = api
         self.onRefreshed = onRefreshed
         self.onExpired = onExpired
@@ -33,8 +35,8 @@ final class SessionManager {
     func loadFromKeychain() -> TokenPair? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.keychainService,
-            kSecAttrAccount as String: Self.keychainAccount,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -72,8 +74,8 @@ final class SessionManager {
         // Add new item
         let addQuery: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.keychainService,
-            kSecAttrAccount as String: Self.keychainAccount,
+            kSecAttrService as String: keychainService,
+            kSecAttrAccount as String: keychainAccount,
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         ]

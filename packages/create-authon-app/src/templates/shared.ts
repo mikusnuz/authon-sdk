@@ -84,8 +84,8 @@ export function generateClaudeMd(template: string): string {
     'vue-vite': '@authon/vue',
     nuxt: '@authon/nuxt',
     svelte: '@authon/svelte',
-    express: '@authon/node',
-    node: '@authon/node',
+    // express: '@authon/node',  // DEPRECATED: @authon/node is no longer maintained
+    // node: '@authon/node',     // DEPRECATED: @authon/node is no longer maintained
   };
 
   const isServer = template === 'express' || template === 'node';
@@ -179,13 +179,20 @@ import { createAuthonStore } from '${sdk}';
 \`\`\`
 `}
 
-### Server-side (@authon/node)
+### Server-side (webhook sync)
+
+> **Note**: @authon/node is deprecated. Authon is a frontend-only platform.
+> For webhook handling, use a plain HTTP endpoint in your backend framework.
 
 \`\`\`ts
-import { AuthonBackend, expressMiddleware } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY);
-const user = await authon.verifyToken(token);
+// POST /api/webhook/authon — sync Authon events to your database
+app.post('/api/webhook/authon', async (req, res) => {
+  const { type, data } = req.body;
+  if (type === 'user.created') {
+    await db.users.create({ email: data.user.email });
+  }
+  res.json({ ok: true });
+});
 \`\`\`
 
 ## Environment Variables

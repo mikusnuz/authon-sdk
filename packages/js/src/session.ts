@@ -12,6 +12,7 @@ export class SessionManager {
   private refreshInFlight: Promise<AuthTokens | null> | null = null;
   private static readonly MAX_REFRESH_RETRIES = 3;
   private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
+  private onSessionCleared: (() => void) | null = null;
 
   constructor(publishableKey: string, apiUrl: string) {
     this.publishableKey = publishableKey;
@@ -80,11 +81,15 @@ export class SessionManager {
     }
   }
 
+  setOnSessionCleared(cb: () => void): void {
+    this.onSessionCleared = cb;
+  }
+
   updateUser(user: AuthonUser): void {
     this.user = user;
   }
 
-  clearSession(): void {
+  clearSession(silent = false): void {
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
@@ -92,6 +97,9 @@ export class SessionManager {
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
+    }
+    if (!silent) {
+      this.onSessionCleared?.();
     }
   }
 
@@ -176,10 +184,10 @@ export class SessionManager {
     } catch {
       // ignore
     }
-    this.clearSession();
+    this.clearSession(true);
   }
 
   destroy(): void {
-    this.clearSession();
+    this.clearSession(true);
   }
 }

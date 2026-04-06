@@ -1,5 +1,7 @@
 [English](./README.md) | **한국어**
 
+> **지원 중단**: 이 패키지는 더 이상 유지보수되지 않습니다. Authon은 프론트엔드 전용 플랫폼입니다. 프론트엔드 SDK (@authon/js, @authon/react 등)를 사용하세요.
+
 # @authon/node
 
 > Node.js 서버 SDK -- 토큰 검증, 사용자 관리, 웹훅 -- 셀프 호스팅 Clerk 대안

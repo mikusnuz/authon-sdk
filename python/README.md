@@ -1,3 +1,5 @@
+> **DEPRECATED**: This package is no longer maintained. Authon is a frontend-only platform. Use the frontend SDKs (@authon/js, @authon/react, etc.) instead.
+
 # authon
 
 > Python server SDK for token verification, user management, and webhooks — self-hosted Clerk alternative, Auth0 alternative

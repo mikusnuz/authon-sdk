@@ -106,8 +106,50 @@ export class AuthonMobileClient {
 
   // ── Auth ──
 
-  async signIn(params: SignInParams): Promise<{ tokens: TokenPair; user: AuthonUser }> {
-    const res = (await this.request('POST', '/v1/auth/signin', params)) as ApiAuthResponse;
+  async signIn(
+    params: SignInParams,
+  ): Promise<
+    | { tokens: TokenPair; user: AuthonUser }
+    | { needsVerification: true; email: string }
+    | { mfaRequired: true; mfaToken: string }
+  > {
+    const res = (await this.request('POST', '/v1/auth/signin', params)) as any;
+    if (res.needsVerification) {
+      this.emit('verificationRequired', res.email);
+      return { needsVerification: true as const, email: res.email };
+    }
+    if (res.mfaRequired) {
+      this.emit('mfaRequired', res.mfaToken);
+      return { mfaRequired: true as const, mfaToken: res.mfaToken };
+    }
+    const authRes = res as ApiAuthResponse;
+    this.tokens = this.toTokenPair(authRes);
+    this.user = authRes.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', authRes.user);
+    return { tokens: this.tokens, user: authRes.user };
+  }
+
+  async signUp(
+    params: SignUpParams,
+  ): Promise<{ tokens: TokenPair; user: AuthonUser } | { needsVerification: true; email: string }> {
+    const res = (await this.request('POST', '/v1/auth/signup', params)) as any;
+    if (res.needsVerification) {
+      this.emit('verificationRequired', res.email);
+      return { needsVerification: true as const, email: res.email };
+    }
+    const authRes = res as ApiAuthResponse;
+    this.tokens = this.toTokenPair(authRes);
+    this.user = authRes.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', authRes.user);
+    return { tokens: this.tokens, user: authRes.user };
+  }
+
+  async verifyEmail(email: string, code: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const res = (await this.request('POST', '/v1/auth/verify-email', { email, code })) as ApiAuthResponse;
     this.tokens = this.toTokenPair(res);
     this.user = res.user;
     await this.persistTokens();
@@ -116,14 +158,8 @@ export class AuthonMobileClient {
     return { tokens: this.tokens, user: res.user };
   }
 
-  async signUp(params: SignUpParams): Promise<{ tokens: TokenPair; user: AuthonUser }> {
-    const res = (await this.request('POST', '/v1/auth/signup', params)) as ApiAuthResponse;
-    this.tokens = this.toTokenPair(res);
-    this.user = res.user;
-    await this.persistTokens();
-    this.scheduleRefresh(this.tokens.expiresAt);
-    this.emit('signedIn', res.user);
-    return { tokens: this.tokens, user: res.user };
+  async resendVerificationCode(email: string): Promise<void> {
+    await this.request('POST', '/v1/auth/resend-code', { email });
   }
 
   async signOut(): Promise<void> {

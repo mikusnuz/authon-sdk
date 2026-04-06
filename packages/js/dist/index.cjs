@@ -2498,6 +2498,7 @@ var SessionManager = class _SessionManager {
   static MAX_REFRESH_RETRIES = 3;
   static RETRY_DELAYS = [3, 10, 30];
   // seconds
+  onSessionCleared = null;
   constructor(publishableKey, apiUrl) {
     this.publishableKey = publishableKey;
     this.apiUrl = apiUrl;
@@ -2559,10 +2560,13 @@ var SessionManager = class _SessionManager {
       this.scheduleRefresh(tokens.expiresIn);
     }
   }
+  setOnSessionCleared(cb) {
+    this.onSessionCleared = cb;
+  }
   updateUser(user) {
     this.user = user;
   }
-  clearSession() {
+  clearSession(silent = false) {
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
@@ -2570,6 +2574,9 @@ var SessionManager = class _SessionManager {
     if (this.refreshTimer) {
       clearTimeout(this.refreshTimer);
       this.refreshTimer = null;
+    }
+    if (!silent) {
+      this.onSessionCleared?.();
     }
   }
   scheduleRefresh(expiresIn) {
@@ -2644,10 +2651,10 @@ var SessionManager = class _SessionManager {
       });
     } catch {
     }
-    this.clearSession();
+    this.clearSession(true);
   }
   destroy() {
-    this.clearSession();
+    this.clearSession(true);
   }
 };
 
@@ -3074,6 +3081,7 @@ var Authon = class {
       appearance: config?.appearance
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl);
+    this.session.setOnSessionCleared(() => this.emit("signedOut"));
     this.consumeRedirectResultFromUrl();
   }
   // ── Public API ──

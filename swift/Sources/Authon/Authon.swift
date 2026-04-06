@@ -31,6 +31,7 @@ public final class Authon: ObservableObject {
         var expiredHandler: (() -> Void)!
 
         self.sessionManager = SessionManager(
+            publishableKey: publishableKey,
             api: api,
             onRefreshed: { pair, user in refreshedHandler(pair, user) },
             onExpired: { expiredHandler() }
@@ -130,6 +131,12 @@ public final class Authon: ObservableObject {
             throw AuthonMfaRequiredError(mfaToken: mfaToken)
         }
 
+        // Check for email verification requirement
+        if let verifyCheck = try? decoder.decode(SignInResponse.self, from: responseData),
+           verifyCheck.needsVerification == true {
+            throw AuthonVerificationRequired(email: verifyCheck.email ?? email)
+        }
+
         let response = try decoder.decode(ApiAuthResponse.self, from: responseData)
         handleAuthSuccess(response)
         return response.user
@@ -137,9 +144,41 @@ public final class Authon: ObservableObject {
 
     public func signUp(email: String, password: String, displayName: String? = nil) async throws -> AuthonUser {
         let body = SignUpRequest(email: email, password: password, displayName: displayName)
-        let response: ApiAuthResponse = try await api.request("POST", "/v1/auth/signup", body: body)
+        let responseData = try await rawRequest("POST", "/v1/auth/signup", body: body)
+
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+
+        if let verifyCheck = try? decoder.decode(SignInResponse.self, from: responseData),
+           verifyCheck.needsVerification == true {
+            throw AuthonVerificationRequired(email: verifyCheck.email ?? email)
+        }
+
+        let response = try decoder.decode(ApiAuthResponse.self, from: responseData)
         handleAuthSuccess(response)
         return response.user
+    }
+
+    public func verifyEmail(email: String, code: String) async throws -> AuthonUser {
+        struct VerifyBody: Encodable {
+            let email: String
+            let code: String
+        }
+        let response: ApiAuthResponse = try await api.request(
+            "POST", "/v1/auth/verify-email",
+            body: VerifyBody(email: email, code: code)
+        )
+        handleAuthSuccess(response)
+        return response.user
+    }
+
+    public func resendVerificationCode(email: String) async throws {
+        struct ResendBody: Encodable { let email: String }
+        struct EmptyResponse: Decodable {}
+        let _: EmptyResponse = try await api.request(
+            "POST", "/v1/auth/resend-code",
+            body: ResendBody(email: email)
+        )
     }
 
     public func signOut() async throws {
@@ -651,6 +690,24 @@ private struct MfaCheckResponse: Decodable {
     let mfaRequired: Bool?
     let mfaToken: String?
     let accessToken: String?
+}
+
+// MARK: - SignInResponse (verification check)
+
+private struct SignInResponse: Decodable {
+    let accessToken: String?
+    let refreshToken: String?
+    let expiresIn: Int?
+    let user: AuthonUser?
+    let needsVerification: Bool?
+    let email: String?
+}
+
+// MARK: - AuthonVerificationRequired
+
+public struct AuthonVerificationRequired: Error {
+    public let email: String
+    public init(email: String) { self.email = email }
 }
 
 // MARK: - AnyEncodableBox (for rawRequest)

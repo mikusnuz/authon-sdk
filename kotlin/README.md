@@ -1,3 +1,5 @@
+> **DEPRECATED**: This package is no longer maintained. Authon is a frontend-only platform. Use the frontend SDKs (@authon/js, @authon/react, etc.) instead.
+
 # authon-kotlin
 
 > Kotlin/JVM server SDK for token verification and user management — self-hosted Clerk alternative, Auth0 alternative
