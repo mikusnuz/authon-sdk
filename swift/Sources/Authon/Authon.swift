@@ -79,17 +79,16 @@ public final class Authon: ObservableObject {
             } catch {
                 // Token expired, try refresh
                 if let refreshed = await sessionManager.refresh() {
+                    // refresh 성공 = 토큰 유효
+                    isSignedIn = true
+                    sessionManager.scheduleRefresh()
                     do {
                         let fetchedUser: AuthonUser = try await api.requestAuth(
                             "GET", "/v1/auth/me", accessToken: refreshed.accessToken
                         )
                         user = fetchedUser
-                        isSignedIn = true
-                        sessionManager.scheduleRefresh()
                     } catch {
-                        // /me failed after refresh — keep tokens for retry, don't destroy session
-                        user = nil
-                        isSignedIn = false
+                        // /me 실패 — 세션은 유지, user 정보만 없음
                     }
                 } else {
                     // refresh() returned nil — could be network error or invalid token
@@ -598,17 +597,20 @@ public final class Authon: ObservableObject {
 
     public func refreshSession() async -> Bool {
         if let refreshed = await sessionManager.refresh() {
+            // refresh 성공 = 토큰 유효. /me 실패와 무관하게 세션 유지.
+            isSignedIn = true
+            sessionManager.scheduleRefresh()
+
+            // /me는 프로필 업데이트용 — 실패해도 세션 상태에 영향 없음
             do {
                 let fetchedUser: AuthonUser = try await api.requestAuth(
                     "GET", "/v1/auth/me", accessToken: refreshed.accessToken
                 )
                 user = fetchedUser
-                isSignedIn = true
-                sessionManager.scheduleRefresh() // Re-arm next auto-refresh
-                return true
             } catch {
-                return false
+                // /me 실패 — 기존 user 유지, 세션은 살아있음
             }
+            return true
         }
         return false
     }
