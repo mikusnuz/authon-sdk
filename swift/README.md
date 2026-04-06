@@ -217,6 +217,85 @@ let user = try await authon.verifyWeb3Signature(
 | `renamePasskey(id:name:)` | Rename a passkey |
 | `deletePasskey(id:)` | Delete a passkey |
 
+## Passkey Setup
+
+Passkeys use the WebAuthn standard via `ASAuthorizationController`. Follow these steps to enable them in your app.
+
+### Requirements
+
+- iOS 16+ or macOS 13+
+- Apple Developer account with an active development team
+- A physical device (passkeys do not work in Simulator)
+- Passkeys enabled in the Authon Dashboard under **Project Settings → Providers**
+
+### 1. Add Associated Domains capability
+
+In Xcode, open your target → **Signing & Capabilities** → click **+** → add **Associated Domains**.
+
+Add the following entry:
+
+```
+webcredentials:api.authon.dev
+```
+
+This tells the OS to look for `https://api.authon.dev/.well-known/apple-app-site-association` to validate your app's right to use passkeys for that relying party.
+
+### 2. Register your Bundle ID with Authon
+
+The `apple-app-site-association` file on `api.authon.dev` must list your app's **Team ID + Bundle ID** (format: `TEAMID.com.example.MyApp`).
+
+Contact [support@authon.dev](mailto:support@authon.dev) with:
+
+- Your **Team ID** (visible in the Apple Developer portal)
+- Your app's **Bundle ID**
+
+We will add the entry to the AASA file. Until it is added, passkey registration and authentication will fail with an `ASAuthorization` error.
+
+### 3. Enable Passkeys in the Dashboard
+
+Go to **Authon Dashboard → your project → Providers** and toggle **Passkeys** on.
+
+### 4. Register a passkey (authenticated user)
+
+```swift
+import Authon
+
+// User must already be signed in
+do {
+    let credential = try await authon.registerPasskey(name: "My iPhone")
+    print("Passkey registered: \(credential.id)")
+} catch {
+    print("Registration failed: \(error.localizedDescription)")
+}
+```
+
+### 5. Sign in with a passkey
+
+```swift
+import Authon
+
+do {
+    let user = try await authon.authenticateWithPasskey(email: "user@example.com")
+    print("Signed in: \(user.email ?? "")")
+} catch {
+    print("Authentication failed: \(error.localizedDescription)")
+}
+```
+
+Passing `email` is optional — the system will present all available passkeys for the relying party if omitted.
+
+### Debug builds and local testing
+
+Apple enforces the AASA domain association at runtime, which means passkeys require a properly configured domain even during development.
+
+For local testing against a custom server, pass `?mode=developer` to your API URL. This relaxes some checks on the server side but cannot bypass the OS-level domain association — you still need a real device with the Associated Domains entitlement and a reachable AASA endpoint.
+
+```swift
+AuthonProvider(publishableKey: "pk_test_...", apiURL: "https://your.dev.server?mode=developer") {
+    ContentView()
+}
+```
+
 ### Web3
 | Method | Description |
 |--------|-------------|

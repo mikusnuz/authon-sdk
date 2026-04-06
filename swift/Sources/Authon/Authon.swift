@@ -302,6 +302,8 @@ public final class Authon: ObservableObject {
 
     // MARK: - Passkeys
 
+    #if canImport(AuthenticationServices)
+    @available(iOS 16.0, macOS 13.0, *)
     public func registerPasskey(name: String? = nil) async throws -> PasskeyCredential {
         guard let accessToken = sessionManager.getAccessToken() else {
             throw AuthonError(statusCode: 401, message: "Not authenticated", code: "not_authenticated")
@@ -309,49 +311,45 @@ public final class Authon: ObservableObject {
 
         // 1. Get registration options from server
         struct OptionsBody: Encodable { let name: String? }
-        struct OptionsResponse: Decodable { let options: AnyCodable }
-        let optionsResponse: OptionsResponse = try await api.requestAuth(
+        let options: WebAuthnRegistrationOptions = try await api.requestAuth(
             "POST", "/v1/auth/passkeys/register/options",
             accessToken: accessToken,
             body: OptionsBody(name: name)
         )
 
-        // TODO: ASAuthorizationController integration
-        // Use ASAuthorizationPlatformPublicKeyCredentialProvider with the options
-        // to create a platform credential via the system passkey UI.
-        // For now, we pass the options directly to verify endpoint as a placeholder.
+        // 2. Create platform credential via ASAuthorization
+        let passkeyResult = try await PasskeyHelper.register(options: options)
 
         // 3. Verify the credential with the server
         let credential: PasskeyCredential = try await api.requestAuth(
             "POST", "/v1/auth/passkeys/register/verify",
             accessToken: accessToken,
-            body: optionsResponse.options
+            body: passkeyResult
         )
         return credential
     }
 
+    @available(iOS 16.0, macOS 13.0, *)
     public func authenticateWithPasskey(email: String? = nil) async throws -> AuthonUser {
         // 1. Get authentication options from server
         struct OptionsBody: Encodable { let email: String? }
-        struct OptionsResponse: Decodable { let options: AnyCodable }
-        let optionsResponse: OptionsResponse = try await api.request(
+        let options: WebAuthnAuthenticationOptions = try await api.request(
             "POST", "/v1/auth/passkeys/authenticate/options",
             body: OptionsBody(email: email)
         )
 
-        // TODO: ASAuthorizationController integration
-        // Use ASAuthorizationPlatformPublicKeyCredentialProvider with the options
-        // to authenticate via the system passkey UI.
-        // For now, we pass the options directly to verify endpoint as a placeholder.
+        // 2. Authenticate via ASAuthorization
+        let passkeyResult = try await PasskeyHelper.authenticate(options: options)
 
         // 3. Verify the credential with the server
         let response: ApiAuthResponse = try await api.request(
             "POST", "/v1/auth/passkeys/authenticate/verify",
-            body: optionsResponse.options
+            body: passkeyResult
         )
         handleAuthSuccess(response)
         return response.user
     }
+    #endif
 
     public func listPasskeys() async throws -> [PasskeyCredential] {
         guard let token = sessionManager.getAccessToken() else {
