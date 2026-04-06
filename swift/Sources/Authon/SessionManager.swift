@@ -208,15 +208,9 @@ final class SessionManager {
                 self.scheduleRefresh()
                 self.onRefreshed(newPair, response.user)
             } catch {
-                // Don't clear refreshToken — keep it for retry
-                if let existing = self.tokens {
-                    self.tokens = TokenPair(
-                        accessToken: existing.accessToken,
-                        refreshToken: existing.refreshToken,
-                        expiresAt: 0 // mark as expired but keep refreshToken
-                    )
-                    self.saveToKeychain(self.tokens!)
-                }
+                // Don't touch Keychain — preserve the existing refreshToken as-is
+                // If we overwrite with expiresAt:0, and the server already rotated,
+                // the Keychain ends up with a dead token that can't recover on restart
                 // Retry with exponential backoff (3s, 10s, 30s) before giving up
                 if self.refreshRetryCount < Self.maxRefreshRetries {
                     let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]

@@ -1,0 +1,131 @@
+{
+  "": {
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/master.swiftdeps"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/AnyCodable.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AnyCodable.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AnyCodable.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AnyCodable~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AnyCodable.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AnyCodable.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/Authon.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Authon.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Authon.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Authon~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Authon.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Authon.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/AuthonAPI.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonAPI.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonAPI.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonAPI~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonAPI.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonAPI.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/BrandingManager.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/BrandingManager.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/BrandingManager.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/BrandingManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/BrandingManager.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/BrandingManager.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/Events.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Events.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Events.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Events~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Events.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Events.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/Models.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Models.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Models.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Models~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Models.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Models.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/OAuthManager.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/OAuthManager.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/OAuthManager.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/OAuthManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/OAuthManager.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/OAuthManager.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/SessionManager.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SessionManager.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SessionManager.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SessionManager~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SessionManager.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SessionManager.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/AuthonProvider.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonProvider.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonProvider.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonProvider~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonProvider.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/AuthonProvider.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/ProviderIcons.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/ProviderIcons.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/ProviderIcons.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/ProviderIcons~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/ProviderIcons.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/ProviderIcons.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SignInView.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignInView.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignInView.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignInView~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignInView.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignInView.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SignUpView.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignUpView.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignUpView.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignUpView~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignUpView.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignUpView.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SignedIn.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedIn.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedIn.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedIn~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedIn.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedIn.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SignedOut.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedOut.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedOut.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedOut~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedOut.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SignedOut.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SocialButton.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButton.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButton.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButton~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButton.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButton.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/SocialButtons.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButtons.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButtons.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButtons~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButtons.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/SocialButtons.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/Theme.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Theme.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Theme.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Theme~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Theme.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/Theme.dia"
+  },
+  "/Users/jskim/Desktop/vibe/authon-sdk/swift/Sources/Authon/UI/UserButton.swift": {
+    "dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/UserButton.d",
+    "object": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/UserButton.swift.o",
+    "swiftmodule": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/UserButton~partial.swiftmodule",
+    "swift-dependencies": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/UserButton.swiftdeps",
+    "diagnostics": "/Users/jskim/Desktop/vibe/authon-sdk/.build/arm64-apple-macosx/debug/Authon.build/UserButton.dia"
+  }
+}
