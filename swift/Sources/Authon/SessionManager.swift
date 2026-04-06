@@ -18,7 +18,7 @@ final class SessionManager {
     private var refreshRetryCount = 0
     private static let maxRefreshRetries = 3
     private static let retryDelays: [TimeInterval] = [3, 10, 30]
-    private var refreshInFlight: Task<TokenPair?, Never>?
+    private var refreshInFlight: Task<RefreshResult?, Never>?
     private let onExpired: () -> Void
 
     init(publishableKey: String, api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
