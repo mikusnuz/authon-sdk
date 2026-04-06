@@ -176,7 +176,7 @@ final class SessionManager {
             self?.performRefresh()
         }
         self.refreshWorkItem = workItem
-        DispatchQueue.main.asyncAfter(deadline: .now() + refreshInSec, execute: workItem)
+        DispatchQueue.main.asyncAfter(wallDeadline: .now() + refreshInSec, execute: workItem)
     }
 
     private func performRefresh() {
@@ -217,7 +217,7 @@ final class SessionManager {
                 if self.refreshRetryCount < Self.maxRefreshRetries {
                     let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
                     self.refreshRetryCount += 1
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                    DispatchQueue.main.asyncAfter(wallDeadline: .now() + delay) { [weak self] in
                         self?.performRefresh()
                     }
                 } else {
@@ -256,6 +256,14 @@ final class SessionManager {
         #elseif canImport(AppKit)
         NotificationCenter.default.addObserver(
             forName: NSApplication.willBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.checkOnForeground()
+        }
+        // macOS sleep 복귀 감지 — willBecomeActive는 sleep 복귀 시 fire 안 됨
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
             object: nil,
             queue: .main
         ) { [weak self] _ in
