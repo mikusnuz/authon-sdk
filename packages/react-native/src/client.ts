@@ -80,10 +80,10 @@ export class AuthonMobileClient {
         this.scheduleRefresh(tokens.expiresAt);
         return tokens;
       }
-      // Try refreshing
+      // Try refreshing — preserve storage on failure for next retry
       return await this.refreshToken(tokens.refreshToken);
     } catch {
-      await this.storage.removeItem(this.storageKey);
+      // Corrupt storage — only case where deletion is justified
       return null;
     }
   }
@@ -206,7 +206,11 @@ export class AuthonMobileClient {
       });
 
       if (!res.ok) {
-        this.clearSession();
+        // 401 = refresh token permanently invalid
+        if (res.status === 401) {
+          this.clearSession();
+        }
+        // Other errors (500, network) — preserve tokens for retry
         return null;
       }
 
@@ -218,6 +222,7 @@ export class AuthonMobileClient {
       this.emit('tokenRefreshed');
       return this.tokens;
     } catch {
+      // Network error — do NOT clear session
       return null;
     }
   }
