@@ -667,8 +667,8 @@ packages:
   '@authon/js@0.7.0':
     resolution: {integrity: sha512-DdMk77nb8HjOFxNVTNbTO72BwEc90GriWLz9ngGn71uGhRm0nLQzXIgVuapggMEkRcBKoU/9kt0Qe/8CKxQn4A==}
 
-  '@authon/js@0.7.10':
-    resolution: {integrity: sha512-9oDKaWdZA3UJy3DiokOkJd9zLPRdsMV0ddkU+wPBsXdZhAdGFW6p3hBOOj7C0whDb+lVjvGSDILX6dFjZ/Qgeg==}
+  '@authon/js@0.7.11':
+    resolution: {integrity: sha512-qTYxKRoOzFKz6LQHkgmYGc4rJL9YMKV4hGcwITctI0pSK3a48lGl1j6yYTHRWiOkDSyW/SUw/R6PSza0nJFG3Q==}
 
   '@authon/nextjs@file:packages/nextjs':
     resolution: {directory: packages/nextjs, type: directory}
@@ -8591,14 +8591,14 @@ snapshots:
   '@authon/angular@file:packages/angular(@angular/core@19.2.18(rxjs@7.8.2)(zone.js@0.15.1))':
     dependencies:
       '@angular/core': 19.2.18(rxjs@7.8.2)(zone.js@0.15.1)
-      '@authon/js': 0.7.10
+      '@authon/js': 0.7.11
       '@authon/shared': 0.3.0
 
   '@authon/js@0.7.0':
     dependencies:
       '@authon/shared': 0.3.0
 
-  '@authon/js@0.7.10':
+  '@authon/js@0.7.11':
     dependencies:
       '@authon/shared': 0.3.0
 
@@ -8610,14 +8610,14 @@ snapshots:
 
   '@authon/nuxt@file:packages/nuxt(nuxt@3.21.1(@parcel/watcher@2.5.6)(@types/node@22.19.11)(@vue/compiler-sfc@3.5.28)(cac@6.7.14)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.9.3)(less@4.2.2)(magicast@0.5.2)(rollup@4.59.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(less@4.2.2)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue-tsc@2.2.12(typescript@5.9.3))(yaml@2.8.2))':
     dependencies:
-      '@authon/js': 0.7.10
+      '@authon/js': 0.7.11
       '@authon/shared': 0.3.0
       '@authon/vue': link:packages/vue
       nuxt: 3.21.1(@parcel/watcher@2.5.6)(@types/node@22.19.11)(@vue/compiler-sfc@3.5.28)(cac@6.7.14)(db0@0.3.4)(encoding@0.1.13)(ioredis@5.9.3)(less@4.2.2)(magicast@0.5.2)(rollup@4.59.0)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(typescript@5.9.3)(vite@7.3.1(@types/node@22.19.11)(jiti@2.6.1)(less@4.2.2)(sass@1.85.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2))(vue-tsc@2.2.12(typescript@5.9.3))(yaml@2.8.2)
 
   '@authon/react@file:packages/react(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:
-      '@authon/js': 0.7.10
+      '@authon/js': 0.7.11
       '@authon/shared': 0.3.0
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
@@ -8626,13 +8626,13 @@ snapshots:
 
   '@authon/svelte@file:packages/svelte(svelte@5.53.2)':
     dependencies:
-      '@authon/js': 0.7.10
+      '@authon/js': 0.7.11
       '@authon/shared': 0.3.0
       svelte: 5.53.2
 
   '@authon/vue@file:packages/vue(vue@3.5.28(typescript@5.9.3))':
     dependencies:
-      '@authon/js': 0.7.10
+      '@authon/js': 0.7.11
       '@authon/shared': 0.3.0
       vue: 3.5.28(typescript@5.9.3)
 

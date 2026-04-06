@@ -36,11 +36,14 @@ interface ProvidersResponse {
 
 type OAuthPollResponse = OAuthCompletedResponse | OAuthErrorResponse;
 
-const STORAGE_KEY = 'authon-tokens';
+function getStorageKey(publishableKey: string): string {
+  return `authon_session_${publishableKey.slice(0, 16)}`;
+}
 
 export class AuthonMobileClient {
   private apiUrl: string;
   private publishableKey: string;
+  private storageKey: string;
   private tokens: TokenPair | null = null;
   private user: AuthonUser | null = null;
   private storage: TokenStorage | null = null;
@@ -55,6 +58,7 @@ export class AuthonMobileClient {
   constructor(config: AuthonReactNativeConfig) {
     this.publishableKey = config.publishableKey;
     this.apiUrl = (config.apiUrl || DEFAULT_API_URL).replace(/\/$/, '');
+    this.storageKey = getStorageKey(config.publishableKey);
   }
 
   setStorage(storage: TokenStorage) {
@@ -66,7 +70,7 @@ export class AuthonMobileClient {
   async initialize(): Promise<TokenPair | null> {
     if (!this.storage) return null;
 
-    const stored = await this.storage.getItem(STORAGE_KEY);
+    const stored = await this.storage.getItem(this.storageKey);
     if (!stored) return null;
 
     try {
@@ -79,7 +83,7 @@ export class AuthonMobileClient {
       // Try refreshing
       return await this.refreshToken(tokens.refreshToken);
     } catch {
-      await this.storage.removeItem(STORAGE_KEY);
+      await this.storage.removeItem(this.storageKey);
       return null;
     }
   }
@@ -430,7 +434,7 @@ export class AuthonMobileClient {
     this.user = null;
     this.clearRefreshTimer();
     if (this.storage) {
-      this.storage.removeItem(STORAGE_KEY).catch(() => {});
+      this.storage.removeItem(this.storageKey).catch(() => {});
     }
   }
 
@@ -452,7 +456,7 @@ export class AuthonMobileClient {
 
   private async persistTokens(): Promise<void> {
     if (this.storage && this.tokens) {
-      await this.storage.setItem(STORAGE_KEY, JSON.stringify(this.tokens));
+      await this.storage.setItem(this.storageKey, JSON.stringify(this.tokens));
     }
   }
 
