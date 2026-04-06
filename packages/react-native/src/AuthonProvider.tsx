@@ -14,8 +14,8 @@ import type {
 
 export interface AuthonContextValue extends AuthState {
   user: AuthonUser | null;
-  signIn: (params: SignInParams) => Promise<void>;
-  signUp: (params: SignUpParams) => Promise<void>;
+  signIn: (params: SignInParams) => Promise<any>;
+  signUp: (params: SignUpParams) => Promise<any>;
   signOut: () => Promise<void>;
   getToken: () => string | null;
   /** Available OAuth providers (fetched from API) */
@@ -125,27 +125,31 @@ export function AuthonProvider({ children, storage, ...config }: AuthonProviderP
   }, []);
 
   const signIn = useCallback(async (params: SignInParams) => {
-    const { tokens, user: u } = await client.signIn(params);
-    setUser(u);
+    const result = await client.signIn(params);
+    if ('needsVerification' in result || 'mfaRequired' in result) return result;
+    setUser(result.user);
     setAuthState({
       isLoaded: true,
       isSignedIn: true,
-      userId: u?.id || null,
+      userId: result.user?.id || null,
       sessionId: null,
-      accessToken: tokens.accessToken,
+      accessToken: result.tokens.accessToken,
     });
+    return result;
   }, [client]);
 
   const signUp = useCallback(async (params: SignUpParams) => {
-    const { tokens, user: u } = await client.signUp(params);
-    setUser(u);
+    const result = await client.signUp(params);
+    if ('needsVerification' in result) return result;
+    setUser(result.user);
     setAuthState({
       isLoaded: true,
       isSignedIn: true,
-      userId: u?.id || null,
+      userId: result.user?.id || null,
       sessionId: null,
-      accessToken: tokens.accessToken,
+      accessToken: result.tokens.accessToken,
     });
+    return result;
   }, [client]);
 
   const signOut = useCallback(async () => {
