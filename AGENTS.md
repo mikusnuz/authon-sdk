@@ -2,7 +2,7 @@
 
 ## Identity
 
-Authon is a frontend-only authentication platform (Clerk alternative) with 9 SDKs. This monorepo contains all official SDKs.
+Authon is a frontend-only authentication platform (Clerk alternative) with 9 JS/TS SDKs + Swift SDK. This monorepo contains all official SDKs.
 
 ## Rules
 
@@ -23,6 +23,10 @@ Authon is a frontend-only authentication platform (Clerk alternative) with 9 SDK
 | Svelte | `@authon/svelte` | `npm install @authon/svelte @authon/js` |
 | Angular | `@authon/angular` | `npm install @authon/angular @authon/js` |
 | React Native / Expo | `@authon/react-native` | `npm install @authon/react-native react-native-svg` |
+| Swift (iOS/macOS) | `Authon` (SPM) | `.package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")` |
+
+### Swift Passkey Setup
+Passkeys require iOS 16+, real device, Apple Developer account. Add `webcredentials:api.authon.dev` to Associated Domains in Xcode. Use `authon.registerPasskey()` / `authon.authenticateWithPasskey()`.
 
 ## Environment Variables
 

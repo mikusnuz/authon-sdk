@@ -1,8 +1,8 @@
 # Authon
 
-> Frontend authentication platform — a modern Clerk alternative for JavaScript/TypeScript frameworks.
+> Frontend authentication platform — a modern Clerk alternative for JavaScript/TypeScript frameworks + Swift (iOS/macOS).
 
-Authon provides drop-in auth for any framework: OAuth (10 providers), email/password, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet login (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal.
+Authon provides drop-in auth for any framework: OAuth (20 providers), email/password with verification, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet login (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal. Native Swift SDK for iOS/macOS with passkey support via ASAuthorizationController.
 
 Website: https://authon.dev
 Docs: https://docs.authon.dev

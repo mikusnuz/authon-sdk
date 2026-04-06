@@ -2,9 +2,28 @@
 
 ## What is Authon
 
-Frontend-only authentication platform (Clerk alternative). This monorepo contains 9 SDKs across JavaScript/TypeScript frameworks and React Native.
+Frontend-only authentication platform (Clerk alternative). This monorepo contains 9 JavaScript/TypeScript SDKs, a React Native SDK, and a native Swift SDK (iOS/macOS).
 
-Features: OAuth (10 providers), email/password, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet auth (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal.
+Features: OAuth (20 providers), email/password, passwordless (magic link, email OTP), passkeys (WebAuthn), Web3 wallet auth (EVM + Solana), TOTP MFA, organizations, session management, webhooks, and a ShadowDOM login modal.
+
+### Swift SDK (iOS/macOS)
+
+The Swift SDK is at `swift/Sources/Authon/`. It supports:
+- OAuth (Apple native + web fallback, Google, GitHub, etc.)
+- Email/password with email verification (`needsVerification` + `verifyEmail` + `resendVerificationCode`)
+- Passkeys via `ASAuthorizationPlatformPublicKeyCredentialProvider` (iOS 16+, macOS 13+, real device only)
+- MFA (TOTP), passwordless, Web3
+- Keychain-based session with auto-refresh + 3x retry backoff
+- Per-publishableKey keychain namespace (no cross-project collision)
+
+**Passkey setup (Swift):**
+1. Apple Developer account required
+2. Xcode → Signing & Capabilities → Add "Associated Domains" → `webcredentials:api.authon.dev`
+3. Contact Authon to register your Team ID + Bundle ID in the AASA file
+4. Enable Passkeys in Authon dashboard (Providers page)
+5. Use `authon.registerPasskey()` and `authon.authenticateWithPasskey()`
+
+SPM: `.package(url: "https://github.com/mikusnuz/authon-sdk.git", from: "0.1.0")`
 
 ## Getting Started
 
