@@ -117,13 +117,15 @@ final class SessionManager {
         return tokens != nil
     }
 
-    func refresh() async -> TokenPair? {
+    typealias RefreshResult = (pair: TokenPair, user: AuthonUser)
+
+    func refresh() async -> RefreshResult? {
         // Single-flight: if refresh is already in progress, wait for that result
         if let existing = refreshInFlight {
             return await existing.value
         }
         guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return nil }
-        let task = Task<TokenPair?, Never> { [weak self] in
+        let task = Task<RefreshResult?, Never> { [weak self] in
             guard let self else { return nil }
             do {
                 struct RefreshBody: Encodable {
@@ -141,7 +143,7 @@ final class SessionManager {
                 )
                 self.tokens = newPair
                 self.saveToKeychain(newPair)
-                return newPair
+                return (pair: newPair, user: response.user)
             } catch {
                 return nil
             }
@@ -180,40 +182,15 @@ final class SessionManager {
     }
 
     private func performRefresh() {
-        // Skip if refresh is already in flight
-        if refreshInFlight != nil { return }
-
-        guard let refreshToken = tokens?.refreshToken else {
-            onExpired()
-            return
-        }
-
         Task { [weak self] in
             guard let self else { return }
-            do {
-                struct RefreshBody: Encodable {
-                    let refreshToken: String
-                }
-                let response: ApiAuthResponse = try await self.api.request(
-                    "POST",
-                    "/v1/auth/token/refresh",
-                    body: RefreshBody(refreshToken: refreshToken)
-                )
-                let newPair = TokenPair(
-                    accessToken: response.accessToken,
-                    refreshToken: response.refreshToken,
-                    expiresAt: Date().timeIntervalSince1970 * 1000 + Double(response.expiresIn) * 1000
-                )
-                self.tokens = newPair
-                self.saveToKeychain(newPair)
+            // Use the public refresh() which has single-flight guard
+            if let result = await self.refresh() {
                 self.refreshRetryCount = 0
                 self.scheduleRefresh()
-                self.onRefreshed(newPair, response.user)
-            } catch {
-                // Don't touch Keychain — preserve the existing refreshToken as-is
-                // If we overwrite with expiresAt:0, and the server already rotated,
-                // the Keychain ends up with a dead token that can't recover on restart
-                // Retry with exponential backoff (3s, 10s, 30s) before giving up
+                self.onRefreshed(result.pair, result.user)
+            } else {
+                // refresh() returned nil — retry with backoff or give up
                 if self.refreshRetryCount < Self.maxRefreshRetries {
                     let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
                     self.refreshRetryCount += 1

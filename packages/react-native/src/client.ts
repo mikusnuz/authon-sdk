@@ -47,6 +47,7 @@ export class AuthonMobileClient {
   private tokens: TokenPair | null = null;
   private user: AuthonUser | null = null;
   private storage: TokenStorage | null = null;
+  private refreshInFlight: Promise<TokenPair | null> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
 
@@ -192,8 +193,19 @@ export class AuthonMobileClient {
   // ── Token management ──
 
   async refreshToken(refreshToken?: string): Promise<TokenPair | null> {
+    // Single-flight guard
+    if (this.refreshInFlight) return this.refreshInFlight;
+
     const token = refreshToken || this.tokens?.refreshToken;
     if (!token) return null;
+
+    this.refreshInFlight = this._doRefresh(token);
+    const result = await this.refreshInFlight;
+    this.refreshInFlight = null;
+    return result;
+  }
+
+  private async _doRefresh(token: string): Promise<TokenPair | null> {
 
     try {
       const res = await fetch(`${this.apiUrl}/v1/auth/token/refresh`, {
