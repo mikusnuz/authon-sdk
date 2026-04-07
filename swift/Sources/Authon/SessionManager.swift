@@ -19,6 +19,7 @@ final class SessionManager {
     private static let maxRefreshRetries = 3
     private static let retryDelays: [TimeInterval] = [3, 10, 30]
     private var refreshInFlight: Task<RefreshResult?, Never>?
+    private var isPerformingRefresh = false
     private let onExpired: () -> Void
 
     init(publishableKey: String, api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
@@ -182,21 +183,24 @@ final class SessionManager {
     }
 
     private func performRefresh() {
+        guard !isPerformingRefresh else { return }
+        isPerformingRefresh = true
+
         Task { [weak self] in
             guard let self else { return }
-            // Use the public refresh() which has single-flight guard
+            defer { self.isPerformingRefresh = false }
+
             if let result = await self.refresh() {
                 self.refreshRetryCount = 0
                 self.scheduleRefresh()
                 self.onRefreshed(result.pair, result.user)
             } else {
-                // refresh() returned nil — retry with backoff or give up
                 if self.refreshRetryCount < Self.maxRefreshRetries {
                     let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
                     self.refreshRetryCount += 1
-                    DispatchQueue.main.asyncAfter(wallDeadline: .now() + delay) { [weak self] in
-                        self?.performRefresh()
-                    }
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    self.isPerformingRefresh = false
+                    self.performRefresh()
                 } else {
                     self.refreshRetryCount = 0
                     self.refreshWorkItem?.cancel()
