@@ -15,7 +15,6 @@ final class AuthonAPI: Sendable {
         dec.keyDecodingStrategy = .convertFromSnakeCase
         self.decoder = dec
         let enc = JSONEncoder()
-        enc.keyEncodingStrategy = .convertToSnakeCase
         self.encoder = enc
     }
 

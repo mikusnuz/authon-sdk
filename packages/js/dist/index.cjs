@@ -2555,6 +2555,7 @@ var SessionManager = class _SessionManager {
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
+    this.refreshRetryCount = 0;
     this.persistToStorage();
     if (tokens.expiresIn && tokens.expiresIn > 0) {
       this.scheduleRefresh(tokens.expiresIn);

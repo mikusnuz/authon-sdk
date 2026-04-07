@@ -19,8 +19,9 @@ final class SessionManager {
     private static let maxRefreshRetries = 3
     private static let retryDelays: [TimeInterval] = [3, 10, 30]
     private var refreshInFlight: Task<RefreshResult?, Never>?
-    private var isPerformingRefresh = false
+    private var retryTask: Task<Void, Never>?
     private let onExpired: () -> Void
+    private var sessionGeneration: UInt64 = 0
 
     init(publishableKey: String, api: AuthonAPI, onRefreshed: @escaping (TokenPair, AuthonUser) -> Void, onExpired: @escaping () -> Void) {
         self.keychainService = "dev.authon.sdk"
@@ -95,6 +96,10 @@ final class SessionManager {
     // MARK: - Token Management
 
     func setTokens(_ pair: TokenPair) {
+        retryTask?.cancel()
+        retryTask = nil
+        refreshRetryCount = 0
+        sessionGeneration &+= 1
         tokens = pair
         saveToKeychain(pair)
         scheduleRefresh()
@@ -160,6 +165,8 @@ final class SessionManager {
     func scheduleRefresh() {
         refreshWorkItem?.cancel()
         refreshWorkItem = nil
+        retryTask?.cancel()
+        retryTask = nil
 
         guard let tokens else { return }
 
@@ -183,29 +190,39 @@ final class SessionManager {
     }
 
     private func performRefresh() {
-        guard !isPerformingRefresh else { return }
-        isPerformingRefresh = true
+        retryTask?.cancel()
+        let generation = sessionGeneration
 
-        Task { [weak self] in
+        retryTask = Task { [weak self] in
             guard let self else { return }
-            defer { self.isPerformingRefresh = false }
 
-            if let result = await self.refresh() {
-                self.refreshRetryCount = 0
-                self.scheduleRefresh()
-                self.onRefreshed(result.pair, result.user)
-            } else {
-                if self.refreshRetryCount < Self.maxRefreshRetries {
-                    let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
-                    self.refreshRetryCount += 1
-                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                    self.isPerformingRefresh = false
-                    self.performRefresh()
-                } else {
+            while !Task.isCancelled, self.sessionGeneration == generation {
+                if let result = await self.refresh() {
+                    guard !Task.isCancelled, self.sessionGeneration == generation else { return }
+                    self.refreshRetryCount = 0
+                    self.scheduleRefresh()
+                    self.onRefreshed(result.pair, result.user)
+                    return
+                }
+
+                guard !Task.isCancelled, self.sessionGeneration == generation else { return }
+
+                if self.refreshRetryCount >= Self.maxRefreshRetries {
                     self.refreshRetryCount = 0
                     self.refreshWorkItem?.cancel()
                     self.refreshWorkItem = nil
+                    guard self.sessionGeneration == generation else { return }
                     self.onExpired()
+                    return
+                }
+
+                let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
+                self.refreshRetryCount += 1
+
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                } catch {
+                    return
                 }
             }
         }
@@ -258,6 +275,9 @@ final class SessionManager {
     func destroy() {
         refreshWorkItem?.cancel()
         refreshWorkItem = nil
+        retryTask?.cancel()
+        retryTask = nil
+        sessionGeneration &+= 1
         tokens = nil
         NotificationCenter.default.removeObserver(self)
     }

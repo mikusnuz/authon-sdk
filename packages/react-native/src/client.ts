@@ -49,6 +49,9 @@ export class AuthonMobileClient {
   private storage: TokenStorage | null = null;
   private refreshInFlight: Promise<TokenPair | null> | null = null;
   private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshRetryCount = 0;
+  private static readonly MAX_REFRESH_RETRIES = 3;
+  private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
 
   // Cached provider/branding data
@@ -206,7 +209,6 @@ export class AuthonMobileClient {
   }
 
   private async _doRefresh(token: string): Promise<TokenPair | null> {
-
     try {
       const res = await fetch(`${this.apiUrl}/v1/auth/token/refresh`, {
         method: 'POST',
@@ -220,13 +222,18 @@ export class AuthonMobileClient {
       if (!res.ok) {
         // 401 = refresh token permanently invalid
         if (res.status === 401) {
+          this.refreshRetryCount = 0;
           this.clearSession();
+          this.emit('signedOut');
+          return null;
         }
-        // Other errors (500, network) — preserve tokens for retry
+        // Other errors (500, network) — retry with backoff
+        this.retryRefresh();
         return null;
       }
 
       const data = (await res.json()) as ApiAuthResponse;
+      this.refreshRetryCount = 0;
       this.tokens = this.toTokenPair(data);
       this.user = data.user;
       await this.persistTokens();
@@ -234,8 +241,26 @@ export class AuthonMobileClient {
       this.emit('tokenRefreshed');
       return this.tokens;
     } catch {
-      // Network error — do NOT clear session
+      // Network error — retry with backoff, do NOT clear session
+      this.retryRefresh();
       return null;
+    }
+  }
+
+  private retryRefresh(): void {
+    if (this.refreshRetryCount < AuthonMobileClient.MAX_REFRESH_RETRIES) {
+      const delay = AuthonMobileClient.RETRY_DELAYS[
+        Math.min(this.refreshRetryCount, AuthonMobileClient.RETRY_DELAYS.length - 1)
+      ];
+      this.refreshRetryCount++;
+      this.clearRefreshTimer();
+      this.refreshTimer = setTimeout(() => {
+        this.refreshToken().catch(() => {});
+      }, delay * 1000);
+    } else {
+      this.refreshRetryCount = 0;
+      this.clearSession();
+      this.emit('signedOut');
     }
   }
 
@@ -501,6 +526,7 @@ export class AuthonMobileClient {
   /** Schedule auto-refresh 60 seconds before token expiry (like JS SDK) */
   private scheduleRefresh(expiresAt: number): void {
     this.clearRefreshTimer();
+    this.refreshRetryCount = 0;
     const refreshIn = Math.max(expiresAt - Date.now() - 60_000, 30_000);
     this.refreshTimer = setTimeout(() => {
       this.refreshToken().catch(() => {});

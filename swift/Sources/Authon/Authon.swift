@@ -647,7 +647,6 @@ public final class Authon: ObservableObject {
 
         if let body {
             let encoder = JSONEncoder()
-            encoder.keyEncodingStrategy = .convertToSnakeCase
             req.httpBody = try encoder.encode(AnyEncodableBox(body))
         }
 
