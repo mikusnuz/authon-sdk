@@ -51,7 +51,7 @@ final class AuthonAPI: Sendable {
         req.httpMethod = method
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
         req.setValue(publishableKey, forHTTPHeaderField: "x-api-key")
-        req.setValue("authon-swift/0.3.0", forHTTPHeaderField: "User-Agent")
+        req.setValue("authon-swift/0.3.1", forHTTPHeaderField: "User-Agent")
 
         if let accessToken {
             req.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")

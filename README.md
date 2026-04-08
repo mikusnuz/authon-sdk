@@ -12,14 +12,14 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 | Package | Version | Description | npm |
 |---------|---------|-------------|-----|
 | [`@authon/shared`](./packages/shared) | 0.3.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
-| [`@authon/js`](./packages/js) | 0.7.13 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/js`](./packages/js) | 0.7.14 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
 | [`@authon/react`](./packages/react) | 0.3.2 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
 | [`@authon/nextjs`](./packages/nextjs) | 0.3.0 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
 | [`@authon/vue`](./packages/vue) | 0.3.3 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
 | [`@authon/nuxt`](./packages/nuxt) | 0.3.3 | Auto-imported composables and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
 | [`@authon/svelte`](./packages/svelte) | 0.3.3 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
 | [`@authon/angular`](./packages/angular) | 0.3.3 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
-| [`@authon/react-native`](./packages/react-native) | 0.3.9 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
+| [`@authon/react-native`](./packages/react-native) | 0.3.10 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
 | [`@authon/create-app`](./packages/create-authon-app) | 0.1.0 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
 
 ## Features
