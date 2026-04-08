@@ -248,20 +248,16 @@ export class AuthonMobileClient {
   }
 
   private retryRefresh(): void {
-    if (this.refreshRetryCount < AuthonMobileClient.MAX_REFRESH_RETRIES) {
-      const delay = AuthonMobileClient.RETRY_DELAYS[
-        Math.min(this.refreshRetryCount, AuthonMobileClient.RETRY_DELAYS.length - 1)
-      ];
-      this.refreshRetryCount++;
-      this.clearRefreshTimer();
-      this.refreshTimer = setTimeout(() => {
-        this.refreshToken().catch(() => {});
-      }, delay * 1000);
-    } else {
-      this.refreshRetryCount = 0;
-      this.clearSession();
-      this.emit('signedOut');
-    }
+    const delay = this.refreshRetryCount < AuthonMobileClient.MAX_REFRESH_RETRIES
+      ? AuthonMobileClient.RETRY_DELAYS[
+          Math.min(this.refreshRetryCount, AuthonMobileClient.RETRY_DELAYS.length - 1)
+        ]
+      : 60; // slow retry after fast retries exhausted — network likely down
+    this.refreshRetryCount++;
+    this.clearRefreshTimer();
+    this.refreshTimer = setTimeout(() => {
+      this.refreshToken().catch(() => {});
+    }, delay * 1000);
   }
 
   getAccessToken(): string | null {

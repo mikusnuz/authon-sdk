@@ -78,16 +78,21 @@ public final class Authon: ObservableObject {
                 sessionManager.scheduleRefresh()
             } catch {
                 // Token expired, try refresh
-                if let result = await sessionManager.refresh() {
-                    // refresh 성공 = 토큰 유효
-                    user = result.user
+                let outcome = await sessionManager.refresh()
+                switch outcome {
+                case .success(_, let refreshedUser):
+                    user = refreshedUser
                     isSignedIn = true
                     sessionManager.scheduleRefresh()
-                } else {
-                    // refresh() returned nil — could be network error or invalid token
-                    // Do NOT clear keychain — preserve refreshToken for retry on next app activate
+                case .authError:
+                    sessionManager.clearKeychain()
                     user = nil
                     isSignedIn = false
+                case .networkError:
+                    // Preserve keychain for retry on next app activate
+                    user = nil
+                    isSignedIn = false
+                    sessionManager.scheduleRefresh()
                 }
             }
         }
@@ -589,14 +594,16 @@ public final class Authon: ObservableObject {
     }
 
     public func refreshSession() async -> Bool {
-        if let result = await sessionManager.refresh() {
-            // refresh 성공 = 토큰 유효
-            user = result.user
+        let outcome = await sessionManager.refresh()
+        switch outcome {
+        case .success(_, let refreshedUser):
+            user = refreshedUser
             isSignedIn = true
             sessionManager.scheduleRefresh()
             return true
+        case .authError, .networkError:
+            return false
         }
-        return false
     }
 
     // MARK: - Events

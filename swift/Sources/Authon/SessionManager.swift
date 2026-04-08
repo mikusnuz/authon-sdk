@@ -18,7 +18,7 @@ final class SessionManager {
     private var refreshRetryCount = 0
     private static let maxRefreshRetries = 3
     private static let retryDelays: [TimeInterval] = [3, 10, 30]
-    private var refreshInFlight: Task<RefreshResult?, Never>?
+    private var refreshInFlight: Task<RefreshOutcome, Never>?
     private var retryTask: Task<Void, Never>?
     private let onExpired: () -> Void
     private var sessionGeneration: UInt64 = 0
@@ -125,14 +125,20 @@ final class SessionManager {
 
     typealias RefreshResult = (pair: TokenPair, user: AuthonUser)
 
-    func refresh() async -> RefreshResult? {
+    enum RefreshOutcome {
+        case success(pair: TokenPair, user: AuthonUser)
+        case authError   // 401 — refresh token permanently invalid
+        case networkError // connectivity/server issue — safe to retry
+    }
+
+    func refresh() async -> RefreshOutcome {
         // Single-flight: if refresh is already in progress, wait for that result
         if let existing = refreshInFlight {
             return await existing.value
         }
-        guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return nil }
-        let task = Task<RefreshResult?, Never> { [weak self] in
-            guard let self else { return nil }
+        guard let refreshToken = tokens?.refreshToken, !refreshToken.isEmpty else { return .authError }
+        let task = Task<RefreshOutcome, Never> { [weak self] in
+            guard let self else { return .networkError }
             do {
                 struct RefreshBody: Encodable {
                     let refreshToken: String
@@ -149,9 +155,11 @@ final class SessionManager {
                 )
                 self.tokens = newPair
                 self.saveToKeychain(newPair)
-                return (pair: newPair, user: response.user)
+                return .success(pair: newPair, user: response.user)
+            } catch let error as AuthonError where error.statusCode == 401 {
+                return .authError
             } catch {
-                return nil
+                return .networkError
             }
         }
         refreshInFlight = task
@@ -189,6 +197,8 @@ final class SessionManager {
         DispatchQueue.main.asyncAfter(wallDeadline: .now() + refreshInSec, execute: workItem)
     }
 
+    private static let slowRetryDelay: TimeInterval = 60
+
     private func performRefresh() {
         retryTask?.cancel()
         let generation = sessionGeneration
@@ -197,32 +207,37 @@ final class SessionManager {
             guard let self else { return }
 
             while !Task.isCancelled, self.sessionGeneration == generation {
-                if let result = await self.refresh() {
-                    guard !Task.isCancelled, self.sessionGeneration == generation else { return }
-                    self.refreshRetryCount = 0
-                    self.scheduleRefresh()
-                    self.onRefreshed(result.pair, result.user)
-                    return
-                }
-
+                let outcome = await self.refresh()
                 guard !Task.isCancelled, self.sessionGeneration == generation else { return }
 
-                if self.refreshRetryCount >= Self.maxRefreshRetries {
+                switch outcome {
+                case .success(let pair, let user):
+                    self.refreshRetryCount = 0
+                    self.scheduleRefresh()
+                    self.onRefreshed(pair, user)
+                    return
+
+                case .authError:
                     self.refreshRetryCount = 0
                     self.refreshWorkItem?.cancel()
                     self.refreshWorkItem = nil
-                    guard self.sessionGeneration == generation else { return }
                     self.onExpired()
                     return
-                }
 
-                let delay = Self.retryDelays[min(self.refreshRetryCount, Self.retryDelays.count - 1)]
-                self.refreshRetryCount += 1
+                case .networkError:
+                    let delay: TimeInterval
+                    if self.refreshRetryCount < Self.retryDelays.count {
+                        delay = Self.retryDelays[self.refreshRetryCount]
+                    } else {
+                        delay = Self.slowRetryDelay
+                    }
+                    self.refreshRetryCount += 1
 
-                do {
-                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
-                } catch {
-                    return
+                    do {
+                        try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                    } catch {
+                        return
+                    }
                 }
             }
         }

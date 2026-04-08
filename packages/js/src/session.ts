@@ -161,14 +161,12 @@ export class SessionManager {
   }
 
   private retryRefresh(): void {
-    if (this.refreshRetryCount < SessionManager.MAX_REFRESH_RETRIES) {
-      const delay = SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, SessionManager.RETRY_DELAYS.length - 1)];
-      this.refreshRetryCount++;
-      this.scheduleRefresh(delay + 60); // scheduleRefresh subtracts 60
-    } else {
-      this.refreshRetryCount = 0;
-      this.clearSession();
-    }
+    const delay = this.refreshRetryCount < SessionManager.MAX_REFRESH_RETRIES
+      ? SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, SessionManager.RETRY_DELAYS.length - 1)]
+      : 60; // slow retry after fast retries exhausted — network likely down
+    this.refreshRetryCount++;
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => this.refresh(), delay * 1000);
   }
 
   async signOut(): Promise<void> {
