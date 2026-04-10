@@ -125,7 +125,9 @@ final class PasskeyHelper: NSObject, ASAuthorizationControllerDelegate, ASAuthor
             throw AuthonError(statusCode: 400, message: "Invalid challenge", code: "invalid_challenge")
         }
 
-        let rpId = options.rpId ?? "localhost"
+        guard let rpId = options.rpId, !rpId.isEmpty else {
+            throw AuthonError(statusCode: 400, message: "Server did not provide rpId for passkey authentication", code: "missing_rp_id")
+        }
         let provider = ASAuthorizationPlatformPublicKeyCredentialProvider(relyingPartyIdentifier: rpId)
         let request = provider.createCredentialAssertionRequest(challenge: challengeData)
 

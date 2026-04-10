@@ -291,8 +291,9 @@ export class ProfileRenderer {
       .slice(0, 2)
       .join('');
 
-    const avatarHtml = u.avatarUrl
-      ? `<img class="avatar-img" src="${u.avatarUrl}" alt="${u.displayName || ''}" />`
+    const safeAvatarUrl = u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl) ? u.avatarUrl : null;
+    const avatarHtml = safeAvatarUrl
+      ? `<img class="avatar-img" src="${safeAvatarUrl.replace(/"/g, '&quot;')}" alt="${(u.displayName || '').replace(/"/g, '&quot;')}" />`
       : `<div class="avatar-placeholder">${initials}</div>`;
 
     const closeBtn = this.mode === 'popup'
