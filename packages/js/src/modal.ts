@@ -300,7 +300,7 @@ export class ModalRenderer {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--authon-primary-start)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <h2 class="title" style="font-size:20px;margin-bottom:4px">${this.t.welcomeBack.includes('Welcome') ? 'Check your email' : this.t.welcomeBack}</h2>
-        <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${email}</p>
+        <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${this.escapeHtml(email)}</p>
       </div>
       <div class="email-form" id="verify-form">
         <div id="verify-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#ef4444;text-align:center;margin-bottom:4px"></div>
@@ -586,9 +586,9 @@ export class ModalRenderer {
     const footer =
       b.termsUrl || b.privacyUrl
         ? `<div class="footer">
-          ${b.termsUrl ? `<a href="${b.termsUrl}" target="_blank">Terms of Service</a>` : ''}
+          ${b.termsUrl && /^https?:\/\//i.test(b.termsUrl) ? `<a href="${b.termsUrl}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ''}
           ${b.termsUrl && b.privacyUrl ? ' · ' : ''}
-          ${b.privacyUrl ? `<a href="${b.privacyUrl}" target="_blank">Privacy Policy</a>` : ''}
+          ${b.privacyUrl && /^https?:\/\//i.test(b.privacyUrl) ? `<a href="${b.privacyUrl}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ''}
         </div>`
         : '';
 

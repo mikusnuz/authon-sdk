@@ -841,7 +841,9 @@ export class Authon {
       };
 
       // 1. postMessage handler (fast path — Chrome/Firefox desktop)
+      const expectedOrigin = new URL(this.config.apiUrl).origin;
       const messageHandler = (e: MessageEvent) => {
+        if (e.origin !== expectedOrigin && e.origin !== window.location.origin) return;
         if (e.data?.type !== 'authon-oauth-callback') return;
         if (e.data.tokens) {
           resolve(e.data.tokens as AuthTokens);
