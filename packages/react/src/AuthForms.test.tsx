@@ -119,6 +119,38 @@ describe('SignIn', () => {
     expect(authonMocks.client!.signInWithOAuth).toHaveBeenLastCalledWith('github');
   });
 
+  it('allows only one primary auth attempt across credential and OAuth starts', async () => {
+    const user = userEvent.setup();
+    const credentialAttempt = deferred<unknown>();
+    const oauthAttempt = deferred<void>();
+    authonMocks.providers = ['github'];
+    authonMocks.client!.signInWithEmail.mockReturnValue(credentialAttempt.promise);
+    authonMocks.client!.signInWithOAuth.mockReturnValue(oauthAttempt.promise);
+    render(<SignIn />);
+
+    await fillSignIn(user);
+    const submit = screen.getByRole('button', { name: 'Sign in' });
+    const github = screen.getByRole('button', { name: 'Continue with GitHub' });
+    act(() => {
+      submit.click();
+      github.click();
+    });
+
+    expect(authonMocks.client!.signInWithEmail).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signInWithOAuth).not.toHaveBeenCalled();
+
+    credentialAttempt.resolve({ id: 'user_1' });
+    await waitFor(() => expect(github).toBeEnabled());
+    act(() => {
+      github.click();
+      submit.click();
+    });
+
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signInWithEmail).toHaveBeenCalledTimes(1);
+    oauthAttempt.resolve();
+  });
+
   it('guards credential submission and preserves credentials when leaving verification', async () => {
     const user = userEvent.setup();
     const signIn = deferred<unknown>();
@@ -336,6 +368,38 @@ describe('SignUp', () => {
     await user.click(github);
     expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(2);
     expect(authonMocks.client!.signInWithOAuth).toHaveBeenLastCalledWith('github');
+  });
+
+  it('allows only one primary auth attempt across credential and OAuth starts', async () => {
+    const user = userEvent.setup();
+    const credentialAttempt = deferred<unknown>();
+    const oauthAttempt = deferred<void>();
+    authonMocks.providers = ['github'];
+    authonMocks.client!.signUpWithEmail.mockReturnValue(credentialAttempt.promise);
+    authonMocks.client!.signInWithOAuth.mockReturnValue(oauthAttempt.promise);
+    render(<SignUp />);
+
+    await fillSignUp(user);
+    const submit = screen.getByRole('button', { name: 'Create account' });
+    const github = screen.getByRole('button', { name: 'Continue with GitHub' });
+    act(() => {
+      submit.click();
+      github.click();
+    });
+
+    expect(authonMocks.client!.signUpWithEmail).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signInWithOAuth).not.toHaveBeenCalled();
+
+    credentialAttempt.resolve({ id: 'user_1' });
+    await waitFor(() => expect(github).toBeEnabled());
+    act(() => {
+      github.click();
+      submit.click();
+    });
+
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signUpWithEmail).toHaveBeenCalledTimes(1);
+    oauthAttempt.resolve();
   });
 
   it('guards credential submission and preserves sign-up fields when leaving verification', async () => {

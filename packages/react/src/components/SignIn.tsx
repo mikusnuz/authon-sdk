@@ -38,8 +38,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
   const [error, setError] = useState('');
   const [step, setStep] = useState<SignInStep>({ kind: 'credentials' });
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
-  const submitPending = useRef(false);
-  const oauthPending = useRef(false);
+  const authAttemptPending = useRef(false);
   const completed = useRef(false);
 
   const completeSignIn = () => {
@@ -59,8 +58,8 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
   };
 
   const handleSubmit = async () => {
-    if (submitPending.current || !validate() || !client) return;
-    submitPending.current = true;
+    if (authAttemptPending.current || !validate() || !client) return;
+    authAttemptPending.current = true;
     setLoading(true);
     setError('');
     try {
@@ -77,7 +76,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
         setError(submitError instanceof Error && submitError.message ? submitError.message : 'Sign in failed');
       }
     } finally {
-      submitPending.current = false;
+      authAttemptPending.current = false;
       setLoading(false);
     }
   };
@@ -88,8 +87,8 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
   };
 
   const handleOAuth = async (provider: OAuthProviderType) => {
-    if (!client || oauthPending.current) return;
-    oauthPending.current = true;
+    if (!client || authAttemptPending.current) return;
+    authAttemptPending.current = true;
     setOauthLoading(provider);
     setError('');
     try {
@@ -97,7 +96,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
     } catch (e: any) {
       setError(e?.message ?? 'OAuth sign in failed');
     } finally {
-      oauthPending.current = false;
+      authAttemptPending.current = false;
       setOauthLoading(null);
     }
   };
