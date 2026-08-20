@@ -1,5 +1,4 @@
 export {
-  AuthonProvider,
   useAuthon,
   useUser,
   SignIn,
@@ -17,6 +16,8 @@ export {
   useAuthonWeb3,
   useAuthonSessions,
 } from '@authon/react';
+export { AuthonProvider } from './provider';
+export type { AuthonProviderProps } from './provider';
 export type {
   AuthonContextValue,
   SocialButtonProps,

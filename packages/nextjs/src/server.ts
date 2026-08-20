@@ -1,57 +1,44 @@
 import type { AuthonUser } from '@authon/shared';
+import { verifyAuthonToken } from './verify';
+import type { TokenVerificationOptions } from './verify';
 
-async function getTokenFromCookies(): Promise<string | null> {
+const DEFAULT_COOKIE_NAME = 'authon-token';
+
+export interface AuthonServerOptions extends TokenVerificationOptions {
+  cookieName?: string;
+}
+
+async function getTokenFromCookies(cookieName: string): Promise<string | null> {
   try {
     const { cookies } = await import('next/headers');
     const cookieStore = await cookies();
-    return cookieStore.get('authon-token')?.value ?? null;
+    return cookieStore.get(cookieName)?.value ?? null;
   } catch {
     return null;
   }
 }
 
-async function verifyTokenWithApi(
-  token: string,
-  secretKey?: string,
-  apiUrl?: string,
-): Promise<AuthonUser | null> {
-  const url = apiUrl || process.env['AUTHON_API_URL'] || 'https://api.authon.dev';
-  const key = secretKey || process.env['AUTHON_SECRET_KEY'];
-  if (!key) return null;
-
-  try {
-    const res = await fetch(`${url}/v1/auth/token/verify`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'x-api-key': key,
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!res.ok) return null;
-    return res.json() as Promise<AuthonUser>;
-  } catch {
-    return null;
-  }
-}
-
-export async function currentUser(): Promise<AuthonUser | null> {
-  const token = await getTokenFromCookies();
+export async function currentUser(options: AuthonServerOptions = {}): Promise<AuthonUser | null> {
+  const token = await getTokenFromCookies(options.cookieName ?? DEFAULT_COOKIE_NAME);
   if (!token) return null;
-  return verifyTokenWithApi(token);
+  return (await verifyAuthonToken(token, options))?.user ?? null;
 }
 
-export async function auth(): Promise<{
+export async function auth(options: AuthonServerOptions = {}): Promise<{
   userId: string | null;
   user: AuthonUser | null;
   getToken: () => string | null;
 }> {
-  const token = await getTokenFromCookies();
+  const token = await getTokenFromCookies(options.cookieName ?? DEFAULT_COOKIE_NAME);
   if (!token) return { userId: null, user: null, getToken: () => null };
 
-  const user = await verifyTokenWithApi(token);
+  const verified = await verifyAuthonToken(token, options);
+  if (!verified) return { userId: null, user: null, getToken: () => null };
+
+  const payloadSubject = verified.payload?.sub;
   return {
-    userId: user?.id ?? null,
-    user,
+    userId: verified.user?.id ?? (typeof payloadSubject === 'string' ? payloadSubject : null),
+    user: verified.user,
     getToken: () => token,
   };
 }
