@@ -39,6 +39,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
   const [step, setStep] = useState<SignInStep>({ kind: 'credentials' });
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const submitPending = useRef(false);
+  const oauthPending = useRef(false);
   const completed = useRef(false);
 
   const completeSignIn = () => {
@@ -87,7 +88,8 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
   };
 
   const handleOAuth = async (provider: OAuthProviderType) => {
-    if (!client) return;
+    if (!client || oauthPending.current) return;
+    oauthPending.current = true;
     setOauthLoading(provider);
     setError('');
     try {
@@ -95,6 +97,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSign
     } catch (e: any) {
       setError(e?.message ?? 'OAuth sign in failed');
     } finally {
+      oauthPending.current = false;
       setOauthLoading(null);
     }
   };

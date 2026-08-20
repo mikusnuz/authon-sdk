@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import userEvent from '@testing-library/user-event';
 import { AuthonMfaRequiredError } from '@authon/js';
@@ -11,6 +11,7 @@ import { SignUp } from './SignUp';
 
 const authonMocks = vi.hoisted(() => ({
   client: null as Record<string, ReturnType<typeof vi.fn>> | null,
+  providers: [] as string[],
 }));
 const navigationMocks = vi.hoisted(() => ({ navigateTo: vi.fn() }));
 
@@ -25,7 +26,7 @@ vi.mock('./hooks/useBranding', async () => {
   return {
     useBranding: () => ({
       branding: DEFAULT_BRANDING,
-      providers: [],
+      providers: authonMocks.providers,
       isLoaded: true,
     }),
   };
@@ -67,6 +68,7 @@ function deferred<T>() {
 describe('SignIn', () => {
   beforeEach(() => {
     authonMocks.client = createClient();
+    authonMocks.providers = [];
     navigationMocks.navigateTo.mockReset();
   });
 
@@ -89,6 +91,32 @@ describe('SignIn', () => {
       'person@example.com',
       'password123',
     );
+  });
+
+  it('allows only one OAuth launch across rapid provider clicks', async () => {
+    const user = userEvent.setup();
+    const oauth = deferred<void>();
+    authonMocks.providers = ['google', 'github'];
+    authonMocks.client!.signInWithOAuth
+      .mockReturnValueOnce(oauth.promise)
+      .mockResolvedValueOnce(undefined);
+    render(<SignIn />);
+
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    const github = screen.getByRole('button', { name: 'Continue with GitHub' });
+    act(() => {
+      google.click();
+      github.click();
+    });
+
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledWith('google');
+
+    oauth.resolve();
+    await waitFor(() => expect(github).toBeEnabled());
+    await user.click(github);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(2);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenLastCalledWith('github');
   });
 
   it('guards credential submission and preserves credentials when leaving verification', async () => {
@@ -149,7 +177,10 @@ describe('SignIn', () => {
     await user.type(codeInput, '111111');
     await user.click(screen.getByRole('button', { name: 'Verify email' }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Incorrect verification code');
+    const verificationAlert = await screen.findByRole('alert');
+    expect(verificationAlert).toHaveTextContent('Incorrect verification code');
+    expect(codeInput).toHaveAttribute('aria-invalid', 'true');
+    expect(codeInput).toHaveAttribute('aria-describedby', verificationAlert.id);
     expect(codeInput).toHaveValue('111111');
     expect(onSignIn).not.toHaveBeenCalled();
     expect(navigationMocks.navigateTo).not.toHaveBeenCalled();
@@ -255,6 +286,7 @@ describe('SignIn', () => {
 describe('SignUp', () => {
   beforeEach(() => {
     authonMocks.client = createClient();
+    authonMocks.providers = [];
     navigationMocks.navigateTo.mockReset();
   });
 
@@ -278,6 +310,32 @@ describe('SignUp', () => {
       'password123',
       { displayName: 'Person' },
     );
+  });
+
+  it('allows only one OAuth launch across rapid provider clicks', async () => {
+    const user = userEvent.setup();
+    const oauth = deferred<void>();
+    authonMocks.providers = ['google', 'github'];
+    authonMocks.client!.signInWithOAuth
+      .mockReturnValueOnce(oauth.promise)
+      .mockResolvedValueOnce(undefined);
+    render(<SignUp />);
+
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    const github = screen.getByRole('button', { name: 'Continue with GitHub' });
+    act(() => {
+      google.click();
+      github.click();
+    });
+
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(1);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledWith('google');
+
+    oauth.resolve();
+    await waitFor(() => expect(github).toBeEnabled());
+    await user.click(github);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenCalledTimes(2);
+    expect(authonMocks.client!.signInWithOAuth).toHaveBeenLastCalledWith('github');
   });
 
   it('guards credential submission and preserves sign-up fields when leaving verification', async () => {

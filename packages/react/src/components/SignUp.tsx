@@ -40,6 +40,7 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
     confirmPassword?: string;
   }>({});
   const submitPending = useRef(false);
+  const oauthPending = useRef(false);
   const completed = useRef(false);
 
   const completeSignUp = () => {
@@ -81,7 +82,8 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
   };
 
   const handleOAuth = async (provider: OAuthProviderType) => {
-    if (!client) return;
+    if (!client || oauthPending.current) return;
+    oauthPending.current = true;
     setOauthLoading(provider);
     setError('');
     try {
@@ -89,6 +91,7 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
     } catch (e: any) {
       setError(e?.message ?? 'OAuth sign in failed');
     } finally {
+      oauthPending.current = false;
       setOauthLoading(null);
     }
   };

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -35,6 +35,7 @@ function CodeForm({
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
+  const errorId = useId();
   const submitPending = useRef(false);
   const resendPending = useRef(false);
 
@@ -114,7 +115,7 @@ function CodeForm({
     <>
       <h1 style={titleStyle}>{title}</h1>
       <p style={descriptionStyle}>{description}</p>
-      {error && <div role="alert" style={errorStyle}>{error}</div>}
+      {error && <div id={errorId} role="alert" style={errorStyle}>{error}</div>}
       {status && <div role="status" aria-live="polite" style={statusStyle}>{status}</div>}
       <Input
         label={label}
@@ -123,6 +124,8 @@ function CodeForm({
         inputMode="numeric"
         autoComplete="one-time-code"
         disabled={loading}
+        aria-invalid={!!error}
+        aria-describedby={error ? errorId : undefined}
       />
       <Button
         variant="primary"
