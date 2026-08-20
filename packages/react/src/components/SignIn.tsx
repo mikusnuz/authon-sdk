@@ -1,23 +1,31 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES } from '@authon/shared';
-import { getProviderButtonConfig } from '@authon/js';
+import { AuthonMfaRequiredError, getProviderButtonConfig } from '@authon/js';
 import { useAuthon } from '../useAuthon';
 import { useBranding } from '../hooks/useBranding';
 import { ThemeProvider, useTheme } from './shared/ThemeProvider';
 import { Input } from './shared/Input';
 import { Button } from './shared/Button';
 import { Divider } from './shared/Divider';
+import { MfaForm, VerificationForm } from './shared/AuthChallengeForms';
+import { navigateTo } from './shared/navigation';
 
 export interface SignInProps {
   appearance?: { variables?: Partial<BrandingConfig> };
   afterSignInUrl?: string;
   onSignIn?: () => void;
+  onForgotPassword?: () => void;
   onNavigateSignUp?: () => void;
 }
 
-function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInProps, 'appearance'>) {
+type SignInStep =
+  | { kind: 'credentials' }
+  | { kind: 'verification'; email: string }
+  | { kind: 'mfa'; mfaToken: string };
+
+function SignInCard({ afterSignInUrl, onSignIn, onForgotPassword, onNavigateSignUp }: Omit<SignInProps, 'appearance'>) {
   const theme = useTheme();
   const { client } = useAuthon();
   const { branding, providers, isLoaded } = useBranding();
@@ -28,7 +36,17 @@ function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInP
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [step, setStep] = useState<SignInStep>({ kind: 'credentials' });
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const submitPending = useRef(false);
+  const completed = useRef(false);
+
+  const completeSignIn = () => {
+    if (completed.current) return;
+    completed.current = true;
+    if (afterSignInUrl) navigateTo(afterSignInUrl);
+    onSignIn?.();
+  };
 
   const validate = () => {
     const errs: typeof fieldErrors = {};
@@ -40,18 +58,32 @@ function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInP
   };
 
   const handleSubmit = async () => {
-    if (!validate() || !client) return;
+    if (submitPending.current || !validate() || !client) return;
+    submitPending.current = true;
     setLoading(true);
     setError('');
     try {
-      await client.signInWithEmail(email, password);
-      if (afterSignInUrl) window.location.assign(afterSignInUrl);
-      onSignIn?.();
-    } catch (e: any) {
-      setError(e?.message ?? 'Sign in failed');
+      const result = await client.signInWithEmail(email, password);
+      if ('needsVerification' in result && result.needsVerification) {
+        setStep({ kind: 'verification', email: result.email });
+        return;
+      }
+      completeSignIn();
+    } catch (submitError) {
+      if (submitError instanceof AuthonMfaRequiredError) {
+        setStep({ kind: 'mfa', mfaToken: submitError.mfaToken });
+      } else {
+        setError(submitError instanceof Error && submitError.message ? submitError.message : 'Sign in failed');
+      }
     } finally {
+      submitPending.current = false;
       setLoading(false);
     }
+  };
+
+  const backToCredentials = () => {
+    setError('');
+    setStep({ kind: 'credentials' });
   };
 
   const handleOAuth = async (provider: OAuthProviderType) => {
@@ -164,6 +196,42 @@ function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInP
     );
   }
 
+  if (step.kind === 'verification') {
+    return (
+      <div style={cardStyle}>
+        <VerificationForm
+          email={step.email}
+          backLabel="Back to sign in"
+          onVerify={async (code) => {
+            if (!client) throw new Error('Sign in is unavailable');
+            await client.verifyEmail(step.email, code);
+            completeSignIn();
+          }}
+          onResend={async () => {
+            if (!client) throw new Error('Sign in is unavailable');
+            await client.resendVerificationCode(step.email);
+          }}
+          onBack={backToCredentials}
+        />
+      </div>
+    );
+  }
+
+  if (step.kind === 'mfa') {
+    return (
+      <div style={cardStyle}>
+        <MfaForm
+          onVerify={async (code) => {
+            if (!client) throw new Error('Sign in is unavailable');
+            await client.verifyMfa(step.mfaToken, code);
+            completeSignIn();
+          }}
+          onBack={backToCredentials}
+        />
+      </div>
+    );
+  }
+
   return (
     <div style={cardStyle}>
       <div style={logoStyle}>
@@ -176,7 +244,7 @@ function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInP
         )}
       </div>
 
-      {error && <div style={errorBoxStyle}>{error}</div>}
+      {error && <div role="alert" style={errorBoxStyle}>{error}</div>}
 
       {providersToShow.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -244,9 +312,11 @@ function SignInCard({ afterSignInUrl, onSignIn, onNavigateSignUp }: Omit<SignInP
                 </button>
               }
             />
-            <div style={forgotStyle}>
-              <button type="button" style={linkStyle}>Forgot password?</button>
-            </div>
+            {onForgotPassword && (
+              <div style={forgotStyle}>
+                <button type="button" style={linkStyle} onClick={onForgotPassword}>Forgot password?</button>
+              </div>
+            )}
           </div>
 
           <Button
@@ -408,7 +478,7 @@ function SecuredByAuthon({ primaryStart, textMuted }: { primaryStart: string; te
   );
 }
 
-export function SignIn({ appearance, afterSignInUrl, onSignIn, onNavigateSignUp }: SignInProps) {
+export function SignIn({ appearance, afterSignInUrl, onSignIn, onForgotPassword, onNavigateSignUp }: SignInProps) {
   const { branding, isLoaded } = useBranding();
 
   const effectiveBranding = isLoaded ? { ...branding, ...(appearance?.variables ?? {}) } : branding;
@@ -419,6 +489,7 @@ export function SignIn({ appearance, afterSignInUrl, onSignIn, onNavigateSignUp 
       <SignInCard
         afterSignInUrl={afterSignInUrl}
         onSignIn={onSignIn}
+        onForgotPassword={onForgotPassword}
         onNavigateSignUp={onNavigateSignUp}
       />
     </ThemeProvider>

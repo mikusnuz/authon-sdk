@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES } from '@authon/shared';
@@ -9,6 +9,8 @@ import { ThemeProvider, useTheme } from './shared/ThemeProvider';
 import { Input } from './shared/Input';
 import { Button } from './shared/Button';
 import { Divider } from './shared/Divider';
+import { VerificationForm } from './shared/AuthChallengeForms';
+import { navigateTo } from './shared/navigation';
 
 export interface SignUpProps {
   appearance?: { variables?: Partial<BrandingConfig> };
@@ -30,12 +32,22 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{
     displayName?: string;
     email?: string;
     password?: string;
     confirmPassword?: string;
   }>({});
+  const submitPending = useRef(false);
+  const completed = useRef(false);
+
+  const completeSignUp = () => {
+    if (completed.current) return;
+    completed.current = true;
+    if (afterSignUpUrl) navigateTo(afterSignUpUrl);
+    onSignUp?.();
+  };
 
   const validate = () => {
     const errs: typeof fieldErrors = {};
@@ -49,16 +61,21 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
   };
 
   const handleSubmit = async () => {
-    if (!validate() || !client) return;
+    if (submitPending.current || !validate() || !client) return;
+    submitPending.current = true;
     setLoading(true);
     setError('');
     try {
-      await client.signUpWithEmail(email, password, displayName ? { displayName } : undefined);
-      if (afterSignUpUrl) window.location.assign(afterSignUpUrl);
-      onSignUp?.();
-    } catch (e: any) {
-      setError(e?.message ?? 'Sign up failed');
+      const result = await client.signUpWithEmail(email, password, displayName ? { displayName } : undefined);
+      if ('needsVerification' in result && result.needsVerification) {
+        setVerificationEmail(result.email);
+        return;
+      }
+      completeSignUp();
+    } catch (submitError) {
+      setError(submitError instanceof Error && submitError.message ? submitError.message : 'Sign up failed');
     } finally {
+      submitPending.current = false;
       setLoading(false);
     }
   };
@@ -164,6 +181,30 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
     );
   }
 
+  if (verificationEmail) {
+    return (
+      <div style={cardStyle}>
+        <VerificationForm
+          email={verificationEmail}
+          backLabel="Back to sign up"
+          onVerify={async (code) => {
+            if (!client) throw new Error('Sign up is unavailable');
+            await client.verifyEmail(verificationEmail, code);
+            completeSignUp();
+          }}
+          onResend={async () => {
+            if (!client) throw new Error('Sign up is unavailable');
+            await client.resendVerificationCode(verificationEmail);
+          }}
+          onBack={() => {
+            setError('');
+            setVerificationEmail(null);
+          }}
+        />
+      </div>
+    );
+  }
+
   const eyeIconPath = showPassword
     ? 'M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24 M1 1l22 22'
     : 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 100 6 3 3 0 000-6z';
@@ -180,7 +221,7 @@ function SignUpCard({ afterSignUpUrl, onSignUp, onNavigateSignIn }: Omit<SignUpP
         )}
       </div>
 
-      {error && <div style={errorBoxStyle}>{error}</div>}
+      {error && <div role="alert" style={errorBoxStyle}>{error}</div>}
 
       {providersToShow.length > 0 && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

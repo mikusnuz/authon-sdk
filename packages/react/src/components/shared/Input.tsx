@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { CSSProperties, InputHTMLAttributes } from 'react';
 import { useTheme } from './ThemeProvider';
 
@@ -22,8 +22,10 @@ export function Input({
   ...rest
 }: InputProps) {
   const theme = useTheme();
+  const generatedId = useId();
   const [focused, setFocused] = useState(false);
   const resolvedStyle = inputStyle ?? theme.inputStyle;
+  const inputId = rest.id ?? generatedId;
 
   const wrapperStyle: CSSProperties = {
     display: 'flex',
@@ -89,10 +91,11 @@ export function Input({
 
   return (
     <div style={wrapperStyle}>
-      {label && <label style={labelStyle}>{label}</label>}
+      {label && <label htmlFor={inputId} style={labelStyle}>{label}</label>}
       <div style={inputContainerStyle}>
         <input
           {...rest}
+          id={inputId}
           style={{ ...baseInputStyle, ...inputVariantStyle }}
           onFocus={(e) => {
             setFocused(true);
