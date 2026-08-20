@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useAuthon, useUser } from '@authon/nuxt/composables'
+
 const authon = useAuthon()
 const { isLoading, isSignedIn, user } = useUser()
 

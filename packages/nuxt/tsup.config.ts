@@ -7,9 +7,12 @@ export default defineConfig({
     'runtime/composables': 'src/runtime/composables.ts',
     'runtime/middleware': 'src/runtime/middleware.ts',
   },
-  format: ['esm'],
+  format: ['esm', 'cjs'],
   dts: true,
   clean: true,
   sourcemap: true,
   external: ['@nuxt/kit', 'nuxt', 'nuxt/app', '#app', '#imports', 'vue'],
+  esbuildOptions(options) {
+    options.logOverride = { 'empty-import-meta': 'silent' }
+  },
 })

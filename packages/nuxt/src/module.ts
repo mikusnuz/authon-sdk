@@ -8,7 +8,7 @@ import {
 import type { AuthonConfig } from '@authon/js';
 
 export interface AuthonModuleOptions {
-  publishableKey: string;
+  publishableKey?: string;
   config?: Omit<AuthonConfig, 'mode'>;
   globalMiddleware?: boolean;
 }
@@ -44,12 +44,21 @@ export const authonModule = defineNuxtModule<AuthonModuleOptions>({
     globalMiddleware: false,
   },
   setup(options, nuxt) {
-    validatePublishableKey(options.publishableKey);
+    const existing = nuxt.options.runtimeConfig.public.authon as {
+      publishableKey?: string;
+      config?: Omit<AuthonConfig, 'mode'>;
+    } | undefined;
+    const publishableKey = options.publishableKey || existing?.publishableKey || '';
+    validatePublishableKey(publishableKey);
 
-    const resolver = createResolver(import.meta.url);
+    const resolver = createResolver(
+      typeof __filename === 'string' ? __filename : import.meta.url,
+    );
     nuxt.options.runtimeConfig.public.authon = {
-      publishableKey: options.publishableKey,
-      config: options.config ?? {},
+      publishableKey,
+      config: Object.keys(options.config ?? {}).length > 0
+        ? options.config
+        : existing?.config ?? {},
     };
 
     addPlugin(resolver.resolve('./runtime/plugin'));

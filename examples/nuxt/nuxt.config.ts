@@ -1,9 +1,8 @@
 export default defineNuxtConfig({
   modules: ['@authon/nuxt'],
   authon: {
-    publishableKey: process.env.NUXT_PUBLIC_AUTHON_KEY || 'pk_test_example_publishable_key',
     config: {
-      apiUrl: process.env.NUXT_PUBLIC_AUTHON_API_URL || undefined,
+      theme: 'auto',
     },
   },
   app: {
@@ -13,5 +12,13 @@ export default defineNuxtConfig({
     baseURL: '/nuxt/',
   },
   css: ['~/assets/style.css'],
+  runtimeConfig: {
+    public: {
+      authon: {
+        publishableKey: 'pk_test_example_publishable_key',
+        config: {},
+      },
+    },
+  },
   compatibilityDate: '2024-11-01',
 })

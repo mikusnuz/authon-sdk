@@ -15,14 +15,13 @@ describe('Nuxt runtime plugin', () => {
       },
     };
     const onUnmount = vi.fn();
-    const provide = vi.fn();
     const pluginModule = await import('./plugin').catch(() => null);
     expect(pluginModule).not.toBeNull();
 
     const plugin = pluginModule!.default as unknown as (app: unknown) => {
       provide: { authon: Record<string, unknown> };
     };
-    const result = plugin({ vueApp: { onUnmount, provide } });
+    const result = plugin({ vueApp: { onUnmount } });
 
     expect(result.provide.authon).toMatchObject({
       client: null,
@@ -31,7 +30,6 @@ describe('Nuxt runtime plugin', () => {
       isLoading: true,
     });
     expect(onUnmount).toHaveBeenCalledOnce();
-    expect(provide).toHaveBeenCalledOnce();
   });
 
   it('fails clearly when runtime config is absent', async () => {
@@ -40,7 +38,7 @@ describe('Nuxt runtime plugin', () => {
     expect(pluginModule).not.toBeNull();
 
     const plugin = pluginModule!.default as unknown as (app: unknown) => unknown;
-    expect(() => plugin({ vueApp: { onUnmount: vi.fn(), provide: vi.fn() } }))
+    expect(() => plugin({ vueApp: { onUnmount: vi.fn() } }))
       .toThrow('@authon/nuxt runtime config is missing publishableKey');
   });
 });

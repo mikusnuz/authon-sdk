@@ -3,13 +3,19 @@
   "version": "0.3.3",
   "description": "Authon Nuxt 3 module — auto-imported composables and middleware",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./composables": {
+      "types": "./dist/runtime/composables.d.ts",
+      "import": "./dist/runtime/composables.js",
+      "require": "./dist/runtime/composables.cjs"
     }
   },
   "files": [

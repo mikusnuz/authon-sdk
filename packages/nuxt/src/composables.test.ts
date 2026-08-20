@@ -1,10 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isRef, shallowReactive } from 'vue';
 import type { AuthonNuxtState } from './runtime/state';
-import { useAuthon, useUser } from './runtime/composables';
+import { useAuthon, useUser } from './composables';
+
+beforeEach(() => {
+  vi.stubGlobal('useNuxtApp', () => globalThis.__AUTHON_TEST_NUXT_APP__ ?? {});
+});
 
 afterEach(() => {
   delete globalThis.__AUTHON_TEST_NUXT_APP__;
+  vi.unstubAllGlobals();
 });
 
 describe('Nuxt composables', () => {
@@ -47,5 +52,12 @@ describe('Nuxt composables', () => {
     expect(() => useAuthon()).toThrow(
       '@authon/nuxt runtime plugin is not installed. Add @authon/nuxt to modules in nuxt.config.',
     );
+  });
+
+  it('uses the exact same composables for public imports and module auto-imports', async () => {
+    const runtimeComposables = await import('./runtime/composables');
+
+    expect(runtimeComposables.useAuthon).toBe(useAuthon);
+    expect(runtimeComposables.useUser).toBe(useUser);
   });
 });

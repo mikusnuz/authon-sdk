@@ -81,6 +81,25 @@ describe('Authon Nuxt module', () => {
     });
   });
 
+  it('uses a publishable key declared through public runtime config', () => {
+    const nuxt = {
+      options: {
+        runtimeConfig: {
+          public: {
+            authon: { publishableKey: 'pk_live_runtime-config', config: { locale: 'ko' } },
+          } as Record<string, unknown>,
+        },
+      },
+    };
+
+    moduleDefinition.setup({ publishableKey: '', config: {}, globalMiddleware: false }, nuxt);
+
+    expect(nuxt.options.runtimeConfig.public.authon).toEqual({
+      publishableKey: 'pk_live_runtime-config',
+      config: { locale: 'ko' },
+    });
+  });
+
   it.each([
     ['', 'requires authon.publishableKey'],
     ['secret_value', 'must start with pk_live_ or pk_test_'],

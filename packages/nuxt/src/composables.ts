@@ -1,12 +1,12 @@
-import { computed, inject } from 'vue';
-import type { ComputedRef, InjectionKey } from 'vue';
+import { computed } from 'vue';
+import type { ComputedRef } from 'vue';
 import type { AuthonUser } from '@authon/shared';
 import type { AuthonNuxtState } from './runtime/state';
 
-export const AUTHON_NUXT_KEY = Symbol.for('@authon/nuxt') as InjectionKey<AuthonNuxtState>;
+declare function useNuxtApp(): { $authon?: AuthonNuxtState };
 
 export function useAuthon(): AuthonNuxtState {
-  const authon = inject(AUTHON_NUXT_KEY, undefined);
+  const authon = useNuxtApp().$authon;
   if (!authon) {
     throw new Error(
       '@authon/nuxt runtime plugin is not installed. Add @authon/nuxt to modules in nuxt.config.',
