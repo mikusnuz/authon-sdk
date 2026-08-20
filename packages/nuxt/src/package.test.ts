@@ -15,4 +15,13 @@ describe('@authon/nuxt package formats', () => {
     });
     expect(tsupConfig).toContain("format: ['esm', 'cjs']");
   });
+
+  it('binds supported runtime composables to Nuxt instead of a test global', () => {
+    const runtimeSource = readFileSync(new URL('./runtime/composables.ts', import.meta.url), 'utf8');
+    const legacySource = readFileSync(new URL('./composables.ts', import.meta.url), 'utf8');
+
+    expect(runtimeSource).toContain("import { useNuxtApp } from 'nuxt/app'");
+    expect(runtimeSource).not.toContain("from '../composables'");
+    expect(legacySource).toContain('@deprecated');
+  });
 });

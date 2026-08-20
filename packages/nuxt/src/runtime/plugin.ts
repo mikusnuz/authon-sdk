@@ -1,5 +1,6 @@
 import { defineNuxtPlugin, useRuntimeConfig } from 'nuxt/app';
 import type { AuthonConfig } from '@authon/js';
+import { AUTHON_NUXT_KEY } from '../composables';
 import { createAuthonRuntime } from './state';
 
 interface AuthonPublicRuntimeConfig {
@@ -21,6 +22,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   });
 
   nuxtApp.vueApp.onUnmount(runtime.dispose);
+  nuxtApp.vueApp.provide(AUTHON_NUXT_KEY, runtime.state);
   const hot = (import.meta as ImportMeta & {
     hot?: { dispose: (callback: () => void) => void };
   }).hot;
