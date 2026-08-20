@@ -40,7 +40,7 @@ var AuthonMfaRequiredError = class extends Error {
   }
 };
 
-// ../../node_modules/.pnpm/@authon+shared@0.3.0/node_modules/@authon/shared/dist/index.js
+// ../shared/dist/index.js
 var PROVIDER_DISPLAY_NAMES = {
   google: "Google",
   apple: "Apple",
@@ -863,7 +863,7 @@ var ModalRenderer = class {
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--authon-primary-start)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
         </div>
         <h2 class="title" style="font-size:20px;margin-bottom:4px">${this.t.welcomeBack.includes("Welcome") ? "Check your email" : this.t.welcomeBack}</h2>
-        <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${email}</p>
+        <p style="font-size:13px;color:var(--authon-muted);margin-bottom:20px">${this.escapeHtml(email)}</p>
       </div>
       <div class="email-form" id="verify-form">
         <div id="verify-error" style="display:none;padding:8px 12px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:13px;color:#ef4444;text-align:center;margin-bottom:4px"></div>
@@ -1090,9 +1090,9 @@ var ModalRenderer = class {
     }
     const authMethods = methodButtons.length > 0 ? `<div class="auth-methods">${methodButtons.join("")}</div>` : "";
     const footer = b.termsUrl || b.privacyUrl ? `<div class="footer">
-          ${b.termsUrl ? `<a href="${b.termsUrl}" target="_blank">Terms of Service</a>` : ""}
+          ${b.termsUrl && /^https?:\/\//i.test(b.termsUrl) ? `<a href="${b.termsUrl}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ""}
           ${b.termsUrl && b.privacyUrl ? " \xB7 " : ""}
-          ${b.privacyUrl ? `<a href="${b.privacyUrl}" target="_blank">Privacy Policy</a>` : ""}
+          ${b.privacyUrl && /^https?:\/\//i.test(b.privacyUrl) ? `<a href="${b.privacyUrl}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ""}
         </div>` : "";
     const titleHtml = isSignUp ? `<div class="title-row">
           <button class="back-btn" id="back-btn" type="button" aria-label="Back to sign in">
@@ -2054,7 +2054,8 @@ var ProfileRenderer = class {
   buildInnerContent() {
     const u = this.user;
     const initials = (u.displayName || u.email || "?").split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
-    const avatarHtml = u.avatarUrl ? `<img class="avatar-img" src="${u.avatarUrl}" alt="${u.displayName || ""}" />` : `<div class="avatar-placeholder">${initials}</div>`;
+    const safeAvatarUrl = u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl) ? u.avatarUrl : null;
+    const avatarHtml = safeAvatarUrl ? `<img class="avatar-img" src="${safeAvatarUrl.replace(/"/g, "&quot;")}" alt="${(u.displayName || "").replace(/"/g, "&quot;")}" />` : `<div class="avatar-placeholder">${initials}</div>`;
     const closeBtn = this.mode === "popup" ? `<button class="close-btn" id="profile-close-btn" aria-label="Close">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -2485,6 +2486,42 @@ var ProfileRenderer = class {
 };
 
 // src/session.ts
+var DEFAULT_API_URL = "https://api.authon.dev";
+var STORAGE_SCHEMA_VERSION = 2;
+function normalizeApiUrl(apiUrl) {
+  try {
+    const url = new URL(apiUrl);
+    const pathname = url.pathname.replace(/\/+$/, "");
+    return `${url.origin}${pathname}`;
+  } catch {
+    return apiUrl.replace(/\/+$/, "");
+  }
+}
+function stableDigest(value) {
+  let hash = 2166136261;
+  for (let index = 0; index < value.length; index++) {
+    hash ^= value.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+function tokenExpiration(token) {
+  try {
+    const parts = token.split(".");
+    if (parts.length !== 3 || !parts[1]) return null;
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, "=");
+    const decoded = JSON.parse(atob(padded));
+    return typeof decoded.exp === "number" && Number.isFinite(decoded.exp) ? decoded.exp : null;
+  } catch {
+    return null;
+  }
+}
+function isStoredSession(value) {
+  if (!value || typeof value !== "object") return false;
+  const session = value;
+  return typeof session.accessToken === "string" && tokenExpiration(session.accessToken) !== null && typeof session.refreshToken === "string" && session.refreshToken.length > 0 && !!session.user && typeof session.user === "object" && typeof session.user.id === "string";
+}
 var SessionManager = class _SessionManager {
   accessToken = null;
   refreshToken = null;
@@ -2495,33 +2532,59 @@ var SessionManager = class _SessionManager {
   storageKey;
   refreshRetryCount = 0;
   refreshInFlight = null;
+  listeners = /* @__PURE__ */ new Set();
+  requestControllers = /* @__PURE__ */ new Set();
+  ready = true;
+  readinessPromise = Promise.resolve();
+  destroyed = false;
+  sessionGeneration = 0;
   static MAX_REFRESH_RETRIES = 3;
   static RETRY_DELAYS = [3, 10, 30];
   // seconds
-  onSessionCleared = null;
   constructor(publishableKey, apiUrl) {
     this.publishableKey = publishableKey;
-    this.apiUrl = apiUrl;
-    this.storageKey = `authon_session_${publishableKey.slice(0, 16)}`;
+    this.apiUrl = normalizeApiUrl(apiUrl);
+    this.storageKey = `authon_session_v${STORAGE_SCHEMA_VERSION}_${encodeURIComponent(this.apiUrl)}_${stableDigest(publishableKey)}`;
     this.restoreFromStorage();
   }
   restoreFromStorage() {
     if (typeof window === "undefined") return;
+    let stored = null;
+    let legacyKey = null;
     try {
-      const stored = localStorage.getItem(this.storageKey);
+      stored = localStorage.getItem(this.storageKey);
+      if (!stored && this.apiUrl === DEFAULT_API_URL) {
+        legacyKey = `authon_session_${this.publishableKey.slice(0, 16)}`;
+        stored = localStorage.getItem(legacyKey);
+      }
       if (!stored) return;
       const data = JSON.parse(stored);
-      if (data.accessToken && data.refreshToken && data.user) {
-        this.accessToken = data.accessToken;
-        this.refreshToken = data.refreshToken;
-        this.user = data.user;
-        this.scheduleRefresh(5);
+      if (!isStoredSession(data)) {
+        if (!legacyKey) localStorage.removeItem(this.storageKey);
+        return;
       }
+      this.accessToken = data.accessToken;
+      this.refreshToken = data.refreshToken;
+      this.user = data.user;
+      if (legacyKey && this.persistToStorage()) localStorage.removeItem(legacyKey);
+      const expiration = tokenExpiration(data.accessToken);
+      const remainingSeconds = expiration - Math.floor(Date.now() / 1e3);
+      if (remainingSeconds > 0) {
+        this.scheduleRefresh(remainingSeconds);
+        return;
+      }
+      this.ready = false;
+      this.readinessPromise = this.refresh().then(() => void 0).finally(() => {
+        if (!this.destroyed) this.ready = true;
+      });
     } catch {
+      this.accessToken = null;
+      this.refreshToken = null;
+      this.user = null;
     }
   }
   persistToStorage() {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined") return false;
     try {
       if (this.accessToken && this.refreshToken && this.user) {
         localStorage.setItem(this.storageKey, JSON.stringify({
@@ -2532,75 +2595,97 @@ var SessionManager = class _SessionManager {
       } else {
         localStorage.removeItem(this.storageKey);
       }
-    } catch {
-    }
-  }
-  getToken() {
-    return this.accessToken;
-  }
-  isTokenValid() {
-    if (!this.accessToken) return false;
-    try {
-      const [, payload] = this.accessToken.split(".");
-      const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-      return decoded.exp > Math.floor(Date.now() / 1e3);
+      return true;
     } catch {
       return false;
     }
   }
-  getUser() {
-    return this.user;
+  isReady() {
+    return this.ready;
   }
-  setSession(tokens) {
+  waitUntilReady() {
+    return this.readinessPromise;
+  }
+  getToken() {
+    return !this.destroyed && this.ready && this.isTokenValid() ? this.accessToken : null;
+  }
+  isTokenValid() {
+    if (this.destroyed || !this.accessToken) return false;
+    const expiration = tokenExpiration(this.accessToken);
+    return expiration !== null && expiration > Math.floor(Date.now() / 1e3);
+  }
+  getUser() {
+    return this.getToken() ? this.user : null;
+  }
+  setSession(tokens, reason = "setSession") {
+    if (this.destroyed) return;
+    this.cancelRefreshTimer();
+    if (reason === "setSession") this.invalidateRequests();
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
+    this.ready = true;
     this.refreshRetryCount = 0;
     this.persistToStorage();
-    if (tokens.expiresIn && tokens.expiresIn > 0) {
-      this.scheduleRefresh(tokens.expiresIn);
-    }
+    if (tokens.expiresIn > 0) this.scheduleRefresh(tokens.expiresIn);
+    this.notify(reason);
   }
-  setOnSessionCleared(cb) {
-    this.onSessionCleared = cb;
+  subscribe(listener) {
+    if (this.destroyed) return () => {
+    };
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
   updateUser(user) {
+    if (this.destroyed) return;
     this.user = user;
+    this.persistToStorage();
+    this.notify("updateUser");
   }
-  clearSession(silent = false) {
+  clearSession(reason = "clearSession") {
+    if (this.destroyed) return;
+    this.invalidateRequests();
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
+    this.ready = true;
     this.persistToStorage();
-    if (this.refreshTimer) {
-      clearTimeout(this.refreshTimer);
-      this.refreshTimer = null;
-    }
-    if (!silent) {
-      this.onSessionCleared?.();
-    }
+    this.cancelRefreshTimer();
+    this.notify(reason);
   }
   scheduleRefresh(expiresIn) {
-    if (this.refreshTimer) clearTimeout(this.refreshTimer);
-    const refreshIn = Math.max((expiresIn - 60) * 1e3, 3e4);
-    this.refreshTimer = setTimeout(() => this.refresh(), refreshIn);
+    this.cancelRefreshTimer();
+    const refreshIn = Math.max((expiresIn - 60) * 1e3, 0);
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      void this.refresh();
+    }, refreshIn);
+  }
+  cancelRefreshTimer() {
+    if (!this.refreshTimer) return;
+    clearTimeout(this.refreshTimer);
+    this.refreshTimer = null;
   }
   async refresh() {
+    if (this.destroyed) return null;
     if (this.refreshInFlight) return this.refreshInFlight;
     if (!this.refreshToken) {
-      this.clearSession();
+      this.clearSession("refreshFailed");
       return null;
     }
-    this.refreshInFlight = this._doRefresh();
-    const result = await this.refreshInFlight;
-    this.refreshInFlight = null;
-    return result;
+    const generation = this.sessionGeneration;
+    const inFlight = this.doRefresh(generation);
+    this.refreshInFlight = inFlight;
+    try {
+      return await inFlight;
+    } finally {
+      if (this.refreshInFlight === inFlight) this.refreshInFlight = null;
+    }
   }
-  async _doRefresh() {
-    if (!this.refreshToken) {
-      this.clearSession();
-      return null;
-    }
+  async doRefresh(generation) {
+    if (!this.refreshToken || this.destroyed) return null;
+    const controller = new AbortController();
+    this.requestControllers.add(controller);
     try {
       const res = await fetch(`${this.apiUrl}/v1/auth/token/refresh`, {
         method: "POST",
@@ -2609,53 +2694,99 @@ var SessionManager = class _SessionManager {
           "x-api-key": this.publishableKey
         },
         credentials: "include",
-        body: JSON.stringify({ refreshToken: this.refreshToken })
+        body: JSON.stringify({ refreshToken: this.refreshToken }),
+        signal: controller.signal
       });
+      if (this.destroyed || generation !== this.sessionGeneration) return null;
       if (!res.ok) {
         if (res.status === 401) {
           this.refreshRetryCount = 0;
-          this.clearSession();
+          this.clearSession("refreshFailed");
           return null;
         }
         this.retryRefresh();
         return null;
       }
       const tokens = await res.json();
+      if (this.destroyed || generation !== this.sessionGeneration) return null;
       this.refreshRetryCount = 0;
-      this.setSession(tokens);
+      this.setSession(tokens, "tokenRefresh");
       return tokens;
     } catch {
-      this.retryRefresh();
+      if (!this.destroyed && generation === this.sessionGeneration && !controller.signal.aborted) {
+        this.retryRefresh();
+      }
       return null;
+    } finally {
+      this.requestControllers.delete(controller);
     }
   }
   retryRefresh() {
-    if (this.refreshRetryCount < _SessionManager.MAX_REFRESH_RETRIES) {
-      const delay = _SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, _SessionManager.RETRY_DELAYS.length - 1)];
-      this.refreshRetryCount++;
-      this.scheduleRefresh(delay + 60);
-    } else {
-      this.refreshRetryCount = 0;
-      this.clearSession();
-    }
+    if (this.destroyed) return;
+    const delay = this.refreshRetryCount < _SessionManager.MAX_REFRESH_RETRIES ? _SessionManager.RETRY_DELAYS[Math.min(this.refreshRetryCount, _SessionManager.RETRY_DELAYS.length - 1)] : 60;
+    this.refreshRetryCount++;
+    this.cancelRefreshTimer();
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      void this.refresh();
+    }, delay * 1e3);
   }
   async signOut() {
+    if (this.destroyed) return;
+    const accessToken = this.accessToken;
+    this.invalidateRequests();
+    this.accessToken = null;
+    this.refreshToken = null;
+    this.user = null;
+    this.ready = true;
+    this.persistToStorage();
+    this.cancelRefreshTimer();
+    this.notify("signOut");
+    const controller = new AbortController();
+    this.requestControllers.add(controller);
     try {
-      await fetch(`${this.apiUrl}/v1/auth/signout`, {
+      const request = fetch(`${this.apiUrl}/v1/auth/signout`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "x-api-key": this.publishableKey,
-          ...this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {}
+          ...accessToken ? { Authorization: `Bearer ${accessToken}` } : {}
         },
-        credentials: "include"
+        credentials: "include",
+        signal: controller.signal
+      });
+      void request.catch(() => void 0).finally(() => {
+        this.requestControllers.delete(controller);
       });
     } catch {
+      this.requestControllers.delete(controller);
     }
-    this.clearSession(true);
   }
   destroy() {
-    this.clearSession(true);
+    if (this.destroyed) return;
+    this.destroyed = true;
+    this.cancelRefreshTimer();
+    this.invalidateRequests();
+    this.listeners.clear();
+  }
+  invalidateRequests() {
+    this.sessionGeneration++;
+    for (const controller of this.requestControllers) controller.abort();
+    this.requestControllers.clear();
+    this.refreshInFlight = null;
+  }
+  notify(reason) {
+    const change = {
+      reason,
+      accessToken: this.getToken(),
+      user: this.getUser()
+    };
+    for (const listener of [...this.listeners]) {
+      try {
+        listener(change);
+      } catch {
+      }
+    }
   }
 };
 
@@ -3082,7 +3213,16 @@ var Authon = class {
       appearance: config?.appearance
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl);
-    this.session.setOnSessionCleared(() => this.emit("signedOut"));
+    this.session.subscribe((change) => {
+      this.emit("sessionChanged", change);
+      if (change.reason === "setSession" && change.user) {
+        this.emit("signedIn", change.user);
+      } else if (change.reason === "tokenRefresh" && change.accessToken) {
+        this.emit("tokenRefreshed", change.accessToken);
+      } else if (change.reason === "clearSession" || change.reason === "signOut" || change.reason === "refreshFailed") {
+        this.emit("signedOut");
+      }
+    });
     this.consumeRedirectResultFromUrl();
   }
   // ── Public API ──
@@ -3169,7 +3309,6 @@ var Authon = class {
       throw new AuthonMfaRequiredError(res.mfaToken);
     }
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async signUpWithEmail(email, password, meta) {
@@ -3183,13 +3322,11 @@ var Authon = class {
       return { needsVerification: true, email: res.email };
     }
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async verifyEmail(email, code) {
     const res = await this.apiPost("/v1/auth/verify-email", { email, code });
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async resendVerificationCode(email) {
@@ -3197,13 +3334,20 @@ var Authon = class {
   }
   async signOut() {
     await this.session.signOut();
-    this.emit("signedOut");
   }
   getUser() {
     return this.session.getUser();
   }
   getToken() {
     return this.session.getToken();
+  }
+  /** Whether persisted session validation (including any required refresh) has completed. */
+  isReady() {
+    return this.session.isReady();
+  }
+  /** Wait until persisted session validation (including any required refresh) has completed. */
+  waitUntilReady() {
+    return this.session.waitUntilReady();
   }
   /** Check if the current access token is valid (JWT exp not passed) */
   isTokenValid() {
@@ -3221,6 +3365,10 @@ var Authon = class {
     set.add(listener);
     return () => set.delete(listener);
   }
+  /** Subscribe to every session mutation with its reason and validated public snapshot. */
+  onSessionChange(listener) {
+    return this.on("sessionChanged", listener);
+  }
   // ── MFA ──
   async setupMfa() {
     const token = this.session.getToken();
@@ -3236,7 +3384,6 @@ var Authon = class {
   async verifyMfa(mfaToken, code) {
     const res = await this.apiPost("/v1/auth/mfa/verify", { mfaToken, code });
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async disableMfa(code) {
@@ -3277,7 +3424,6 @@ var Authon = class {
   async verifyPasswordless(options) {
     const res = await this.apiPost("/v1/auth/passwordless/verify", options);
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   // ── Passkeys ──
@@ -3330,7 +3476,6 @@ var Authon = class {
       }
     });
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async listPasskeys() {
@@ -3366,7 +3511,6 @@ var Authon = class {
       walletType
     });
     this.session.setSession(res);
-    this.emit("signedIn", res.user);
     return res.user;
   }
   async listWallets() {
@@ -3480,7 +3624,6 @@ var Authon = class {
       signIn: async (params) => {
         const res = await this.apiPost("/v1/auth/testing/token", params);
         this.session.setSession(res);
-        this.emit("signedIn", res.user);
         return res.user;
       }
     };
@@ -3502,7 +3645,12 @@ var Authon = class {
     document.head.appendChild(script);
   }
   emit(event, ...args) {
-    this.listeners.get(event)?.forEach((fn) => fn(...args));
+    for (const listener of [...this.listeners.get(event) ?? []]) {
+      try {
+        listener(...args);
+      } catch {
+      }
+    }
   }
   async ensureInitialized() {
     if (this.initialized) return;
@@ -3697,7 +3845,6 @@ var Authon = class {
         }
         this.session.setSession(tokens);
         this.modal?.close();
-        this.emit("signedIn", tokens.user);
       };
       const handleError = (msg) => {
         if (resolved) return;
@@ -3736,7 +3883,9 @@ var Authon = class {
         if (closePollTimer) clearInterval(closePollTimer);
         if (maxTimer) clearTimeout(maxTimer);
       };
+      const expectedOrigin = new URL(this.config.apiUrl).origin;
       const messageHandler = (e) => {
+        if (e.origin !== expectedOrigin && e.origin !== window.location.origin) return;
         if (e.data?.type !== "authon-oauth-callback") return;
         if (e.data.tokens) {
           resolve(e.data.tokens);
@@ -3846,7 +3995,6 @@ var Authon = class {
           const data = JSON.parse(stored);
           if (data.tokens) {
             this.session.setSession(data.tokens);
-            this.emit("signedIn", data.tokens.user);
             consumed = true;
           } else if (data.error) {
             this.emit("error", new Error(data.error));

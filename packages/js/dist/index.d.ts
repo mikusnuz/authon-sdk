@@ -1,4 +1,12 @@
-import { BrandingConfig, AuthonUser, PasskeyCredential, Web3Wallet, OAuthProviderType, MfaSetupResponse, MfaStatus, Web3Chain, Web3WalletType, Web3NonceResponse, SessionInfo, OrganizationListResponse, CreateOrganizationParams, AuthonOrganization, UpdateOrganizationParams, OrganizationMember, InviteMemberParams, OrganizationInvitation } from '@authon/shared';
+import { AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet, OAuthProviderType, MfaSetupResponse, MfaStatus, Web3Chain, Web3WalletType, Web3NonceResponse, SessionInfo, OrganizationListResponse, CreateOrganizationParams, AuthonOrganization, UpdateOrganizationParams, OrganizationMember, InviteMemberParams, OrganizationInvitation } from '@authon/shared';
+
+type SessionChangeReason = 'setSession' | 'tokenRefresh' | 'updateUser' | 'clearSession' | 'signOut' | 'refreshFailed';
+interface SessionChange {
+    reason: SessionChangeReason;
+    accessToken: string | null;
+    user: AuthonUser | null;
+}
+type SessionChangeListener = (change: SessionChange) => void;
 
 type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 interface AuthonConfig {
@@ -15,7 +23,9 @@ interface OAuthSignInOptions {
 interface AuthonEvents {
     signedIn: (user: AuthonUser) => void;
     signedOut: () => void;
+    sessionChanged: (change: SessionChange) => void;
     tokenRefreshed: (token: string) => void;
+    verificationRequired: (email: string) => void;
     mfaRequired: (mfaToken: string) => void;
     passkeyRegistered: (credential: PasskeyCredential) => void;
     web3Connected: (wallet: Web3Wallet) => void;
@@ -65,11 +75,17 @@ declare class Authon {
     signOut(): Promise<void>;
     getUser(): AuthonUser | null;
     getToken(): string | null;
+    /** Whether persisted session validation (including any required refresh) has completed. */
+    isReady(): boolean;
+    /** Wait until persisted session validation (including any required refresh) has completed. */
+    waitUntilReady(): Promise<void>;
     /** Check if the current access token is valid (JWT exp not passed) */
     isTokenValid(): boolean;
     /** Ensure a valid token is available — refreshes if expired. Returns true if a valid token exists after the call. */
     ensureValidToken(): Promise<boolean>;
     on<K extends AuthonEventType>(event: K, listener: AuthonEvents[K]): () => void;
+    /** Subscribe to every session mutation with its reason and validated public snapshot. */
+    onSessionChange(listener: SessionChangeListener): () => void;
     setupMfa(): Promise<MfaSetupResponse & {
         qrCodeSvg: string;
     }>;
@@ -765,4 +781,4 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, ProfileRenderer, type ProviderButtonConfig, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
