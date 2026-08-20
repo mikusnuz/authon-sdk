@@ -70,6 +70,8 @@ describe('documentation contracts', () => {
     expect(readmes).toMatch(/verifyToken.*opt-in|opt-in.*verifyToken/is);
     expect(readmes).toMatch(/fail-closed/i);
     expect(readmes).toMatch(/protectApiRoutes.*opt-in|opt-in.*protectApiRoutes/is);
+    expect(readmes).toMatch(/JWT structure/i);
+    expect(readmes).toMatch(/does not verify.*signature/is);
     expect(readmes).toMatch(/currentUser/);
     expect(readmes).toMatch(/auth\(\)/);
   });
@@ -99,5 +101,18 @@ describe('documentation contracts', () => {
     expect(shared).toContain('PUBLIC_AUTHON_PUBLISHABLE_KEY');
     expect(svelte).toContain('PUBLIC_AUTHON_PUBLISHABLE_KEY');
     expect(svelte).not.toContain('VITE_AUTHON_PUBLISHABLE_KEY');
+  });
+
+  it('keeps the Nuxt example key environment-driven', async () => {
+    const config = await readFile(join(root, 'examples/nuxt/nuxt.config.ts'), 'utf8');
+
+    expect(config).toContain('process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY');
+    expect(config).not.toMatch(/publishableKey:\s*['"]pk_/);
+  });
+
+  it('includes create-app in the release changeset', async () => {
+    const changeset = await readFile(join(root, '.changeset/calm-pandas-build.md'), 'utf8');
+
+    expect(changeset).toMatch(/['"]@authon\/create-app['"]:\s*patch/);
   });
 });

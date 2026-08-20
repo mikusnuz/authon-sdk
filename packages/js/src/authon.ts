@@ -171,8 +171,9 @@ export class Authon {
       body,
     );
     if (res.needsVerification) {
-      this.emit('verificationRequired', res.email);
-      return { needsVerification: true, email: res.email! };
+      const verificationEmail = res.email || email;
+      this.emit('verificationRequired', verificationEmail);
+      return { needsVerification: true, email: verificationEmail };
     }
     if (res.mfaRequired && res.mfaToken) {
       this.emit('mfaRequired', res.mfaToken);
@@ -193,8 +194,9 @@ export class Authon {
       ...meta,
     });
     if (res.needsVerification) {
-      this.emit('verificationRequired', res.email);
-      return { needsVerification: true, email: res.email! };
+      const verificationEmail = res.email || email;
+      this.emit('verificationRequired', verificationEmail);
+      return { needsVerification: true, email: verificationEmail };
     }
     this.session.setSession(res);
     return res.user;

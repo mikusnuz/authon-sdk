@@ -136,6 +136,32 @@ describe('Authon session event contracts', () => {
     expect(listener).toHaveBeenCalledWith('verify@example.com');
   });
 
+  it('falls back to the requested email when sign-in verification omits it', async () => {
+    const authon = new Authon('pk_live_authon-signin-verification-fallback');
+    const listener: AuthonEvents['verificationRequired'] = vi.fn();
+    authon.on('verificationRequired', listener);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ needsVerification: true }));
+
+    await expect(authon.signInWithEmail('signin@example.com', 'secret')).resolves.toEqual({
+      needsVerification: true,
+      email: 'signin@example.com',
+    });
+    expect(listener).toHaveBeenCalledWith('signin@example.com');
+  });
+
+  it('falls back to the requested email when sign-up verification omits it', async () => {
+    const authon = new Authon('pk_live_authon-signup-verification-fallback');
+    const listener: AuthonEvents['verificationRequired'] = vi.fn();
+    authon.on('verificationRequired', listener);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ needsVerification: true }));
+
+    await expect(authon.signUpWithEmail('signup@example.com', 'secret')).resolves.toEqual({
+      needsVerification: true,
+      email: 'signup@example.com',
+    });
+    expect(listener).toHaveBeenCalledWith('signup@example.com');
+  });
+
   it('forwards readiness and hides an expired restored session until refresh resolves', async () => {
     const seed = new Authon('pk_live_authon-ready');
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens(-10, { expiresIn: -10 })));

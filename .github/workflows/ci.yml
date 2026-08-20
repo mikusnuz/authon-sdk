@@ -50,6 +50,8 @@ jobs:
 
       - name: Build examples
         if: matrix.node-version == 22
+        env:
+          NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY: pk_test_ci_workspace_build
         run: pnpm build:examples
 
       - name: Verify changesets

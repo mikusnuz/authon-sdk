@@ -100,8 +100,21 @@ describe('Authon Nuxt module', () => {
     });
   });
 
+  it('allows build-time setup without a key so runtime config can provide it', () => {
+    const nuxt = { options: { runtimeConfig: { public: {} as Record<string, unknown> } } };
+
+    expect(() => moduleDefinition.setup({
+      publishableKey: '',
+      config: {},
+      globalMiddleware: false,
+    }, nuxt)).not.toThrow();
+    expect(nuxt.options.runtimeConfig.public.authon).toEqual({
+      publishableKey: '',
+      config: {},
+    });
+  });
+
   it.each([
-    ['', 'requires authon.publishableKey'],
     ['secret_value', 'must start with pk_live_ or pk_test_'],
     ['pk_live_', 'must include a key value after pk_live_'],
   ])('rejects an invalid publishable key %j', (publishableKey, message) => {

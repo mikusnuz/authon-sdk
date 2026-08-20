@@ -43,6 +43,19 @@ describe('Next.js server auth helpers', () => {
     });
   });
 
+  it.each([
+    ['a legacy raw user', user()],
+    ['a legacy user envelope', { user: user() }],
+    ['a documented data envelope', {
+      data: { valid: true, payload: { sub: 'payload-user' }, user: user() },
+    }],
+  ])('accepts %s verification response', async (_description, body) => {
+    respondWithJson(body);
+
+    await expect(currentUser()).resolves.toEqual(user());
+    await expect(auth()).resolves.toMatchObject({ userId: 'user_1', user: user() });
+  });
+
   it('uses a valid payload subject for auth while currentUser remains null', async () => {
     respondWithJson({
       valid: true,
@@ -61,6 +74,9 @@ describe('Next.js server auth helpers', () => {
     {},
     { valid: 'true', payload: { sub: 'payload-user' } },
     { valid: true, user: { id: 42 } },
+    { id: 'user_1', valid: false },
+    { data: { valid: false, user: user() } },
+    { data: { user: { id: 42 } } },
   ])('fails closed for invalid or malformed response %#', async (body) => {
     respondWithJson(body);
 

@@ -43,11 +43,22 @@ export function readAuthonCookie(name = DEFAULT_COOKIE_NAME): string | null {
 export function isUnexpiredAuthonToken(token: string, now = Date.now()): boolean {
   try {
     const parts = token.split('.');
-    if (parts.length !== 3 || !parts[1]) return false;
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-    const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
-    const payload = JSON.parse(atob(padded)) as { exp?: unknown };
-    return typeof payload.exp === 'number' && payload.exp > Math.floor(now / 1_000);
+    if (parts.length !== 3 || parts.some((part) => !part || !/^[A-Za-z0-9_-]+$/.test(part))) {
+      return false;
+    }
+    const decode = (part: string): unknown => {
+      const base64 = part.replace(/-/g, '+').replace(/_/g, '/');
+      const padded = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=');
+      return JSON.parse(atob(padded)) as unknown;
+    };
+    const header = decode(parts[0]);
+    const payload = decode(parts[1]);
+    if (typeof header !== 'object' || header === null || Array.isArray(header)) return false;
+    if (typeof payload !== 'object' || payload === null || Array.isArray(payload)) return false;
+    const exp = (payload as { exp?: unknown }).exp;
+    return typeof exp === 'number'
+      && Number.isFinite(exp)
+      && exp > Math.floor(now / 1_000);
   } catch {
     return false;
   }

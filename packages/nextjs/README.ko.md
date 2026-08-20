@@ -66,6 +66,8 @@ export default authonMiddleware({ publicRoutes: ['/', '/sign-in'] });
 
 Provider는 미들웨어 호환성을 위해 기본 이름이 `authon-token`인 JavaScript 접근
 가능 쿠키를 동기화합니다. 이 쿠키는 HttpOnly가 아니므로 XSS 방어가 필요합니다.
+기본 미들웨어 검사는 JWT 구조와 `exp` 만 로컬에서 확인하며 JWT 서명을 검증하지
+않습니다.
 원격 토큰 검증은 `verifyToken: true`, API 라우트 보호는
 `protectApiRoutes: true`로 각각 명시적으로 켭니다. 원격 검증 오류는 인증 실패로
 처리됩니다. `@authon/nextjs/server`의 `currentUser()`와 `auth()`는 직접 응답과

@@ -18,8 +18,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function parseVerificationResponse(value: unknown): VerifiedToken | null {
-  if (!isRecord(value) || value.valid !== true) return null;
+function parseUser(value: unknown): AuthonUser | null {
+  if (!isRecord(value) || typeof value.id !== 'string' || !value.id) return null;
+  return value as unknown as AuthonUser;
+}
+
+function parseVerifiedFields(value: Record<string, unknown>): VerifiedToken | null {
 
   let payload: Record<string, unknown> | null = null;
   if (value.payload != null) {
@@ -30,11 +34,30 @@ function parseVerificationResponse(value: unknown): VerifiedToken | null {
 
   let user: AuthonUser | null = null;
   if (value.user != null) {
-    if (!isRecord(value.user) || typeof value.user.id !== 'string' || !value.user.id) return null;
-    user = value.user as unknown as AuthonUser;
+    user = parseUser(value.user);
+    if (!user) return null;
   }
 
   return payload || user ? { payload, user } : null;
+}
+
+function parseVerificationResponse(value: unknown): VerifiedToken | null {
+  if (!isRecord(value)) return null;
+
+  if ('data' in value) return parseVerificationResponse(value.data);
+
+  if ('valid' in value) {
+    if (value.valid !== true) return null;
+    return parseVerifiedFields(value);
+  }
+
+  if ('user' in value) {
+    const user = parseUser(value.user);
+    return user ? { payload: null, user } : null;
+  }
+
+  const user = parseUser(value);
+  return user ? { payload: null, user } : null;
 }
 
 function normalizedTimeout(timeoutMs: number | undefined): number {

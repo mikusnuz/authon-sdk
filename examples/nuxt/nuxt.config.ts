@@ -15,7 +15,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       authon: {
-        publishableKey: 'pk_test_example_publishable_key',
+        publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY || '',
         config: {},
       },
     },

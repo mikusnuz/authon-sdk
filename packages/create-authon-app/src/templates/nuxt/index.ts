@@ -69,13 +69,18 @@ export function generateNuxt(options: ProjectOptions): FileEntry[] {
   // middleware/auth.ts
   files.push({
     path: 'middleware/auth.ts',
-    content: `export default defineNuxtRouteMiddleware((to) => {
-  // This middleware redirects unauthenticated users
-  // For client-side protection, use the AuthonSignedIn / AuthonSignedOut components
-  // For server-side protection, verify tokens in your API routes
-  const publicRoutes = ['/', '/sign-in'];
-  if (publicRoutes.includes(to.path)) {
+    content: `export default defineNuxtRouteMiddleware(async (to) => {
+  const authon = useAuthon();
+
+  // The browser SDK owns the session. SSR cannot decide authentication while
+  // the client is intentionally absent, so defer the decision to hydration.
+  if (import.meta.server || !authon.client) {
     return;
+  }
+
+  await authon.client.waitUntilReady();
+  if (!authon.isSignedIn) {
+    return navigateTo('/sign-in?redirect_url=' + encodeURIComponent(to.fullPath));
   }
 });
 `,
@@ -176,23 +181,57 @@ const authon = useAuthon();
 `,
   });
 
+  // pages/sign-in.vue
+  files.push({
+    path: 'pages/sign-in.vue',
+    content: `<script setup lang="ts">
+import { useAuthon } from '@authon/nuxt/composables';
+import { onMounted, watch } from 'vue';
+
+const authon = useAuthon();
+const route = useRoute();
+
+function redirectTarget(): string {
+  const requested = route.query.redirect_url;
+  return typeof requested === 'string' && requested.startsWith('/') && !requested.startsWith('//')
+    ? requested
+    : '/dashboard';
+}
+
+watch(() => authon.isSignedIn, (signedIn) => {
+  if (signedIn) void navigateTo(redirectTarget());
+}, { immediate: true });
+
+onMounted(() => {
+  if (!authon.isSignedIn) void authon.client?.openSignIn();
+});
+</script>
+
+<template>
+  <main style="min-height: 100vh; display: flex; align-items: center; justify-content: center;">
+    <button
+      type="button"
+      style="padding: 12px 32px; font-size: 1rem; font-weight: 600; color: #fff; background: var(--primary); border: none; border-radius: 8px; cursor: pointer;"
+      @click="authon.client?.openSignIn()"
+    >
+      Sign In
+    </button>
+  </main>
+</template>
+`,
+  });
+
   // pages/dashboard.vue
   files.push({
     path: 'pages/dashboard.vue',
     content: `<script setup lang="ts">
 import { AuthonUserButton } from '@authon/nuxt';
 import { useAuthon, useUser } from '@authon/nuxt/composables';
-import { watch } from 'vue';
+
+definePageMeta({ middleware: 'auth' });
 
 const authon = useAuthon();
 const { user } = useUser();
-const router = useRouter();
-
-watch(() => [authon.isLoading, authon.isSignedIn], ([loading, signedIn]) => {
-  if (!loading && !signedIn) {
-    router.push('/');
-  }
-}, { immediate: true });
 </script>
 
 <template>

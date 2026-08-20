@@ -179,7 +179,8 @@ export async function GET() {
 
 The provider synchronizes a JavaScript-readable `authon-token` compatibility
 cookie for middleware. It is not HttpOnly, so protect the app against XSS.
-Remote middleware verification and API-route protection are separate,
+The default local check validates JWT structure and expiry but does not verify its
+signature. Remote middleware verification and API-route protection are separate,
 fail-closed opt-ins (`verifyToken` and `protectApiRoutes`); server helpers verify
 the token before returning `currentUser()`/`auth()` identity data. See the
 [@authon/nextjs security notes](./packages/nextjs/README.md#security-and-verification).

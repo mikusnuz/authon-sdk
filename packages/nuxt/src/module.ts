@@ -49,7 +49,7 @@ export const authonModule = defineNuxtModule<AuthonModuleOptions>({
       config?: Omit<AuthonConfig, 'mode'>;
     } | undefined;
     const publishableKey = options.publishableKey || existing?.publishableKey || '';
-    validatePublishableKey(publishableKey);
+    if (publishableKey) validatePublishableKey(publishableKey);
 
     const resolver = createResolver(
       typeof __filename === 'string' ? __filename : import.meta.url,

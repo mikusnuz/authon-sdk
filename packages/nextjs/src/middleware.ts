@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server.js';
 import { NextResponse } from 'next/server.js';
+import { isUnexpiredAuthonToken } from './cookie';
 import { verifyAuthonToken } from './verify';
 
 const DEFAULT_COOKIE_NAME = 'authon-token';
@@ -66,7 +67,10 @@ export function authonMiddleware(options: AuthonMiddlewareOptions = {}) {
 
     if (!token) return unauthorized(request, signInUrl, apiOrBearerRequest);
 
-    if (verifyToken && !await verifyAuthonToken(token, options)) {
+    const accepted = verifyToken
+      ? await verifyAuthonToken(token, options) !== null
+      : isUnexpiredAuthonToken(token);
+    if (!accepted) {
       return unauthorized(request, signInUrl, apiOrBearerRequest);
     }
 

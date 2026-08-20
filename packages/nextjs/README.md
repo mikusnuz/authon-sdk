@@ -195,16 +195,20 @@ so an XSS vulnerability can expose it. Use a strict Content Security
 Policy, avoid rendering untrusted HTML, and do not treat the cookie alone as
 server-side proof of identity.
 
-Middleware performs local presence/expiry checks by default. Set `verifyToken:
-true` to opt in to remote verification against Authon; verification errors fail
-closed. API routes are public by default even when page routes are protected. Set
+Middleware checks JWT structure and the `exp` claim locally by default, rejecting
+malformed and expired tokens. This local check does not verify the JWT signature.
+Set `verifyToken: true` to opt in to authoritative remote verification against
+Authon; verification errors fail closed. API routes are public by default even
+when page routes are protected. Set
 `protectApiRoutes: true` (and normally `verifyToken: true`) to protect matching API
 routes.
 
 `currentUser()` and `auth()` from `@authon/nextjs/server` remotely verify the
-token before returning identity data. They accept both a direct verification
-payload and the API's wrapped `{ data: ... }` response. Failed verification
-returns `null`/an unauthenticated state rather than trusting the cookie payload.
+token before returning identity data. They accept the current
+`{ valid, payload, user }` response, legacy raw-user and `{ user }` responses, and
+the API's wrapped `{ data: ... }` response. Malformed or explicitly invalid
+responses return `null`/an unauthenticated state rather than trusting the cookie
+payload.
 
 ## API Reference
 

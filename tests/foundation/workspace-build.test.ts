@@ -27,4 +27,19 @@ describe('workspace build foundation', () => {
     expect(internalDependencies.length).toBeGreaterThan(0);
     expect(internalDependencies.every(([, version]) => version === 'workspace:*')).toBe(true);
   });
+
+  it('injects the Nuxt example key in CI instead of baking one into source', async () => {
+    const workflow = await readFile(join(process.cwd(), '.github/workflows/ci.yml'), 'utf8');
+
+    expect(workflow).toMatch(
+      /- name: Build examples[\s\S]*?env:[\s\S]*?NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY:/,
+    );
+  });
+
+  it('pins Next.js output tracing to the workspace root', async () => {
+    const config = await readFile(join(process.cwd(), 'examples/nextjs/next.config.ts'), 'utf8');
+
+    expect(config).toContain('outputFileTracingRoot');
+    expect(config).toContain("path.join(process.cwd(), '../..')");
+  });
 });
