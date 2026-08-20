@@ -9,7 +9,7 @@ describe('authonMiddleware compatibility', () => {
     vi.unstubAllGlobals();
   });
 
-  it.each(['/', '/sign-in', '/_next/static/app.js', '/api/private', '/favicon.ico'])(
+  it.each(['/', '/sign-in', '/_next/static/app.js', '/api', '/api/private', '/favicon.ico'])(
     'leaves the default public route %s accessible',
     async (pathname) => {
       const response = await authonMiddleware()(new NextRequest(`https://app.example${pathname}`));
@@ -25,6 +25,8 @@ describe('authonMiddleware compatibility', () => {
     );
 
     expect(response.status).toBe(307);
+    expect(response.headers.get('x-authon-token')).toBeNull();
+    expect(response.headers.get('x-middleware-request-x-authon-token')).toBeNull();
     expect(response.headers.get('location')).toBe(
       'https://app.example/sign-in?redirect_url=%2Fdashboard%3Ftab%3Dsecurity',
     );
@@ -38,7 +40,9 @@ describe('authonMiddleware compatibility', () => {
     const response = await authonMiddleware()(request);
 
     expect(response.headers.get('x-middleware-next')).toBe('1');
-    expect(response.headers.get('x-authon-token')).toBe('session-token');
+    expect(response.headers.get('x-authon-token')).toBeNull();
+    expect(response.headers.get('x-middleware-request-x-authon-token')).toBe('session-token');
+    expect(response.headers.get('x-middleware-override-headers')).toContain('x-authon-token');
   });
 
   it('uses a configurable cookie name', async () => {
@@ -48,7 +52,8 @@ describe('authonMiddleware compatibility', () => {
 
     const response = await authonMiddleware({ cookieName: 'project-token' })(request);
 
-    expect(response.headers.get('x-authon-token')).toBe('session-token');
+    expect(response.headers.get('x-authon-token')).toBeNull();
+    expect(response.headers.get('x-middleware-request-x-authon-token')).toBe('session-token');
   });
 
   it.each([
@@ -59,7 +64,8 @@ describe('authonMiddleware compatibility', () => {
       new NextRequest('https://app.example/dashboard', { headers: { authorization } }),
     );
 
-    expect(response.headers.get('x-authon-token')).toBe(token);
+    expect(response.headers.get('x-authon-token')).toBeNull();
+    expect(response.headers.get('x-middleware-request-x-authon-token')).toBe(token);
   });
 
   it.each(['Bearer', 'Bearer ', 'Bearer  two-spaces', 'Basic value', 'Bearer token extra']) (
@@ -70,6 +76,8 @@ describe('authonMiddleware compatibility', () => {
       );
 
       expect(response.status).toBe(401);
+      expect(response.headers.get('x-authon-token')).toBeNull();
+      expect(response.headers.get('x-middleware-request-x-authon-token')).toBeNull();
       await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' });
     },
   );
@@ -85,6 +93,18 @@ describe('authonMiddleware compatibility', () => {
     expect(publicResponse.headers.get('x-middleware-next')).toBe('1');
     expect(protectedResponse.status).toBe(401);
     await expect(protectedResponse.json()).resolves.toEqual({ error: 'Unauthorized' });
+  });
+
+  it('returns JSON for the protected API root', async () => {
+    const response = await authonMiddleware({ protectApiRoutes: true })(
+      new NextRequest('https://app.example/api'),
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('location')).toBeNull();
+    expect(response.headers.get('x-authon-token')).toBeNull();
+    expect(response.headers.get('x-middleware-request-x-authon-token')).toBeNull();
+    await expect(response.json()).resolves.toEqual({ error: 'Unauthorized' });
   });
 
   it('only remotely verifies tokens when explicitly enabled', async () => {

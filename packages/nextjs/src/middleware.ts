@@ -27,6 +27,10 @@ function bearerToken(value: string | null): string | null {
   return /^Bearer ([^\s]+)$/i.exec(value)?.[1] ?? null;
 }
 
+function isApiRoute(pathname: string): boolean {
+  return pathname === '/api' || pathname.startsWith('/api/');
+}
+
 function unauthorized(request: NextRequest, signInUrl: string, asJson: boolean): NextResponse {
   if (asJson) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
@@ -47,7 +51,7 @@ export function authonMiddleware(options: AuthonMiddlewareOptions = {}) {
     verifyToken = false,
   } = options;
   const alwaysPublic = [signInUrl, '/_next/*', '/favicon.ico'];
-  if (!protectApiRoutes) alwaysPublic.push('/api/*');
+  if (!protectApiRoutes) alwaysPublic.push('/api', '/api/*');
 
   return async (request: NextRequest) => {
     const { pathname } = request.nextUrl;
@@ -58,7 +62,7 @@ export function authonMiddleware(options: AuthonMiddlewareOptions = {}) {
     const token = authorization !== null
       ? bearerToken(authorization)
       : request.cookies.get(cookieName)?.value ?? null;
-    const apiOrBearerRequest = (protectApiRoutes && pathname.startsWith('/api/')) || authorization !== null;
+    const apiOrBearerRequest = (protectApiRoutes && isApiRoute(pathname)) || authorization !== null;
 
     if (!token) return unauthorized(request, signInUrl, apiOrBearerRequest);
 
@@ -66,8 +70,8 @@ export function authonMiddleware(options: AuthonMiddlewareOptions = {}) {
       return unauthorized(request, signInUrl, apiOrBearerRequest);
     }
 
-    const response = NextResponse.next();
-    response.headers.set('x-authon-token', token);
-    return response;
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set('x-authon-token', token);
+    return NextResponse.next({ request: { headers: requestHeaders } });
   };
 }
