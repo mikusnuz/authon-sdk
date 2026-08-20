@@ -69,8 +69,12 @@ const authon = new Authon('pk_live_...');
 await authon.openSignIn();
 
 // Or sign in programmatically
-const user = await authon.signInWithEmail('user@example.com', 'password');
-console.log(user.displayName);
+const result = await authon.signInWithEmail('user@example.com', 'password');
+if ('needsVerification' in result) {
+  // Prompt for the emailed code, then call verifyEmail(result.email, code).
+} else {
+  console.log(result.displayName);
+}
 
 // Listen for auth state changes
 authon.on('signedIn', (user) => {
@@ -134,10 +138,9 @@ npm install @authon/nextjs
 
 ```ts
 // middleware.ts
-import { authMiddleware } from '@authon/nextjs';
+import { authonMiddleware } from '@authon/nextjs';
 
-export default authMiddleware({
-  publishableKey: process.env.NEXT_PUBLIC_AUTHON_KEY!,
+export default authonMiddleware({
   publicRoutes: ['/', '/about', '/pricing'],
 });
 
@@ -154,7 +157,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html>
       <body>
-        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
           {children}
         </AuthonProvider>
       </body>
@@ -173,6 +176,29 @@ export async function GET() {
   return Response.json({ user });
 }
 ```
+
+The provider synchronizes a JavaScript-readable `authon-token` compatibility
+cookie for middleware. It is not HttpOnly, so protect the app against XSS.
+Remote middleware verification and API-route protection are separate,
+fail-closed opt-ins (`verifyToken` and `protectApiRoutes`); server helpers verify
+the token before returning `currentUser()`/`auth()` identity data. See the
+[@authon/nextjs security notes](./packages/nextjs/README.md#security-and-verification).
+
+### Nuxt
+
+```ts
+export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
+  runtimeConfig: {
+    public: {
+      authon: { publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY },
+    },
+  },
+})
+```
+
+The module auto-imports `useAuthon` and `useUser`. Explicit imports should use
+`@authon/nuxt/composables`; the legacy manual plugin is deprecated.
 
 ## Package READMEs
 

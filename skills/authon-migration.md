@@ -43,7 +43,7 @@ npm install @authon/react   # For React SPA
 ```diff
 - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxxx
 - CLERK_SECRET_KEY=sk_live_xxxxx
-+ NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
++ NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ### Step 3: Replace Provider
@@ -56,7 +56,7 @@ npm install @authon/react   # For React SPA
   export default function RootLayout({ children }) {
     return (
 -     <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
-+     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
++     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
         {children}
 -     </ClerkProvider>
 +     </AuthonProvider>
@@ -171,7 +171,7 @@ npm install @authon/nextjs
 - NEXTAUTH_URL=http://localhost:3000
 - GOOGLE_CLIENT_ID=xxxxx
 - GOOGLE_CLIENT_SECRET=xxxxx
-+ NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
++ NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 Note: OAuth provider credentials (Google, GitHub, etc.) are now configured in the Authon dashboard, not in env vars.
@@ -192,7 +192,7 @@ Delete the Auth.js API route:
   export default function RootLayout({ children }) {
     return (
 -     <SessionProvider>
-+     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
++     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
         {children}
 -     </SessionProvider>
 +     </AuthonProvider>
@@ -285,7 +285,7 @@ npm install @authon/react
 - AUTH0_ISSUER_BASE_URL=https://your-tenant.auth0.com
 - AUTH0_CLIENT_ID=xxxxx
 - AUTH0_CLIENT_SECRET=xxxxx
-+ NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
++ NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ### Step 3: Replace Provider (Next.js)
@@ -297,7 +297,7 @@ npm install @authon/react
   export default function RootLayout({ children }) {
     return (
 -     <UserProvider>
-+     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
++     <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
         {children}
 -     </UserProvider>
 +     </AuthonProvider>
@@ -385,7 +385,7 @@ npm install @authon/react  # or @authon/nextjs for Next.js
 - NEXT_PUBLIC_FIREBASE_API_KEY=xxxxx
 - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=xxxxx
 - FIREBASE_SERVICE_ACCOUNT=xxxxx
-+ NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
++ NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ### Step 3: Replace Client-Side Auth
@@ -433,7 +433,7 @@ npm install @authon/nextjs  # or @authon/react
 - NEXT_PUBLIC_SUPABASE_URL=xxxxx
 - NEXT_PUBLIC_SUPABASE_ANON_KEY=xxxxx
 - SUPABASE_SERVICE_ROLE_KEY=xxxxx
-+ NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx
++ NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx
 ```
 
 ### Step 3: Replace Client-Side Auth

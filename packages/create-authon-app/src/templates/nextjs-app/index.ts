@@ -113,7 +113,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
           {children}
         </AuthonProvider>
       </body>

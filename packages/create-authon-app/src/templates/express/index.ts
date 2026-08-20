@@ -91,11 +91,11 @@ app.get('/api/health', (_req, res) => {
 });
 
 // Protected routes (auth required)
-const authMiddleware = expressMiddleware({
+const authonMiddleware = expressMiddleware({
   secretKey: process.env.AUTHON_SECRET_KEY!,
 });
 
-app.use('/api/user', authMiddleware, userRouter);
+app.use('/api/user', authonMiddleware, userRouter);
 
 // Start server
 app.listen(port, () => {

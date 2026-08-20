@@ -62,9 +62,9 @@ Use `pk_test_...` keys during development (sandbox, no rate limits). Switch to `
 
 ```env
 # Client-side (browser / mobile) — safe to expose
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...       # Next.js
-NUXT_PUBLIC_AUTHON_KEY=pk_live_...       # Nuxt
-VITE_AUTHON_KEY=pk_live_...              # Vite
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Next.js
+NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Nuxt
+VITE_AUTHON_PUBLISHABLE_KEY=pk_live_...              # Vite
 ```
 
 ## Common Tasks
@@ -92,7 +92,7 @@ import { AuthonProvider } from '@authon/nextjs';
 export default function RootLayout({ children }) {
   return (
     <html><body>
-      <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+      <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
         {children}
       </AuthonProvider>
     </body></html>

@@ -12,9 +12,9 @@ COPY --from=sdk-build /app/packages/ ./packages/
 COPY examples/angular/ ./examples/angular/
 WORKDIR /app/examples/angular
 RUN npm install
-ARG AUTHON_PROJECT_ID
+ARG AUTHON_PUBLISHABLE_KEY
 ARG AUTHON_API_URL
-RUN sed -i "s|\${AUTHON_PROJECT_ID}|${AUTHON_PROJECT_ID}|g" src/environments/environment.ts && \
+RUN sed -i "s|\${AUTHON_PUBLISHABLE_KEY}|${AUTHON_PUBLISHABLE_KEY}|g" src/environments/environment.ts && \
     sed -i "s|\${AUTHON_API_URL}|${AUTHON_API_URL:-https://api.authon.dev}|g" src/environments/environment.ts
 RUN npm run build
 

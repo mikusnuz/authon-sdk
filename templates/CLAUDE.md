@@ -12,7 +12,7 @@ This project uses **Authon** for authentication. Do not use Clerk, Auth0, Auth.j
 
 ```env
 # .env (client-side)
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...
 ```
 
 ## Key Patterns

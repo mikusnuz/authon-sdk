@@ -2,28 +2,7 @@
 
 # @authon/nuxt
 
-> Drop-in Nuxt 3 authentication with plugin, composables, and route middleware — Auth0 alternative
-
-[![npm version](https://img.shields.io/npm/v/@authon/nuxt?color=6d28d9)](https://www.npmjs.com/package/@authon/nuxt)
-[![License](https://img.shields.io/badge/license-MIT-blue)](../../LICENSE)
-
-## Prerequisites
-
-Before installing the SDK, create an Authon project and get your API keys:
-
-1. **Create a project** at [Authon Dashboard](https://authon.dev/dashboard/overview)
-   - Click "Create Project" and enter your app name
-   - Select the authentication methods you want (Email/Password, OAuth providers, etc.)
-
-2. **Get your API keys** from Project Settings → API Keys
-   - **Publishable Key** (`pk_live_...`) — use in your frontend code
-   - **Test Key** (`pk_test_...`) — for development, enables Dev Teleport
-
-3. **Configure OAuth providers** (optional) in Project Settings → OAuth
-   - Add Google, Apple, GitHub, etc. with their respective Client ID and Secret
-   - Set the redirect URL to `https://api.authon.dev/v1/auth/oauth/redirect`
-
-> **Test vs Live keys:** Use `pk_test_...` during development. Switch to `pk_live_...` before deploying to production. Test keys use a sandbox environment with no rate limits.
+> Nuxt 3 authentication module with auto-imported composables and Vue components
 
 ## Install
 
@@ -31,178 +10,89 @@ Before installing the SDK, create an Authon project and get your API keys:
 npm install @authon/nuxt
 ```
 
-## Quick Start
+## Setup
 
-```ts
-// plugins/authon.client.ts
-import { createAuthonPlugin } from '@authon/nuxt';
-
-export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig();
-  const authon = createAuthonPlugin(config.public.authonKey, {
-    theme: 'auto',
-  });
-  return { provide: { authon } };
-});
+```env
+NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_test_...
 ```
 
 ```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
   runtimeConfig: {
     public: {
-      authonKey: process.env.NUXT_PUBLIC_AUTHON_KEY,
+      authon: {
+        publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY,
+      },
     },
   },
-});
+})
 ```
 
+The module installs the runtime plugin and auto-imports `useAuthon` and
+`useUser`. Components are available from `@authon/nuxt`:
+
 ```vue
-<!-- pages/index.vue -->
 <script setup lang="ts">
-const { $authon } = useNuxtApp();
-const { client, isSignedIn, user } = $authon;
+import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/nuxt'
+
+const authon = useAuthon()
+const { user } = useUser()
 </script>
 
 <template>
-  <div v-if="isSignedIn">
+  <AuthonSignedOut><button @click="authon.client?.openSignIn()">Sign in</button></AuthonSignedOut>
+  <AuthonSignedIn>
     <p>Welcome, {{ user?.displayName }}</p>
-    <button @click="client.signOut()">Sign out</button>
-  </div>
-  <div v-else>
-    <button @click="client.openSignIn()">Sign in</button>
-  </div>
+    <AuthonUserButton />
+  </AuthonSignedIn>
 </template>
 ```
 
-## Common Tasks
-
-### Add Google OAuth Login
-
-```vue
-<script setup lang="ts">
-const { $authon } = useNuxtApp();
-
-async function signInWithGoogle() {
-  await $authon.client.signInWithOAuth('google');
-}
-</script>
-
-<template>
-  <button @click="signInWithGoogle">Sign in with Google</button>
-</template>
-```
-
-### Protect a Route
+For explicit imports, use the dedicated entry point:
 
 ```ts
-// middleware/auth.ts
-import { createAuthMiddleware } from '@authon/nuxt';
-
-export default defineNuxtRouteMiddleware((to, from) => {
-  const { $authon } = useNuxtApp();
-  return createAuthMiddleware($authon, '/sign-in')(to, from);
-});
+import { useAuthon, useUser } from '@authon/nuxt/composables'
 ```
 
-```vue
-<!-- pages/dashboard.vue -->
-<script setup>
-definePageMeta({ middleware: 'auth' });
-const { $authon } = useNuxtApp();
-</script>
+## Configuration
 
-<template>
-  <h1>Welcome, {{ $authon.user?.displayName }}</h1>
-</template>
+The module also accepts inline options. Keep the publishable key in public
+runtime config; a server secret, if your own endpoints need one, belongs in
+private runtime config and is not required by the browser module.
+
+```ts
+export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
+  authon: {
+    publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY,
+    config: { theme: 'auto' },
+    globalMiddleware: false,
+  },
+})
 ```
 
-### Get Current User
+`globalMiddleware` installs Authon's route middleware globally. Client-side
+route guards improve navigation UX, but sensitive server/API operations must
+still verify an access token.
 
-```vue
-<script setup lang="ts">
-const { $authon } = useNuxtApp();
-const { user, isLoading } = $authon;
-</script>
+## Legacy manual plugin
 
-<template>
-  <p v-if="isLoading">Loading...</p>
-  <p v-else-if="user">{{ user.email }}</p>
-  <p v-else>Not signed in</p>
-</template>
-```
+`createAuthonPlugin` remains exported for compatibility, but is deprecated for
+Nuxt applications. Do not create `plugins/authon.client.ts` in new projects;
+use `modules: ['@authon/nuxt']`, auto-imports, and
+`@authon/nuxt/composables` instead.
 
-### Add Email/Password Auth
+## Public API
 
-```vue
-<script setup lang="ts">
-import { ref } from 'vue';
-const { $authon } = useNuxtApp();
-const email = ref('');
-const password = ref('');
-
-async function handleSignIn() {
-  await $authon.client.signInWithEmail(email.value, password.value);
-}
-</script>
-
-<template>
-  <form @submit.prevent="handleSignIn">
-    <input v-model="email" type="email" placeholder="Email" />
-    <input v-model="password" type="password" placeholder="Password" />
-    <button type="submit">Sign In</button>
-  </form>
-</template>
-```
-
-### Handle Sign Out
-
-```vue
-<script setup lang="ts">
-const { $authon } = useNuxtApp();
-</script>
-
-<template>
-  <button @click="$authon.client.signOut()">Sign Out</button>
-</template>
-```
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `NUXT_PUBLIC_AUTHON_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
-| `NUXT_PUBLIC_AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
-
-## API Reference
-
-### Plugin
-
-| Function | Returns |
-|----------|---------|
-| `createAuthonPlugin(key, config?)` | `AuthonPluginState { client, user, isSignedIn, isLoading }` |
-| `createAuthMiddleware(authon, redirectTo?)` | Route middleware function |
-| `renderSocialButtons(options)` | Cleanup function |
-
-### Composables
-
-| Composable | Returns |
-|------------|---------|
-| `useAuthon()` | `AuthonPluginState` (access via `useNuxtApp().$authon` in practice) |
-| `useUser()` | `{ user, isLoading }` |
-| `useAuthonWeb3()` | Web3 wallet auth |
-| `useAuthonPasswordless()` | Magic link and OTP |
-| `useAuthonPasskeys()` | Passkey registration and auth |
-
-## Comparison
-
-| Feature | Authon | Clerk | Auth.js |
-|---------|--------|-------|---------|
-| Pricing | Free | $25/mo+ | Free |
-| OAuth providers | 10+ | 20+ | 80+ |
-| Nuxt 3 module | Yes | No | Via Sidebase |
-| MFA/Passkeys | Yes | Yes | Plugin |
-| Web3 auth | Yes | No | No |
+- Module: default export, `authonModule`, `AuthonModuleOptions`
+- Composables: `useAuthon`, `useUser`, `useAuthonWeb3`,
+  `useAuthonPasswordless`, `useAuthonPasskeys`
+- Components: `AuthonSignIn`, `AuthonSignUp`, `AuthonUserButton`,
+  `AuthonSignedIn`, `AuthonSignedOut`
+- Compatibility helpers: `createAuthonPlugin` (deprecated),
+  `createAuthMiddleware`, `renderSocialButtons`
 
 ## License
 

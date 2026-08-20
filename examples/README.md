@@ -73,7 +73,7 @@ cd authon-sdk/examples
 
 # Copy and configure environment
 cp .env.example .env
-# Edit .env with your Authon project credentials
+# Edit .env with your Authon publishable key
 
 # Start all 13 web containers
 docker compose up -d
@@ -102,15 +102,15 @@ Each example can be run independently. See the README in each directory for spec
 
 ```env
 # All examples
-AUTHON_PROJECT_ID=your-project-id
+AUTHON_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 AUTHON_API_URL=https://api.authon.dev
 
 # Vite-based frontends (React, Vue, Vanilla JS)
-VITE_AUTHON_PROJECT_ID=your-project-id
+VITE_AUTHON_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 VITE_AUTHON_API_URL=https://api.authon.dev
 
 # Backend examples
-AUTHON_API_KEY=your-api-key
+AUTHON_SECRET_KEY=sk_test_your_secret_key_here
 AUTHON_WEBHOOK_SECRET=your-webhook-secret
 ```
 

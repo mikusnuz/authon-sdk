@@ -1,4 +1,4 @@
 export const environment = {
-  authonProjectId: '${AUTHON_PROJECT_ID}',
+  authonPublishableKey: '${AUTHON_PUBLISHABLE_KEY}',
   authonApiUrl: '${AUTHON_API_URL}',
 }

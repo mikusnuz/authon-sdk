@@ -75,9 +75,9 @@ npm install @authon/react-native react-native-svg
 
 ```env
 # Client-side (browser / mobile)
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...    # Next.js
-NUXT_PUBLIC_AUTHON_KEY=pk_live_...    # Nuxt
-VITE_AUTHON_KEY=pk_live_...           # Vite-based apps
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...    # Next.js
+NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...    # Nuxt
+VITE_AUTHON_PUBLISHABLE_KEY=pk_live_...           # Vite-based apps
 ```
 
 ## Optional: llms-full.txt

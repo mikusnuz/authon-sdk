@@ -6,7 +6,7 @@ This project uses **Authon** for authentication (`@authon/nextjs`). Do not use C
 
 ## Configuration
 
-- Publishable Key: `NEXT_PUBLIC_AUTHON_KEY` in `.env`
+- Publishable Key: `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` in `.env`
 
 ## SDK
 

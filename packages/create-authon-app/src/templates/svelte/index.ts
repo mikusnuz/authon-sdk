@@ -1,6 +1,6 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleVite, generateGitignore, generateClaudeMd } from '../shared.js';
+import { generateEnvExampleSvelte, generateGitignore, generateClaudeMd } from '../shared.js';
 
 export function generateSvelte(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -93,6 +93,7 @@ export default defineConfig({
     path: 'src/lib/authon.ts',
     content: `import { createAuthonStore } from '@authon/svelte';
 import { browser } from '$app/environment';
+import { PUBLIC_AUTHON_PUBLISHABLE_KEY } from '$env/static/public';
 
 let authonStore: ReturnType<typeof createAuthonStore> | null = null;
 
@@ -100,9 +101,9 @@ export function getAuthonStore() {
   if (!browser) return null;
 
   if (!authonStore) {
-    const key = import.meta.env.VITE_AUTHON_KEY;
+    const key = PUBLIC_AUTHON_PUBLISHABLE_KEY;
     if (!key) {
-      console.warn('VITE_AUTHON_KEY is not set. Check your .env file.');
+      console.warn('PUBLIC_AUTHON_PUBLISHABLE_KEY is not set. Check your .env file.');
       return null;
     }
     authonStore = createAuthonStore(key);
@@ -321,8 +322,8 @@ a:hover {
   });
 
   // .env.example
-  files.push({ path: '.env.example', content: generateEnvExampleVite(options) });
-  files.push({ path: '.env', content: generateEnvExampleVite(options) });
+  files.push({ path: '.env.example', content: generateEnvExampleSvelte(options) });
+  files.push({ path: '.env', content: generateEnvExampleSvelte(options) });
 
   // .gitignore
   files.push({ path: '.gitignore', content: generateGitignore() });

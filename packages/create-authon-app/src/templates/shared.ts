@@ -6,10 +6,10 @@ export function generateEnvExample(options: ProjectOptions): string {
     '# Get your keys at https://dashboard.authon.dev',
     '',
     '# Your Authon publishable key (safe for client-side)',
-    'NEXT_PUBLIC_AUTHON_KEY=pk_test_your_publishable_key_here',
+    'NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_test_your_publishable_key_here',
     '',
-    '# Your Authon secret key (server-side only)',
-    'AUTHON_SECRET_KEY=sk_test_your_secret_key_here',
+    '# Optional Authon secret key (server-side only; never expose it to the browser)',
+    '# AUTHON_SECRET_KEY=sk_test_your_secret_key_here',
     '',
     '# Authon API URL (defaults to https://api.authon.dev)',
     '# AUTHON_API_URL=https://api.authon.dev',
@@ -25,12 +25,17 @@ export function generateEnvExample(options: ProjectOptions): string {
 
 export function generateEnvExampleVite(options: ProjectOptions): string {
   return generateEnvExample(options)
-    .replace(/NEXT_PUBLIC_AUTHON_KEY/g, 'VITE_AUTHON_KEY');
+    .replace(/NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY/g, 'VITE_AUTHON_PUBLISHABLE_KEY');
 }
 
 export function generateEnvExampleNuxt(options: ProjectOptions): string {
   return generateEnvExample(options)
-    .replace(/NEXT_PUBLIC_AUTHON_KEY/g, 'NUXT_PUBLIC_AUTHON_KEY');
+    .replace(/NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY/g, 'NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY');
+}
+
+export function generateEnvExampleSvelte(options: ProjectOptions): string {
+  return generateEnvExample(options)
+    .replace(/NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY/g, 'PUBLIC_AUTHON_PUBLISHABLE_KEY');
 }
 
 export function generateEnvExampleServer(options: ProjectOptions): string {
@@ -119,7 +124,6 @@ This is a ${framework} project using **Authon** for authentication.
 - \`pages/_app.tsx\` — AuthonProvider wraps the app
 - \`pages/index.tsx\` — Landing page with sign-in
 - \`pages/dashboard.tsx\` — Protected dashboard page
-- \`pages/api/user.ts\` — Server-side user verification
 `;
   } else if (template === 'react-vite') {
     content += `
@@ -138,7 +142,6 @@ This is a ${framework} project using **Authon** for authentication.
   } else if (template === 'nuxt') {
     content += `
 - \`nuxt.config.ts\` — Authon module configuration
-- \`plugins/authon.client.ts\` — Client-side Authon setup
 - \`middleware/auth.ts\` — Route protection middleware
 - \`pages/index.vue\` — Landing page with sign-in
 - \`pages/dashboard.vue\` — Protected dashboard page
@@ -197,7 +200,7 @@ app.post('/api/webhook/authon', async (req, res) => {
 
 ## Environment Variables
 
-- \`${isServer ? 'AUTHON_SECRET_KEY' : template === 'nuxt' ? 'NUXT_PUBLIC_AUTHON_KEY' : template.includes('vite') ? 'VITE_AUTHON_KEY' : 'NEXT_PUBLIC_AUTHON_KEY'}\` — ${isServer ? 'Secret key for server-side operations' : 'Publishable key (safe for client)'}
+- \`${isServer ? 'AUTHON_SECRET_KEY' : template === 'nuxt' ? 'NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY' : template.includes('vite') ? 'VITE_AUTHON_PUBLISHABLE_KEY' : 'NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY'}\` — ${isServer ? 'Secret key for server-side operations' : 'Publishable key (safe for client)'}
 ${!isServer ? `- \`AUTHON_SECRET_KEY\` — Secret key for server-side operations` : ''}
 `;
 

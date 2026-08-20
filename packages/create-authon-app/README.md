@@ -40,7 +40,7 @@ npx @authon/create-app my-app --template nextjs-app --yes
 | `nextjs-pages` | Next.js (Pages Router) | `@authon/nextjs` |
 | `react-vite` | React + Vite | `@authon/react` |
 | `vue-vite` | Vue 3 + Vite | `@authon/vue` |
-| `nuxt` | Nuxt 3 | `@authon/vue` |
+| `nuxt` | Nuxt 3 | `@authon/nuxt` |
 | `svelte` | SvelteKit | `@authon/svelte` |
 
 ## What's included

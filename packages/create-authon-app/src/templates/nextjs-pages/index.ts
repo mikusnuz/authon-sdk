@@ -101,7 +101,7 @@ import '../styles/globals.css';
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
-    <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+    <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
       <Component {...pageProps} />
     </AuthonProvider>
   );
@@ -281,31 +281,6 @@ export default function SignInPage() {
       <p style={{ color: 'var(--muted)' }}>Opening sign in...</p>
     </main>
   );
-}
-`,
-  });
-
-  // pages/api/user.ts
-  files.push({
-    path: 'pages/api/user.ts',
-    content: `import type { NextApiRequest, NextApiResponse } from 'next';
-import { AuthonBackend } from '@authon/node';
-
-const authon = new AuthonBackend(process.env.AUTHON_SECRET_KEY!);
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-
-  if (!token) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-
-  try {
-    const user = await authon.verifyToken(token);
-    return res.status(200).json({ user });
-  } catch {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
 }
 `,
   });

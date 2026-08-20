@@ -101,7 +101,7 @@ export default defineConfig({
     content: `/// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_AUTHON_KEY: string;
+  readonly VITE_AUTHON_PUBLISHABLE_KEY: string;
 }
 
 interface ImportMeta {
@@ -128,7 +128,7 @@ import './style.css';
 const app = createApp(App);
 
 const authon = createAuthon({
-  publishableKey: import.meta.env.VITE_AUTHON_KEY,
+  publishableKey: import.meta.env.VITE_AUTHON_PUBLISHABLE_KEY,
 });
 
 app.use(authon);

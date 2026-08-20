@@ -21,8 +21,7 @@ export function generateNuxt(options: ProjectOptions): FileEntry[] {
           preview: 'nuxt preview',
         },
         dependencies: {
-          '@authon/vue': '^0.3.0',
-          '@authon/js': '^0.3.0',
+          '@authon/nuxt': '^0.3.3',
           nuxt: '^3.15.0',
           vue: '^3.5.0',
           'vue-router': '^4.0.0',
@@ -54,30 +53,15 @@ export function generateNuxt(options: ProjectOptions): FileEntry[] {
     content: `export default defineNuxtConfig({
   compatibilityDate: '2025-01-01',
   devtools: { enabled: true },
+  modules: ['@authon/nuxt'],
   runtimeConfig: {
-    authonSecretKey: process.env.AUTHON_SECRET_KEY || '',
     public: {
-      authonKey: process.env.NUXT_PUBLIC_AUTHON_KEY || '',
+      authon: {
+        publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY || '',
+      },
     },
   },
   css: ['~/assets/css/main.css'],
-});
-`,
-  });
-
-  // plugins/authon.client.ts
-  files.push({
-    path: 'plugins/authon.client.ts',
-    content: `import { createAuthon } from '@authon/vue';
-
-export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig();
-
-  const authon = createAuthon({
-    publishableKey: config.public.authonKey,
-  });
-
-  nuxtApp.vueApp.use(authon);
 });
 `,
   });
@@ -146,10 +130,10 @@ a:hover {
   files.push({
     path: 'pages/index.vue',
     content: `<script setup lang="ts">
-import { useAuthon } from '@authon/vue';
-import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/vue';
+import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/nuxt';
+import { useAuthon } from '@authon/nuxt/composables';
 
-const { openSignIn } = useAuthon();
+const authon = useAuthon();
 </script>
 
 <template>
@@ -163,7 +147,7 @@ const { openSignIn } = useAuthon();
           Powered by Authon authentication. Sign in to get started.
         </p>
         <button
-          @click="openSignIn()"
+          @click="authon.client?.openSignIn()"
           style="padding: 12px 32px; font-size: 1rem; font-weight: 600; color: #fff; background: linear-gradient(135deg, #7c3aed, #4f46e5); border: none; border-radius: 8px; cursor: pointer;"
         >
           Sign In
@@ -196,15 +180,15 @@ const { openSignIn } = useAuthon();
   files.push({
     path: 'pages/dashboard.vue',
     content: `<script setup lang="ts">
-import { useAuthon, useUser } from '@authon/vue';
-import { AuthonUserButton } from '@authon/vue';
+import { AuthonUserButton } from '@authon/nuxt';
+import { useAuthon, useUser } from '@authon/nuxt/composables';
 import { watch } from 'vue';
 
-const { isSignedIn, isLoading } = useAuthon();
+const authon = useAuthon();
 const { user } = useUser();
 const router = useRouter();
 
-watch([() => isLoading, () => isSignedIn], ([loading, signedIn]) => {
+watch(() => [authon.isLoading, authon.isSignedIn], ([loading, signedIn]) => {
   if (!loading && !signedIn) {
     router.push('/');
   }
@@ -212,7 +196,7 @@ watch([() => isLoading, () => isSignedIn], ([loading, signedIn]) => {
 </script>
 
 <template>
-  <main v-if="!isLoading && isSignedIn" style="min-height: 100vh; padding: 2rem; max-width: 800px; margin: 0 auto;">
+  <main v-if="!authon.isLoading && authon.isSignedIn" style="min-height: 100vh; padding: 2rem; max-width: 800px; margin: 0 auto;">
     <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
       <NuxtLink to="/" style="font-size: 1.25rem; font-weight: 700; color: var(--primary); text-decoration: none;">
         ${options.projectName}
@@ -239,32 +223,6 @@ watch([() => isLoading, () => isSignedIn], ([loading, signedIn]) => {
     <p>Loading...</p>
   </main>
 </template>
-`,
-  });
-
-  // server/api/user.get.ts
-  files.push({
-    path: 'server/api/user.get.ts',
-    content: `import { AuthonBackend } from '@authon/node';
-
-export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig();
-  const authon = new AuthonBackend(config.authonSecretKey);
-
-  const authHeader = getRequestHeader(event, 'authorization');
-  const token = authHeader?.replace('Bearer ', '');
-
-  if (!token) {
-    throw createError({ statusCode: 401, message: 'Unauthorized' });
-  }
-
-  try {
-    const user = await authon.verifyToken(token);
-    return { user };
-  } catch {
-    throw createError({ statusCode: 401, message: 'Invalid token' });
-  }
-});
 `,
   });
 

@@ -185,12 +185,42 @@ export function SignOutButton() {
 | `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` | Yes | Project publishable key (`pk_live_...` or `pk_test_...`) |
 | `NEXT_PUBLIC_AUTHON_API_URL` | No | Optional — defaults to `api.authon.dev` |
 
+## Security and verification
+
+`AuthonProvider` keeps the browser session compatible with Next.js middleware by
+copying the access token to a JavaScript-readable cookie. The default cookie name
+is `authon-token`; set `cookieName` on both the provider and middleware when you
+need a different name. This compatibility cookie is intentionally **not HttpOnly**,
+so an XSS vulnerability can expose it. Use a strict Content Security
+Policy, avoid rendering untrusted HTML, and do not treat the cookie alone as
+server-side proof of identity.
+
+Middleware performs local presence/expiry checks by default. Set `verifyToken:
+true` to opt in to remote verification against Authon; verification errors fail
+closed. API routes are public by default even when page routes are protected. Set
+`protectApiRoutes: true` (and normally `verifyToken: true`) to protect matching API
+routes.
+
+`currentUser()` and `auth()` from `@authon/nextjs/server` remotely verify the
+token before returning identity data. They accept both a direct verification
+payload and the API's wrapped `{ data: ... }` response. Failed verification
+returns `null`/an unauthenticated state rather than trusting the cookie payload.
+
 ## API Reference
 
 ### Middleware
 
 ```ts
-authonMiddleware({ publicRoutes?: string[], signInUrl?: string, secretKey?: string, apiUrl?: string })
+authonMiddleware({
+  publicRoutes?: string[],
+  signInUrl?: string,
+  secretKey?: string,
+  apiUrl?: string,
+  timeoutMs?: number,
+  cookieName?: string,
+  verifyToken?: boolean,
+  protectApiRoutes?: boolean,
+})
 ```
 
 ### Server Helpers (`@authon/nextjs/server`)

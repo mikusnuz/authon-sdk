@@ -77,9 +77,9 @@ Default: `https://api.authon.dev`
 
 ```env
 # Client-side (safe to expose)
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...       # Next.js
-NUXT_PUBLIC_AUTHON_KEY=pk_live_...       # Nuxt
-VITE_AUTHON_KEY=pk_live_...              # Vite apps (React, Vue, Svelte)
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Next.js
+NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Nuxt
+VITE_AUTHON_PUBLISHABLE_KEY=pk_live_...              # Vite apps (React, Vue, Svelte)
 ```
 
 ---
@@ -146,8 +146,11 @@ const user = await authon.signUpWithEmail('user@example.com', 'password', {
   displayName: 'Alice',
 });
 
-// Sign in
-const user = await authon.signInWithEmail('user@example.com', 'password');
+// Sign in (sign-up can return the same verification challenge)
+const result = await authon.signInWithEmail('user@example.com', 'password');
+if ('needsVerification' in result) {
+  const user = await authon.verifyEmail(result.email, '123456');
+}
 
 // Sign out
 await authon.signOut();
@@ -333,7 +336,7 @@ authon.destroy();
 |--------|---------|-------------|
 | `openSignIn()` | `Promise<void>` | Open sign-in modal |
 | `openSignUp()` | `Promise<void>` | Open sign-up modal |
-| `signInWithEmail(email, password)` | `Promise<AuthonUser>` | Email sign-in |
+| `signInWithEmail(email, password)` | `Promise<AuthonUser \| { needsVerification: true; email: string }>` | Returns a verification challenge; throws `AuthonMfaRequiredError` for MFA |
 | `signUpWithEmail(email, password, meta?)` | `Promise<AuthonUser>` | Email sign-up |
 | `signInWithOAuth(provider, options?)` | `Promise<void>` | OAuth flow |
 | `signOut()` | `Promise<void>` | Sign out |
@@ -482,6 +485,9 @@ Middleware options:
 | `publicRoutes` | `string[]` | `['/']` | Routes accessible without auth. Supports trailing `*` wildcard |
 | `signInUrl` | `string` | `'/sign-in'` | Redirect for unauthenticated users |
 | `apiUrl` | `string` | `'https://api.authon.dev'` | API base URL |
+| `cookieName` | `string` | `'authon-token'` | JavaScript-readable compatibility cookie name; must match the provider |
+| `verifyToken` | `boolean` | `false` | Opt in to remote verification; verification errors fail closed |
+| `protectApiRoutes` | `boolean` | `false` | Opt in to protecting matching API routes |
 
 ### 2. Layout provider
 
@@ -493,7 +499,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
           {children}
         </AuthonProvider>
       </body>
@@ -516,6 +522,11 @@ const { userId, user, getToken } = await auth();
 const token = getToken(); // forward to downstream services
 ```
 
+The provider synchronizes a JavaScript-readable compatibility cookie for
+middleware. It is not HttpOnly and is exposed if the application has an XSS
+vulnerability. Server helpers remotely verify the token and handle both direct
+and wrapped Authon API responses before returning identity data.
+
 ### 4. Client components
 
 All hooks and components from @authon/react are re-exported. Use `'use client'` directive.
@@ -528,7 +539,7 @@ import { useAuthon, useUser, SignedIn, SignedOut, UserButton } from '@authon/nex
 ### Environment variables
 
 ```env
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...
 ```
 
 ---
@@ -613,21 +624,15 @@ Requires Nuxt >= 3.
 ### Setup
 
 ```ts
-// plugins/authon.client.ts
-import { createAuthonPlugin } from '@authon/nuxt'
-
-export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig()
-  const authon = createAuthonPlugin(config.public.authonKey)
-  return { provide: { authon } }
-})
-```
-
-```ts
 // nuxt.config.ts
 export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
   runtimeConfig: {
-    public: { authonKey: process.env.NUXT_PUBLIC_AUTHON_KEY },
+    public: {
+      authon: {
+        publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY,
+      },
+    },
   },
 })
 ```
@@ -636,10 +641,15 @@ export default defineNuxtConfig({
 
 ```vue
 <script setup lang="ts">
-const { $authon } = useNuxtApp()
-const { client, isSignedIn, user } = $authon
+import { useAuthon, useUser } from '@authon/nuxt/composables'
+const authon = useAuthon()
+const { user } = useUser()
 </script>
 ```
+
+`useAuthon` and `useUser` are also auto-imported by the module. The legacy
+`createAuthonPlugin` manual-plugin helper is deprecated and retained only for
+compatibility.
 
 ### Route middleware
 
@@ -648,8 +658,7 @@ const { client, isSignedIn, user } = $authon
 import { createAuthMiddleware } from '@authon/nuxt'
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const { $authon } = useNuxtApp()
-  return createAuthMiddleware($authon, '/login')(to, from)
+  return createAuthMiddleware(useAuthon(), '/login')(to, from)
 })
 ```
 
@@ -1167,7 +1176,7 @@ import { AuthonProvider, useAuthon, SocialButtons } from '@authon/react';
 
 function LoginPage() {
   return (
-    <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+    <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
       <SocialButtons
         onSuccess={() => window.location.href = '/dashboard'}
         onError={(err) => console.error(err)}
@@ -1269,7 +1278,7 @@ async function fetchProtectedData() {
 
 | Clerk | Authon |
 |-------|--------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `NEXT_PUBLIC_AUTHON_KEY` |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` |
 
 ### Middleware
 
@@ -1292,7 +1301,7 @@ export default authonMiddleware({
 <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
 
 // After (Authon)
-<AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+<AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
 ```
 
 ---

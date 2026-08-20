@@ -3,11 +3,11 @@ import { createAuthon } from '@authon/vue'
 import App from './App.vue'
 import './style.css'
 
-const publishableKey = import.meta.env.VITE_AUTHON_PROJECT_ID as string
+const publishableKey = import.meta.env.VITE_AUTHON_PUBLISHABLE_KEY as string
 const apiUrl = import.meta.env.VITE_AUTHON_API_URL as string | undefined
 
 if (!publishableKey) {
-  throw new Error('VITE_AUTHON_PROJECT_ID is required. Copy .env.example to .env and fill in your project ID.')
+  throw new Error('VITE_AUTHON_PUBLISHABLE_KEY is required. Copy .env.example to .env and add your publishable key.')
 }
 
 const app = createApp(App)

@@ -59,10 +59,9 @@ npm install @authon/nextjs
 
 ```ts
 // middleware.ts
-import { authMiddleware } from '@authon/nextjs';
+import { authonMiddleware } from '@authon/nextjs';
 
-export default authMiddleware({
-  publishableKey: process.env.NEXT_PUBLIC_AUTHON_KEY!,
+export default authonMiddleware({
   publicRoutes: ['/', '/about', '/pricing'],
 });
 
@@ -79,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html>
       <body>
-        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
           {children}
         </AuthonProvider>
       </body>
@@ -98,6 +97,29 @@ export async function GET() {
   return Response.json({ user });
 }
 ```
+
+Provider가 동기화하는 기본 `authon-token` 쿠키는 미들웨어 호환성을 위한
+JavaScript 접근 가능 쿠키이며 HttpOnly가 아닙니다. XSS를 방어하고, 원격 검증과
+API 보호가 필요하면 각각 `verifyToken`, `protectApiRoutes`를 명시적으로
+활성화하세요. 서버의 `currentUser()`와 `auth()`는 토큰을 검증한 뒤 사용자 정보를
+반환합니다.
+
+### Nuxt
+
+```ts
+export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
+  runtimeConfig: {
+    public: {
+      authon: { publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY },
+    },
+  },
+})
+```
+
+`useAuthon`, `useUser`는 자동 임포트됩니다. 명시적 임포트는
+`@authon/nuxt/composables`를 사용하며 기존 수동 플러그인은 더 이상 권장하지
+않습니다.
 
 ## 다중 인증 (MFA)
 

@@ -31,9 +31,9 @@ Passkeys require iOS 16+, real device, Apple Developer account. Add `webcredenti
 ## Environment Variables
 
 ```
-NEXT_PUBLIC_AUTHON_KEY=pk_live_...       # Next.js (client)
-NUXT_PUBLIC_AUTHON_KEY=pk_live_...       # Nuxt (client)
-VITE_AUTHON_KEY=pk_live_...              # Vite (client)
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Next.js (client)
+NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_...       # Nuxt (client)
+VITE_AUTHON_PUBLISHABLE_KEY=pk_live_...              # Vite (client)
 ```
 
 ## Quick Recipes
@@ -58,7 +58,7 @@ export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\
 // app/layout.tsx
 import { AuthonProvider } from '@authon/nextjs';
 export default function RootLayout({ children }) {
-  return <html><body><AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>{children}</AuthonProvider></body></html>;
+  return <html><body><AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>{children}</AuthonProvider></body></html>;
 }
 ```
 

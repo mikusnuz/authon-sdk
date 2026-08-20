@@ -15,7 +15,7 @@ Before diving into specific issues, gather information:
 
 ```bash
 # Verify key is set (don't print the actual value)
-echo "AUTHON_KEY set: $([ -n "$NEXT_PUBLIC_AUTHON_KEY" ] && echo YES || echo NO)"
+echo "AUTHON_KEY set: $([ -n "$NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY" ] && echo YES || echo NO)"
 ```
 
 In code, verify the key format:
@@ -408,7 +408,7 @@ When MFA is enabled, `signInWithEmail` throws `AuthonMfaRequiredError` instead o
      return (
        <html>
          <body>
-           <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+           <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
              {children}
            </AuthonProvider>
          </body>
@@ -471,16 +471,17 @@ export class AuthonService extends BaseAuthonService {
 }
 ```
 
-**Nuxt**: Use as a plugin, not a Nuxt module:
+**Nuxt**: Use the Nuxt module. The manual `createAuthonPlugin` path is deprecated:
 ```ts
-// plugins/authon.client.ts
-import { createAuthonPlugin } from '@authon/nuxt';
-
-export default defineNuxtPlugin(() => {
-  const authon = createAuthonPlugin('pk_live_xxxxx');
-  return { provide: { authon } };
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
+  authon: { publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY },
 });
 ```
+
+Use the auto-imported composables or import them from
+`@authon/nuxt/composables`.
 
 ---
 
@@ -519,7 +520,7 @@ Branding is fetched from `/v1/auth/branding` during `ensureInitialized()`. Clien
 |--------------|-------|-----|
 | `useAuthon must be used within an <AuthonProvider>` | Component not wrapped in provider | Add `<AuthonProvider>` to root layout |
 | `Must be signed in to X` | Calling authenticated method while signed out | Check `isSignedIn` before calling |
-| `API /v1/auth/branding: 401` | Invalid publishable key | Check `NEXT_PUBLIC_AUTHON_KEY` |
+| `API /v1/auth/branding: 401` | Invalid publishable key | Check `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` |
 | `API /v1/auth/signin: 401` | Wrong email or password | Verify credentials |
 | `MFA verification required` | User has MFA enabled | Handle `AuthonMfaRequiredError` |
 | `Invalid webhook signature` | Wrong secret or body modified | Use raw body, check secret |

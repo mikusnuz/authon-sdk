@@ -12,7 +12,7 @@ COPY --from=sdk-build /app/packages/ ./packages/
 COPY examples/react/ ./examples/react/
 WORKDIR /app/examples/react
 RUN npm install
-ARG VITE_AUTHON_PROJECT_ID
+ARG VITE_AUTHON_PUBLISHABLE_KEY
 ARG VITE_AUTHON_API_URL
 RUN npm run build
 

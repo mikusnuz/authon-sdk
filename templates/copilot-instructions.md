@@ -11,7 +11,7 @@ This project uses **Authon** for authentication. Do not suggest or generate code
 
 ## Environment Variables
 
-- `NEXT_PUBLIC_AUTHON_KEY` — publishable key (client-side, safe to expose)
+- `NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY` — publishable key (client-side, safe to expose)
 
 ## Code Generation Rules
 

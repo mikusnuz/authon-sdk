@@ -51,7 +51,10 @@ await authon.signInWithOAuth('google');
 
 ```ts
 const user = await authon.signUpWithEmail('user@example.com', 'MyP@ssw0rd', { displayName: 'Alice' });
-const user = await authon.signInWithEmail('user@example.com', 'MyP@ssw0rd');
+const result = await authon.signInWithEmail('user@example.com', 'MyP@ssw0rd');
+if ('needsVerification' in result) {
+  const user = await authon.verifyEmail(result.email, '123456');
+}
 ```
 
 ### 현재 사용자 가져오기

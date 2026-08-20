@@ -91,8 +91,11 @@ const user = await authon.signUpWithEmail('user@example.com', 'MyP@ssw0rd', {
   displayName: 'Alice',
 });
 
-// Sign in
-const user = await authon.signInWithEmail('user@example.com', 'MyP@ssw0rd');
+// Sign in (sign-up has the same verification challenge shape)
+const result = await authon.signInWithEmail('user@example.com', 'MyP@ssw0rd');
+if ('needsVerification' in result) {
+  const user = await authon.verifyEmail(result.email, '123456');
+}
 ```
 
 ### Get Current User
@@ -201,7 +204,7 @@ new Authon(publishableKey: string, config?: AuthonConfig)
 |--------|---------|
 | `openSignIn()` | `Promise<void>` |
 | `openSignUp()` | `Promise<void>` |
-| `signInWithEmail(email, password)` | `Promise<AuthonUser>` |
+| `signInWithEmail(email, password)` | `Promise<AuthonUser \| { needsVerification: true; email: string }>`; throws `AuthonMfaRequiredError` when MFA is required |
 | `signUpWithEmail(email, password, meta?)` | `Promise<AuthonUser>` |
 | `signInWithOAuth(provider, options?)` | `Promise<void>` |
 | `signOut()` | `Promise<void>` |

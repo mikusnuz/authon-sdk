@@ -3,7 +3,7 @@
 import { AuthonProvider } from '@authon/nextjs'
 import './globals.css'
 
-const publishableKey = process.env.NEXT_PUBLIC_AUTHON_PROJECT_ID as string
+const publishableKey = process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY as string
 const apiUrl = process.env.NEXT_PUBLIC_AUTHON_API_URL as string | undefined
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

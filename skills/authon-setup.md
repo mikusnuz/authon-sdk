@@ -28,8 +28,8 @@ All setups need these env vars. Create `.env` (or `.env.local` for Next.js):
 
 ```
 # Client-side (publishable key — safe to expose)
-NEXT_PUBLIC_AUTHON_KEY=pk_live_xxxxx        # Next.js
-VITE_AUTHON_KEY=pk_live_xxxxx               # Vite-based (React/Vue/Svelte)
+NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx        # Next.js
+VITE_AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx               # Vite-based (React/Vue/Svelte)
 AUTHON_PUBLISHABLE_KEY=pk_live_xxxxx        # Other frameworks
 ```
 
@@ -52,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_KEY!}>
+        <AuthonProvider publishableKey={process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!}>
           {children}
         </AuthonProvider>
       </body>
@@ -184,7 +184,7 @@ import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <AuthonProvider publishableKey={import.meta.env.VITE_AUTHON_KEY}>
+    <AuthonProvider publishableKey={import.meta.env.VITE_AUTHON_PUBLISHABLE_KEY}>
       <App />
     </AuthonProvider>
   </React.StrictMode>,
@@ -293,7 +293,7 @@ import App from './App.vue';
 const app = createApp(App);
 
 app.use(createAuthon({
-  publishableKey: import.meta.env.VITE_AUTHON_KEY,
+  publishableKey: import.meta.env.VITE_AUTHON_PUBLISHABLE_KEY,
 }));
 
 app.mount('#app');
@@ -354,44 +354,36 @@ router.beforeEach((to) => {
 npm install @authon/nuxt
 ```
 
-### 2. Create Plugin — `plugins/authon.client.ts`
-
-```ts
-import { createAuthonPlugin } from '@authon/nuxt';
-
-export default defineNuxtPlugin(() => {
-  const config = useRuntimeConfig();
-  const authon = createAuthonPlugin(config.public.authonKey as string, {
-    theme: 'auto',
-  });
-  return { provide: { authon } };
-});
-```
-
-### 3. Runtime Config — `nuxt.config.ts`
+### 2. Enable the module — `nuxt.config.ts`
 
 ```ts
 export default defineNuxtConfig({
+  modules: ['@authon/nuxt'],
   runtimeConfig: {
     public: {
-      authonKey: process.env.AUTHON_PUBLISHABLE_KEY || '',
+      authon: {
+        publishableKey: process.env.NUXT_PUBLIC_AUTHON_PUBLISHABLE_KEY || '',
+      },
     },
   },
 });
 ```
 
-### 4. Auth Middleware — `middleware/auth.ts`
+The module auto-imports `useAuthon` and `useUser`. For explicit imports use
+`@authon/nuxt/composables`. The legacy `createAuthonPlugin` manual setup is
+deprecated and should only be kept while migrating an existing application.
+
+### 3. Auth Middleware — `middleware/auth.ts`
 
 ```ts
 import { createAuthMiddleware } from '@authon/nuxt';
 
 export default defineNuxtRouteMiddleware((to, from) => {
-  const { $authon } = useNuxtApp();
-  return createAuthMiddleware($authon as any, '/sign-in')(to, from);
+  return createAuthMiddleware(useAuthon(), '/sign-in')(to, from);
 });
 ```
 
-### 5. Use in Pages — `pages/index.vue`
+### 4. Use in Pages — `pages/index.vue`
 
 ```vue
 <script setup lang="ts">
@@ -450,9 +442,9 @@ npm install @authon/svelte
 ```svelte
 <script>
   import { initAuthon } from '@authon/svelte';
-  import { PUBLIC_AUTHON_KEY } from '$env/static/public';
+  import { PUBLIC_AUTHON_PUBLISHABLE_KEY } from '$env/static/public';
 
-  const authon = initAuthon(PUBLIC_AUTHON_KEY);
+  const authon = initAuthon(PUBLIC_AUTHON_PUBLISHABLE_KEY);
 </script>
 
 <slot />
@@ -643,7 +635,10 @@ await authon.openSignUp();
 
 ```ts
 // Email sign in (throws AuthonMfaRequiredError if MFA is enabled)
-const user = await authon.signInWithEmail('user@example.com', 'password');
+const result = await authon.signInWithEmail('user@example.com', 'password');
+if ('needsVerification' in result) {
+  const user = await authon.verifyEmail(result.email, '123456');
+}
 
 // Email sign up
 const newUser = await authon.signUpWithEmail('user@example.com', 'password', {

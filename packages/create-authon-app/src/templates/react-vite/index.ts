@@ -110,7 +110,7 @@ import './index.css';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <AuthonProvider publishableKey={import.meta.env.VITE_AUTHON_KEY}>
+      <AuthonProvider publishableKey={import.meta.env.VITE_AUTHON_PUBLISHABLE_KEY}>
         <App />
       </AuthonProvider>
     </BrowserRouter>
@@ -294,7 +294,7 @@ export default function Dashboard() {
     content: `/// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_AUTHON_KEY: string;
+  readonly VITE_AUTHON_PUBLISHABLE_KEY: string;
 }
 
 interface ImportMeta {
