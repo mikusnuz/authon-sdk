@@ -67,20 +67,75 @@ import type {
   UserButtonProps,
   UserProfileProps,
 } from '../../packages/react/src/index';
-import type { AuthonMiddlewareOptions } from '../../packages/nextjs/src/index';
-import type { AuthonPluginOptions, AuthonState } from '../../packages/vue/src/index';
-import type { AuthonModuleOptions, AuthonPluginState } from '../../packages/nuxt/src/index';
-import type { AuthonStore, SocialButtonsOptions } from '../../packages/svelte/src/index';
-import type { AuthonServiceConfig, SocialButtonsConfig } from '../../packages/angular/src/index';
 import type {
+  AuthonContextValue as NextAuthonContextValue,
+  AuthonMiddlewareOptions,
+  LinkWalletParams as NextLinkWalletParams,
+  SocialButtonProps as NextSocialButtonProps,
+  SocialButtonsProps as NextSocialButtonsProps,
+  UseAuthonMfaReturn as NextUseAuthonMfaReturn,
+  UseAuthonPasskeysReturn as NextUseAuthonPasskeysReturn,
+  UseAuthonPasswordlessReturn as NextUseAuthonPasswordlessReturn,
+  UseAuthonSessionsReturn as NextUseAuthonSessionsReturn,
+  UseAuthonWeb3Return as NextUseAuthonWeb3Return,
+  UserProfileProps as NextUserProfileProps,
+} from '../../packages/nextjs/src/index';
+import type {
+  AuthonPluginOptions,
+  AuthonState,
+  LinkWalletParams as VueLinkWalletParams,
+  UseAuthonPasskeysReturn as VueUseAuthonPasskeysReturn,
+  UseAuthonPasswordlessReturn as VueUseAuthonPasswordlessReturn,
+  UseAuthonWeb3Return as VueUseAuthonWeb3Return,
+} from '../../packages/vue/src/index';
+import type {
+  AuthonModuleOptions,
+  AuthonPluginState,
+  LinkWalletParams as NuxtLinkWalletParams,
+  SocialButtonsConfig as NuxtSocialButtonsConfig,
+  UseAuthonPasskeysReturn as NuxtUseAuthonPasskeysReturn,
+  UseAuthonPasswordlessReturn as NuxtUseAuthonPasswordlessReturn,
+  UseAuthonWeb3Return as NuxtUseAuthonWeb3Return,
+} from '../../packages/nuxt/src/index';
+import type {
+  AuthonStore,
+  PasskeyCredential as SveltePasskeyCredential,
+  SocialButtonsOptions,
+  Web3Chain as SvelteWeb3Chain,
+  Web3NonceResponse as SvelteWeb3NonceResponse,
+  Web3Wallet as SvelteWeb3Wallet,
+  Web3WalletType as SvelteWeb3WalletType,
+} from '../../packages/svelte/src/index';
+import type {
+  AuthonServiceConfig,
+  PasskeyCredential as AngularPasskeyCredential,
+  SocialButtonsConfig,
+  Web3Chain as AngularWeb3Chain,
+  Web3NonceResponse as AngularWeb3NonceResponse,
+  Web3Wallet as AngularWeb3Wallet,
+  Web3WalletType as AngularWeb3WalletType,
+} from '../../packages/angular/src/index';
+import type {
+  AuthonContextValue as ReactNativeAuthonContextValue,
+  AuthonEvents as ReactNativeAuthonEvents,
+  AuthonEventType as ReactNativeAuthonEventType,
   AuthonReactNativeConfig,
   AuthState,
+  AuthonUser as ReactNativeAuthonUser,
+  BrandingConfig as ReactNativeBrandingConfig,
   OAuthCompletedResponse,
   OAuthErrorResponse,
+  OAuthFlowMode as ReactNativeOAuthFlowMode,
+  OAuthProviderType as ReactNativeOAuthProviderType,
   SignInParams,
   SignUpParams,
+  SocialButtonProps as ReactNativeSocialButtonProps,
+  SocialButtonsProps as ReactNativeSocialButtonsProps,
   StartOAuthOptions,
   TokenPair,
+  UseAuthonPasskeysReturn as ReactNativeUseAuthonPasskeysReturn,
+  UseAuthonPasswordlessReturn as ReactNativeUseAuthonPasswordlessReturn,
+  UseAuthonWeb3Return as ReactNativeUseAuthonWeb3Return,
   Web3LinkWalletParams,
 } from '../../packages/react-native/src/index';
 
@@ -180,9 +235,78 @@ type PublicValues = [
   typeof import('../../packages/react-native/src/index'),
 ];
 
+type AdapterEntryPointReexportedTypes = [
+  // @authon/nextjs
+  NextAuthonContextValue,
+  AuthonMiddlewareOptions,
+  NextLinkWalletParams,
+  NextSocialButtonProps,
+  NextSocialButtonsProps,
+  NextUseAuthonMfaReturn,
+  NextUseAuthonPasskeysReturn,
+  NextUseAuthonPasswordlessReturn,
+  NextUseAuthonSessionsReturn,
+  NextUseAuthonWeb3Return,
+  NextUserProfileProps,
+  // @authon/vue
+  AuthonPluginOptions,
+  AuthonState,
+  VueLinkWalletParams,
+  VueUseAuthonPasskeysReturn,
+  VueUseAuthonPasswordlessReturn,
+  VueUseAuthonWeb3Return,
+  // @authon/nuxt
+  AuthonModuleOptions,
+  AuthonPluginState,
+  NuxtLinkWalletParams,
+  NuxtSocialButtonsConfig,
+  NuxtUseAuthonPasskeysReturn,
+  NuxtUseAuthonPasswordlessReturn,
+  NuxtUseAuthonWeb3Return,
+  // @authon/svelte
+  AuthonStore,
+  SveltePasskeyCredential,
+  SocialButtonsOptions,
+  SvelteWeb3Chain,
+  SvelteWeb3NonceResponse,
+  SvelteWeb3Wallet,
+  SvelteWeb3WalletType,
+  // @authon/angular
+  AngularPasskeyCredential,
+  AuthonServiceConfig,
+  SocialButtonsConfig,
+  AngularWeb3Chain,
+  AngularWeb3NonceResponse,
+  AngularWeb3Wallet,
+  AngularWeb3WalletType,
+  // @authon/react-native
+  ReactNativeAuthonContextValue,
+  ReactNativeAuthonEvents,
+  ReactNativeAuthonEventType,
+  AuthonReactNativeConfig,
+  AuthState,
+  ReactNativeAuthonUser,
+  ReactNativeBrandingConfig,
+  OAuthCompletedResponse,
+  OAuthErrorResponse,
+  ReactNativeOAuthFlowMode,
+  ReactNativeOAuthProviderType,
+  SignInParams,
+  SignUpParams,
+  ReactNativeSocialButtonProps,
+  ReactNativeSocialButtonsProps,
+  StartOAuthOptions,
+  TokenPair,
+  ReactNativeUseAuthonPasskeysReturn,
+  ReactNativeUseAuthonPasswordlessReturn,
+  ReactNativeUseAuthonWeb3Return,
+  Web3LinkWalletParams,
+];
+
 export type AuthonPublicApiCompatibilityFixture = {
   types: PublicTypes;
   values: PublicValues;
+  adapterEntryPointReexports: AdapterEntryPointReexportedTypes;
 };
 
 type Equal<Left, Right> =
