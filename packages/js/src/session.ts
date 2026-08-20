@@ -85,6 +85,7 @@ export class SessionManager {
   private ready = true;
   private readinessPromise: Promise<void> = Promise.resolve();
   private destroyed = false;
+  private sessionGeneration = 0;
 
   private static readonly MAX_REFRESH_RETRIES = 3;
   private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
@@ -167,11 +168,11 @@ export class SessionManager {
   }
 
   getToken(): string | null {
-    return this.ready && this.isTokenValid() ? this.accessToken : null;
+    return !this.destroyed && this.ready && this.isTokenValid() ? this.accessToken : null;
   }
 
   isTokenValid(): boolean {
-    if (!this.accessToken) return false;
+    if (this.destroyed || !this.accessToken) return false;
     const expiration = tokenExpiration(this.accessToken);
     return expiration !== null && expiration > Math.floor(Date.now() / 1000);
   }
@@ -182,6 +183,8 @@ export class SessionManager {
 
   setSession(tokens: AuthTokens, reason: 'setSession' | 'tokenRefresh' = 'setSession'): void {
     if (this.destroyed) return;
+    this.cancelRefreshTimer();
+    if (reason === 'setSession') this.invalidateRequests();
     this.accessToken = tokens.accessToken;
     this.refreshToken = tokens.refreshToken;
     this.user = tokens.user;
@@ -207,6 +210,7 @@ export class SessionManager {
 
   clearSession(reason: 'clearSession' | 'refreshFailed' = 'clearSession'): void {
     if (this.destroyed) return;
+    this.invalidateRequests();
     this.accessToken = null;
     this.refreshToken = null;
     this.user = null;
@@ -240,7 +244,8 @@ export class SessionManager {
       return null;
     }
 
-    const inFlight = this.doRefresh();
+    const generation = this.sessionGeneration;
+    const inFlight = this.doRefresh(generation);
     this.refreshInFlight = inFlight;
     try {
       return await inFlight;
@@ -249,7 +254,7 @@ export class SessionManager {
     }
   }
 
-  private async doRefresh(): Promise<AuthTokens | null> {
+  private async doRefresh(generation: number): Promise<AuthTokens | null> {
     if (!this.refreshToken || this.destroyed) return null;
     const controller = new AbortController();
     this.requestControllers.add(controller);
@@ -264,7 +269,7 @@ export class SessionManager {
         body: JSON.stringify({ refreshToken: this.refreshToken }),
         signal: controller.signal,
       });
-      if (this.destroyed) return null;
+      if (this.destroyed || generation !== this.sessionGeneration) return null;
       if (!res.ok) {
         if (res.status === 401) {
           this.refreshRetryCount = 0;
@@ -275,12 +280,14 @@ export class SessionManager {
         return null;
       }
       const tokens: AuthTokens = await res.json();
-      if (this.destroyed) return null;
+      if (this.destroyed || generation !== this.sessionGeneration) return null;
       this.refreshRetryCount = 0;
       this.setSession(tokens, 'tokenRefresh');
       return tokens;
     } catch {
-      if (!this.destroyed && !controller.signal.aborted) this.retryRefresh();
+      if (!this.destroyed && generation === this.sessionGeneration && !controller.signal.aborted) {
+        this.retryRefresh();
+      }
       return null;
     } finally {
       this.requestControllers.delete(controller);
@@ -302,32 +309,35 @@ export class SessionManager {
 
   async signOut(): Promise<void> {
     if (this.destroyed) return;
+    const accessToken = this.accessToken;
+    this.invalidateRequests();
+    this.accessToken = null;
+    this.refreshToken = null;
+    this.user = null;
+    this.ready = true;
+    this.persistToStorage();
+    this.cancelRefreshTimer();
+    this.notify('signOut');
+
     const controller = new AbortController();
     this.requestControllers.add(controller);
     try {
-      await fetch(`${this.apiUrl}/v1/auth/signout`, {
+      const request = fetch(`${this.apiUrl}/v1/auth/signout`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': this.publishableKey,
-          ...(this.accessToken ? { Authorization: `Bearer ${this.accessToken}` } : {}),
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         credentials: 'include',
         signal: controller.signal,
       });
+      void request.catch(() => undefined).finally(() => {
+        this.requestControllers.delete(controller);
+      });
     } catch {
       // A local sign-out must succeed even when the network request does not.
-    } finally {
       this.requestControllers.delete(controller);
-    }
-    if (!this.destroyed) {
-      this.accessToken = null;
-      this.refreshToken = null;
-      this.user = null;
-      this.ready = true;
-      this.persistToStorage();
-      this.cancelRefreshTimer();
-      this.notify('signOut');
     }
   }
 
@@ -335,9 +345,15 @@ export class SessionManager {
     if (this.destroyed) return;
     this.destroyed = true;
     this.cancelRefreshTimer();
+    this.invalidateRequests();
+    this.listeners.clear();
+  }
+
+  private invalidateRequests(): void {
+    this.sessionGeneration++;
     for (const controller of this.requestControllers) controller.abort();
     this.requestControllers.clear();
-    this.listeners.clear();
+    this.refreshInFlight = null;
   }
 
   private notify(reason: SessionChangeReason): void {

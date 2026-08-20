@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { StrictMode, useContext } from 'react';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AuthTokens, AuthonUser } from '@authon/shared';
 import { Authon } from '@authon/js';
@@ -44,6 +44,18 @@ function Status() {
   return <div data-testid="status">{context.isLoading ? 'loading' : context.user?.id ?? 'signed-out'}</div>;
 }
 
+function ProfileStatus() {
+  const context = useContext(AuthonContext)!;
+  return (
+    <button
+      data-testid="profile"
+      onClick={() => { void context.client?.updateProfile({ displayName: 'Updated' }); }}
+    >
+      {context.user?.displayName ?? 'none'}
+    </button>
+  );
+}
+
 describe('AuthonProvider session lifecycle', () => {
   beforeEach(() => {
     vi.stubGlobal('localStorage', new MemoryStorage());
@@ -52,6 +64,7 @@ describe('AuthonProvider session lifecycle', () => {
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
@@ -99,5 +112,49 @@ describe('AuthonProvider session lifecycle', () => {
     const restored = new Authon('pk_live_provider-strict');
     await (restored as Authon & { waitUntilReady(): Promise<void> }).waitUntilReady();
     expect(restored.getUser()?.id).toBe('user_1');
+  });
+
+  it('leaves loading after an initial transient failure and updates on the scheduled retry', async () => {
+    vi.useFakeTimers();
+    const seed = new Authon('pk_live_provider-retry');
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify(tokens(-10)), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    await seed.signInWithEmail('person@example.com', 'secret');
+    seed.destroy();
+    vi.mocked(fetch).mockResolvedValueOnce(new Response('{}', { status: 500 }));
+
+    render(<AuthonProvider publishableKey="pk_live_provider-retry"><Status /></AuthonProvider>);
+    await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+    expect(screen.getByTestId('status').textContent).toBe('signed-out');
+
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify(tokens(3600)), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    await act(async () => { await vi.advanceTimersByTimeAsync(3_000); });
+    expect(screen.getByTestId('status').textContent).toBe('user_1');
+    vi.useRealTimers();
+  });
+
+  it('reflects updateProfile changes from the sessionChanged subscription', async () => {
+    const seed = new Authon('pk_live_provider-profile');
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify(tokens(3600)), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    await seed.signInWithEmail('person@example.com', 'secret');
+    seed.destroy();
+    render(<AuthonProvider publishableKey="pk_live_provider-profile"><ProfileStatus /></AuthonProvider>);
+    await waitFor(() => expect(screen.getByTestId('profile').textContent).toBe('Person'));
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({
+      ...user(),
+      displayName: 'Updated',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+
+    fireEvent.click(screen.getByTestId('profile'));
+
+    await waitFor(() => expect(screen.getByTestId('profile').textContent).toBe('Updated'));
   });
 });

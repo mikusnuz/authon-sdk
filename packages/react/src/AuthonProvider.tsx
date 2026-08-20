@@ -25,6 +25,15 @@ interface AuthonProviderProps {
   config?: Omit<AuthonConfig, 'mode'>;
 }
 
+interface SessionChangeSnapshot {
+  user: AuthonUser | null;
+}
+
+type SessionAwareAuthon = Authon & {
+  waitUntilReady(): Promise<void>;
+  onSessionChange(listener: (change: SessionChangeSnapshot) => void): () => void;
+};
+
 export function AuthonProvider({ publishableKey, children, config }: AuthonProviderProps) {
   const [user, setUser] = useState<AuthonUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -33,31 +42,32 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
 
   useEffect(() => {
     let active = true;
+    let receivedSessionChange = false;
     const client = new Authon(publishableKey, config);
+    const sessionClient = client as SessionAwareAuthon;
     clientRef.current = client;
 
-    client.on('signedIn', (u) => {
-      setUser(u as AuthonUser);
+    const unsubscribeSession = sessionClient.onSessionChange((change) => {
+      if (!active) return;
+      receivedSessionChange = true;
+      setUser(change.user);
       setIsLoading(false);
-    });
-
-    client.on('signedOut', () => {
-      setUser(null);
+      if (!change.user) setActiveOrganization(null);
     });
 
     client.on('error', () => {
       setIsLoading(false);
     });
 
-    const readiness = client as Authon & { waitUntilReady(): Promise<void> };
-    void readiness.waitUntilReady().then(() => {
+    void sessionClient.waitUntilReady().then(() => {
       if (!active) return;
-      setUser(client.getUser());
+      if (!receivedSessionChange) setUser(client.getUser());
       setIsLoading(false);
     });
 
     return () => {
       active = false;
+      unsubscribeSession();
       client.destroy();
       clientRef.current = null;
     };
@@ -65,8 +75,6 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
 
   const signOut = useCallback(async () => {
     await clientRef.current?.signOut();
-    setUser(null);
-    setActiveOrganization(null);
   }, []);
 
   const openSignIn = useCallback(async () => {

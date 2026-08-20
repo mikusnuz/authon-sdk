@@ -88,6 +88,18 @@ describe('SessionManager lifecycle and restoration', () => {
     expect(remounted.getToken()).not.toBeNull();
   });
 
+  it('keeps persisted storage on destroy but hides memory from the destroyed instance', () => {
+    const manager = new SessionManager('pk_live_destroyed-getters', DEFAULT_API_URL);
+    manager.setSession(tokens());
+    const storedBeforeDestroy = sessionStorageKeys().map((key) => localStorage.getItem(key));
+
+    manager.destroy();
+
+    expect(manager.getToken()).toBeNull();
+    expect(manager.getUser()).toBeNull();
+    expect(sessionStorageKeys().map((key) => localStorage.getItem(key))).toEqual(storedBeforeDestroy);
+  });
+
   it('restores a valid stored token synchronously as ready', async () => {
     const first = new SessionManager('pk_live_valid-restore', DEFAULT_API_URL);
     first.setSession(tokens());
@@ -263,5 +275,45 @@ describe('SessionManager change subscriptions', () => {
     await restored.waitUntilReady();
     expect(restored.getUser()?.displayName).toBe('Not observed');
     expect(observed).toEqual(['Persisted']);
+  });
+
+  it('invalidates local state synchronously without waiting for the sign-out request', async () => {
+    const manager = new SessionManager('pk_live_sync-signout', DEFAULT_API_URL);
+    manager.setSession(tokens());
+    const changes: string[] = [];
+    manager.subscribe((change) => changes.push(change.reason));
+    vi.mocked(fetch).mockImplementationOnce(() => new Promise(() => {}));
+
+    const signOut = manager.signOut();
+
+    expect(manager.getToken()).toBeNull();
+    expect(manager.getUser()).toBeNull();
+    expect(sessionStorageKeys()).toHaveLength(0);
+    expect(changes).toEqual(['signOut']);
+    await expect(signOut).resolves.toBeUndefined();
+  });
+
+  it('does not allow a deferred refresh to restore credentials after sign-out', async () => {
+    const manager = new SessionManager('pk_live_refresh-signout-race', DEFAULT_API_URL);
+    manager.setSession(tokens());
+    const changes: string[] = [];
+    manager.subscribe((change) => changes.push(change.reason));
+    let resolveRefresh!: (response: Response) => void;
+    vi.mocked(fetch)
+      .mockImplementationOnce(() => new Promise((resolve) => { resolveRefresh = resolve; }))
+      .mockImplementationOnce(() => new Promise(() => {}));
+
+    const refresh = manager.refresh();
+    await manager.signOut();
+    resolveRefresh(new Response(JSON.stringify(tokens(7200)), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    }));
+    await refresh;
+
+    expect(manager.getToken()).toBeNull();
+    expect(manager.getUser()).toBeNull();
+    expect(sessionStorageKeys()).toHaveLength(0);
+    expect(changes).toEqual(['signOut']);
   });
 });
