@@ -9,6 +9,7 @@
   "include": [
     "packages/**/*.test.ts",
     "packages/**/*.test.tsx",
+    "packages/**/*.d.ts",
     "tests/**/*.test.ts",
     "tests/**/*.test.tsx",
     "tests/compat/public-api.types.ts",

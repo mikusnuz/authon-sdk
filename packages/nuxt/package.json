@@ -3,14 +3,13 @@
   "version": "0.3.3",
   "description": "Authon Nuxt 3 module — auto-imported composables and middleware",
   "type": "module",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.js"
     }
   },
   "files": [
@@ -41,7 +40,8 @@
   "dependencies": {
     "@authon/js": "workspace:^",
     "@authon/shared": "workspace:^",
-    "@authon/vue": "workspace:^"
+    "@authon/vue": "workspace:^",
+    "@nuxt/kit": "^3.21.1"
   },
   "peerDependencies": {
     "nuxt": "^3.0.0"

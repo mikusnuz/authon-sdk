@@ -90,6 +90,7 @@ import type {
 } from '../../packages/vue/src/index';
 import type {
   AuthonModuleOptions,
+  AuthonNuxtState,
   AuthonPluginState,
   LinkWalletParams as NuxtLinkWalletParams,
   SocialButtonsConfig as NuxtSocialButtonsConfig,
@@ -207,6 +208,7 @@ type PublicTypes = [
   AuthonPluginOptions,
   AuthonState,
   AuthonModuleOptions,
+  AuthonNuxtState,
   AuthonPluginState,
   AuthonStore,
   SocialButtonsOptions,
@@ -428,9 +430,13 @@ type VueComposableContract = Expect<HasShape<
     getToken: () => string | null;
   }
 >>;
-type NuxtModuleInputContract = Expect<Equal<
-  Parameters<typeof import('../../packages/nuxt/src/index').authonModule>,
-  [options: AuthonModuleOptions]
+type NuxtModuleInputContract = Expect<HasShape<
+  Exclude<Parameters<typeof import('../../packages/nuxt/src/index').authonModule>[0], undefined | false>,
+  Partial<AuthonModuleOptions>
+>>;
+type NuxtComposableContract = Expect<Equal<
+  ReturnType<typeof import('../../packages/nuxt/src/index').useAuthon>,
+  AuthonNuxtState
 >>;
 type NuxtPluginContract = Expect<Equal<
   typeof import('../../packages/nuxt/src/index').createAuthonPlugin,

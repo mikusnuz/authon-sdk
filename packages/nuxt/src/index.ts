@@ -4,6 +4,7 @@ export type { AuthonModuleOptions } from './module';
 export { createAuthonPlugin } from './plugin';
 export type { AuthonPluginState } from './plugin';
 export { useAuthon, useUser } from './composables';
+export type { AuthonNuxtState } from './runtime/state';
 export { useAuthonWeb3 } from './useAuthonWeb3';
 export type { UseAuthonWeb3Return, LinkWalletParams } from './useAuthonWeb3';
 export { useAuthonPasswordless } from './useAuthonPasswordless';

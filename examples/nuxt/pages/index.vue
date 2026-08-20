@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import type { AuthonPluginState } from '@authon/nuxt'
-
-const nuxtApp = useNuxtApp()
-const authon = computed(() => nuxtApp.$authon as AuthonPluginState | undefined)
-
-const isLoading = computed(() => authon.value?.isLoading ?? true)
-const isSignedIn = computed(() => authon.value?.isSignedIn ?? false)
-const user = computed(() => authon.value?.user ?? null)
+const authon = useAuthon()
+const { isLoading, isSignedIn, user } = useUser()
 
 const avatar = computed(() => {
   const u = user.value
@@ -23,21 +17,20 @@ const avatar = computed(() => {
 })
 
 function signIn() {
-  authon.value?.client.openSignIn()
+  authon.client?.openSignIn()
 }
 
 function signUp() {
-  authon.value?.client.openSignUp()
+  authon.client?.openSignUp()
 }
 
 function signOut() {
-  authon.value?.client.signOut()
+  authon.client?.signOut()
 }
 </script>
 
 <template>
   <div class="page">
-    <ClientOnly>
       <div v-if="isLoading" class="auth-page">
         <div class="hero">
           <div class="badge">@authon/nuxt SDK</div>
@@ -143,6 +136,5 @@ function signOut() {
         </div>
       </div>
     </div>
-    </ClientOnly>
   </div>
 </template>
