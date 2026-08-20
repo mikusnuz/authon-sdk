@@ -1,4 +1,5 @@
 import type { AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet } from '@authon/shared';
+import type { SessionChange } from './session';
 
 export type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 
@@ -18,7 +19,9 @@ export interface OAuthSignInOptions {
 export interface AuthonEvents {
   signedIn: (user: AuthonUser) => void;
   signedOut: () => void;
+  sessionChanged: (change: SessionChange) => void;
   tokenRefreshed: (token: string) => void;
+  verificationRequired: (email: string) => void;
   mfaRequired: (mfaToken: string) => void;
   passkeyRegistered: (credential: PasskeyCredential) => void;
   web3Connected: (wallet: Web3Wallet) => void;

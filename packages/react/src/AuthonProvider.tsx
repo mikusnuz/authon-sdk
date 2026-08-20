@@ -32,6 +32,7 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
   const clientRef = useRef<Authon | null>(null);
 
   useEffect(() => {
+    let active = true;
     const client = new Authon(publishableKey, config);
     clientRef.current = client;
 
@@ -48,13 +49,15 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
       setIsLoading(false);
     });
 
-    const existingUser = client.getUser();
-    if (existingUser) {
-      setUser(existingUser);
-    }
-    setIsLoading(false);
+    const readiness = client as Authon & { waitUntilReady(): Promise<void> };
+    void readiness.waitUntilReady().then(() => {
+      if (!active) return;
+      setUser(client.getUser());
+      setIsLoading(false);
+    });
 
     return () => {
+      active = false;
       client.destroy();
       clientRef.current = null;
     };

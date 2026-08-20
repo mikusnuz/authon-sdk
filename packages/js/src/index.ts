@@ -7,6 +7,7 @@ export type {
   OAuthSignInOptions,
 } from './types';
 export { AuthonMfaRequiredError } from './types';
+export type { SessionChange, SessionChangeListener, SessionChangeReason } from './session';
 export { getProviderButtonConfig } from './providers';
 export type { ProviderButtonConfig } from './providers';
 export { generateQrSvg } from './qrcode';

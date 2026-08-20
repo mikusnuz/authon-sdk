@@ -30,6 +30,7 @@ import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
 import { ProfileRenderer } from './profile';
 import { SessionManager } from './session';
+import type { SessionChangeListener } from './session';
 import { generateQrSvg } from './qrcode';
 
 interface ProvidersResponse {
@@ -65,7 +66,20 @@ export class Authon {
       appearance: config?.appearance,
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl);
-    this.session.setOnSessionCleared(() => this.emit('signedOut'));
+    this.session.subscribe((change) => {
+      this.emit('sessionChanged', change);
+      if (change.reason === 'setSession' && change.user) {
+        this.emit('signedIn', change.user);
+      } else if (change.reason === 'tokenRefresh' && change.accessToken) {
+        this.emit('tokenRefreshed', change.accessToken);
+      } else if (
+        change.reason === 'clearSession'
+        || change.reason === 'signOut'
+        || change.reason === 'refreshFailed'
+      ) {
+        this.emit('signedOut');
+      }
+    });
     this.consumeRedirectResultFromUrl();
   }
 
@@ -165,7 +179,6 @@ export class Authon {
       throw new AuthonMfaRequiredError(res.mfaToken);
     }
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -184,14 +197,12 @@ export class Authon {
       return { needsVerification: true, email: res.email! };
     }
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
   async verifyEmail(email: string, code: string): Promise<AuthonUser> {
     const res = await this.apiPost<AuthTokens>('/v1/auth/verify-email', { email, code });
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -201,7 +212,6 @@ export class Authon {
 
   async signOut(): Promise<void> {
     await this.session.signOut();
-    this.emit('signedOut');
   }
 
   getUser(): AuthonUser | null {
@@ -210,6 +220,16 @@ export class Authon {
 
   getToken(): string | null {
     return this.session.getToken();
+  }
+
+  /** Whether persisted session validation (including any required refresh) has completed. */
+  isReady(): boolean {
+    return this.session.isReady();
+  }
+
+  /** Wait until persisted session validation (including any required refresh) has completed. */
+  waitUntilReady(): Promise<void> {
+    return this.session.waitUntilReady();
   }
 
   /** Check if the current access token is valid (JWT exp not passed) */
@@ -231,6 +251,11 @@ export class Authon {
     return () => set.delete(listener as (...args: unknown[]) => void);
   }
 
+  /** Subscribe to every session mutation with its reason and validated public snapshot. */
+  onSessionChange(listener: SessionChangeListener): () => void {
+    return this.on('sessionChanged', listener);
+  }
+
   // ── MFA ──
 
   async setupMfa(): Promise<MfaSetupResponse & { qrCodeSvg: string }> {
@@ -249,7 +274,6 @@ export class Authon {
   async verifyMfa(mfaToken: string, code: string): Promise<AuthonUser> {
     const res = await this.apiPost<AuthTokens>('/v1/auth/mfa/verify', { mfaToken, code });
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -301,7 +325,6 @@ export class Authon {
   }): Promise<AuthonUser> {
     const res = await this.apiPost<AuthTokens>('/v1/auth/passwordless/verify', options);
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -364,7 +387,6 @@ export class Authon {
     });
 
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -417,7 +439,6 @@ export class Authon {
       walletType,
     });
     this.session.setSession(res);
-    this.emit('signedIn', res.user);
     return res.user;
   }
 
@@ -566,7 +587,6 @@ export class Authon {
       signIn: async (params: { email: string; nickname?: string }): Promise<AuthonUser> => {
         const res = await this.apiPost<AuthTokens>('/v1/auth/testing/token', params);
         this.session.setSession(res);
-        this.emit('signedIn', res.user);
         return res.user;
       },
     };
@@ -592,7 +612,13 @@ export class Authon {
   }
 
   private emit(event: string, ...args: unknown[]): void {
-    this.listeners.get(event)?.forEach((fn) => fn(...args));
+    for (const listener of [...(this.listeners.get(event) ?? [])]) {
+      try {
+        listener(...args);
+      } catch {
+        // Listener failures must not block other framework adapters.
+      }
+    }
   }
 
   private async ensureInitialized(): Promise<void> {
@@ -796,7 +822,6 @@ export class Authon {
         try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
         this.session.setSession(tokens);
         this.modal?.close();
-        this.emit('signedIn', tokens.user);
       };
 
       const handleError = (msg: string) => {
@@ -976,7 +1001,6 @@ export class Authon {
           const data = JSON.parse(stored) as { tokens?: AuthTokens; error?: string };
           if (data.tokens) {
             this.session.setSession(data.tokens);
-            this.emit('signedIn', data.tokens.user);
             consumed = true;
           } else if (data.error) {
             this.emit('error', new Error(data.error));
