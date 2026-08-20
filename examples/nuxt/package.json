@@ -8,9 +8,9 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@authon/nuxt": "file:../../packages/nuxt",
-    "@authon/js": "file:../../packages/js",
-    "@authon/shared": "file:../../packages/shared",
+    "@authon/nuxt": "workspace:*",
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*",
     "nuxt": "^3.13.0"
   },
   "devDependencies": {

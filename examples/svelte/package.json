@@ -9,9 +9,9 @@
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "dependencies": {
-    "@authon/svelte": "file:../../packages/svelte",
-    "@authon/js": "file:../../packages/js",
-    "@authon/shared": "file:../../packages/shared"
+    "@authon/svelte": "workspace:*",
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "devDependencies": {
     "@sveltejs/adapter-node": "^5.0.0",

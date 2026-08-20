@@ -8,8 +8,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@authon/js": "file:../../packages/js",
-    "@authon/shared": "file:../../packages/shared"
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5",

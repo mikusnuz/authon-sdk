@@ -16,9 +16,9 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
-    "@authon/angular": "file:../../packages/angular",
-    "@authon/js": "file:../../packages/js",
-    "@authon/shared": "file:../../packages/shared",
+    "@authon/angular": "workspace:*",
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"

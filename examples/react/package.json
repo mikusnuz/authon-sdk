@@ -8,9 +8,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@authon/react": "file:../../packages/react",
-    "@authon/js": "file:../../packages/js",
-    "@authon/shared": "file:../../packages/shared",
+    "@authon/react": "workspace:*",
+    "@authon/js": "workspace:*",
+    "@authon/shared": "workspace:*",
     "react": "^19",
     "react-dom": "^19",
     "react-router-dom": "^7"

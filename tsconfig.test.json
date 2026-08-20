@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node", "vitest/globals"]
+  },
+  "include": [
+    "packages/**/*.test.ts",
+    "packages/**/*.test.tsx",
+    "tests/**/*.test.ts",
+    "tests/**/*.test.tsx",
+    "tests/compat/public-api.types.ts",
+    "tests/setup.ts",
+    "vitest.config.ts"
+  ]
+}

@@ -15,8 +15,7 @@
       "@authon/nuxt",
       "@authon/svelte",
       "@authon/angular",
-      "@authon/react-native",
-      "@authon/node"
+      "@authon/react-native"
     ]
   ],
   "linked": [],

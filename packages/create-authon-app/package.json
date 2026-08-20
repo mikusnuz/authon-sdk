@@ -12,7 +12,9 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev": "tsx src/index.ts"
+    "dev": "tsx src/index.ts",
+    "test": "vitest run --root ../.. --passWithNoTests packages/create-authon-app",
+    "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
   "repository": {

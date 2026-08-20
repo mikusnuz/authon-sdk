@@ -18,7 +18,9 @@
   ],
   "scripts": {
     "build": "tsup",
-    "dev": "tsup --watch"
+    "dev": "tsup --watch",
+    "test": "vitest run --root ../.. --passWithNoTests packages/angular",
+    "typecheck": "tsc --noEmit"
   },
   "license": "MIT",
   "repository": {
@@ -37,8 +39,8 @@
     "guard"
   ],
   "dependencies": {
-    "@authon/js": "^0.7.0",
-    "@authon/shared": "^0.3.0"
+    "@authon/js": "workspace:^",
+    "@authon/shared": "workspace:^"
   },
   "peerDependencies": {
     "@angular/core": "^17.0.0 || ^18.0.0 || ^19.0.0"
