@@ -11,16 +11,16 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 
 | Package | Version | Description | npm |
 |---------|---------|-------------|-----|
-| [`@authon/shared`](./packages/shared) | 0.7.16 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
-| [`@authon/js`](./packages/js) | 0.7.16 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
-| [`@authon/react`](./packages/react) | 0.7.16 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
-| [`@authon/nextjs`](./packages/nextjs) | 0.7.16 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
-| [`@authon/vue`](./packages/vue) | 0.7.16 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
-| [`@authon/nuxt`](./packages/nuxt) | 0.7.16 | Auto-imported composables and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
-| [`@authon/svelte`](./packages/svelte) | 0.7.16 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
-| [`@authon/angular`](./packages/angular) | 0.7.16 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
-| [`@authon/react-native`](./packages/react-native) | 0.7.16 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
-| [`@authon/create-app`](./packages/create-authon-app) | 0.1.3 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
+| [`@authon/shared`](./packages/shared) | 0.7.17 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
+| [`@authon/js`](./packages/js) | 0.7.17 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/react`](./packages/react) | 0.7.17 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
+| [`@authon/nextjs`](./packages/nextjs) | 0.7.17 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
+| [`@authon/vue`](./packages/vue) | 0.7.17 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
+| [`@authon/nuxt`](./packages/nuxt) | 0.7.17 | Auto-imported composables, components, and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
+| [`@authon/svelte`](./packages/svelte) | 0.7.17 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
+| [`@authon/angular`](./packages/angular) | 0.7.17 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
+| [`@authon/react-native`](./packages/react-native) | 0.7.17 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
+| [`@authon/create-app`](./packages/create-authon-app) | 0.1.4 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
 
 ## Features
 

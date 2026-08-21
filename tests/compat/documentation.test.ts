@@ -112,6 +112,8 @@ describe('documentation contracts', () => {
 
     expect(nuxtReadme).toContain("modules: ['@authon/nuxt']");
     expect(nuxtReadme).toContain('@authon/nuxt/composables');
+    expect(nuxtReadme).toMatch(/auto-imports[\s\S]*components/i);
+    expect(nuxtReadme).not.toMatch(/import\s*\{[^}]*AuthonSignedIn[^}]*\}\s*from\s*['"]@authon\/nuxt['"]/s);
     expect(nuxtReadme).toMatch(/createAuthonPlugin.*deprecated|deprecated.*createAuthonPlugin/is);
     expect(nuxtTemplate).toContain("modules: ['@authon/nuxt']");
     expect(nuxtTemplate).toContain('@authon/nuxt/composables');

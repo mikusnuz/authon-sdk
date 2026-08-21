@@ -1,5 +1,11 @@
 # @authon/create-app
 
+## 0.1.4
+
+### Patch Changes
+
+- Register Authon Vue components with Nuxt auto-imports and stop generated pages from importing the protected module entry directly.
+
 ## 0.1.3
 
 ### Patch Changes

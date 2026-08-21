@@ -1,5 +1,14 @@
 # @authon/react-native
 
+## 0.7.17
+
+### Patch Changes
+
+- No React Native runtime API changes. This release keeps the fixed Authon SDK version group synchronized.
+
+- Updated dependencies:
+  - @authon/shared@0.7.17
+
 ## 0.7.16
 
 ### Patch Changes

@@ -31,12 +31,13 @@ export default defineNuxtConfig({
 })
 ```
 
-모듈이 런타임 플러그인을 설치하고 `useAuthon`, `useUser`를 자동 임포트합니다.
-명시적으로 임포트하려면 전용 엔트리 포인트를 사용하세요.
+모듈이 런타임 플러그인을 설치하고 `useAuthon`, `useUser` 및 Authon Vue
+컴포넌트를 자동 임포트합니다. 앱 페이지에서 Nuxt 모듈 엔트리를 직접 임포트하지
+말고 등록된 컴포넌트를 템플릿에서 바로 사용하세요. 컴포저블을 명시적으로
+임포트하려면 전용 엔트리 포인트를 사용합니다.
 
 ```ts
 import { useAuthon, useUser } from '@authon/nuxt/composables'
-import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/nuxt'
 ```
 
 `createAuthonPlugin`은 호환성을 위해 남아 있지만 Nuxt 앱에서는 더 이상 권장하지

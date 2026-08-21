@@ -41,4 +41,13 @@ describe('Nuxt create-app template', () => {
     expect(signIn).toContain('authon.client?.openSignIn()');
     expect(signIn).toContain('route.query.redirect_url');
   });
+
+  it('uses module-registered components instead of importing the protected module entry', () => {
+    for (const path of ['pages/index.vue', 'pages/dashboard.vue']) {
+      const page = generated(path);
+
+      expect(page).not.toMatch(/from ['"]@authon\/nuxt['"]/);
+      expect(page).toContain('<Authon');
+    }
+  });
 });

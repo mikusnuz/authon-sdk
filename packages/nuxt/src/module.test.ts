@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const kit = vi.hoisted(() => ({
+  addComponent: vi.fn(),
   addImports: vi.fn(),
   addPlugin: vi.fn(),
   addRouteMiddleware: vi.fn(),
@@ -61,6 +62,13 @@ describe('Authon Nuxt module', () => {
     expect(kit.addImports).toHaveBeenCalledWith([
       { name: 'useAuthon', as: 'useAuthon', from: '/resolved/runtime/composables' },
       { name: 'useUser', as: 'useUser', from: '/resolved/runtime/composables' },
+    ]);
+    expect(kit.addComponent.mock.calls.map(([component]) => component)).toEqual([
+      { name: 'AuthonSignIn', filePath: '@authon/vue', export: 'AuthonSignIn' },
+      { name: 'AuthonSignUp', filePath: '@authon/vue', export: 'AuthonSignUp' },
+      { name: 'AuthonUserButton', filePath: '@authon/vue', export: 'AuthonUserButton' },
+      { name: 'AuthonSignedIn', filePath: '@authon/vue', export: 'AuthonSignedIn' },
+      { name: 'AuthonSignedOut', filePath: '@authon/vue', export: 'AuthonSignedOut' },
     ]);
     expect(kit.addRouteMiddleware).not.toHaveBeenCalled();
   });

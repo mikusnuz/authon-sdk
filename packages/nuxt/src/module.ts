@@ -1,4 +1,5 @@
 import {
+  addComponent,
   addImports,
   addPlugin,
   addRouteMiddleware,
@@ -6,6 +7,14 @@ import {
   defineNuxtModule,
 } from '@nuxt/kit';
 import type { AuthonConfig } from '@authon/js';
+
+const AUTHON_COMPONENTS = [
+  'AuthonSignIn',
+  'AuthonSignUp',
+  'AuthonUserButton',
+  'AuthonSignedIn',
+  'AuthonSignedOut',
+] as const;
 
 export interface AuthonModuleOptions {
   publishableKey?: string;
@@ -66,6 +75,9 @@ export const authonModule = defineNuxtModule<AuthonModuleOptions>({
       { name: 'useAuthon', as: 'useAuthon', from: resolver.resolve('./runtime/composables') },
       { name: 'useUser', as: 'useUser', from: resolver.resolve('./runtime/composables') },
     ]);
+    for (const name of AUTHON_COMPONENTS) {
+      addComponent({ name, filePath: '@authon/vue', export: name });
+    }
 
     if (options.globalMiddleware) {
       addRouteMiddleware({

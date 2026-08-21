@@ -33,13 +33,12 @@ export default defineNuxtConfig({
 })
 ```
 
-The module installs the runtime plugin and auto-imports `useAuthon` and
-`useUser`. Components are available from `@authon/nuxt`:
+The module installs the runtime plugin and auto-imports `useAuthon`, `useUser`,
+and the Authon Vue components. Do not import the Nuxt module entry from an app
+page; use the registered components directly:
 
 ```vue
 <script setup lang="ts">
-import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/nuxt'
-
 const authon = useAuthon()
 const { user } = useUser()
 </script>
@@ -92,7 +91,7 @@ use `modules: ['@authon/nuxt']`, auto-imports, and
 - Module: default export, `authonModule`, `AuthonModuleOptions`
 - Composables: `useAuthon`, `useUser`, `useAuthonWeb3`,
   `useAuthonPasswordless`, `useAuthonPasskeys`
-- Components: `AuthonSignIn`, `AuthonSignUp`, `AuthonUserButton`,
+- Auto-imported components: `AuthonSignIn`, `AuthonSignUp`, `AuthonUserButton`,
   `AuthonSignedIn`, `AuthonSignedOut`
 - Compatibility helpers: `createAuthonPlugin` (deprecated),
   `createAuthMiddleware`, `renderSocialButtons`

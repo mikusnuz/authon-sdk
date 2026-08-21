@@ -140,7 +140,6 @@ a:hover {
   files.push({
     path: 'pages/index.vue',
     content: `<script setup lang="ts">
-import { AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/nuxt';
 import { useAuthon } from '@authon/nuxt/composables';
 
 const authon = useAuthon();
@@ -230,7 +229,6 @@ onMounted(() => {
   files.push({
     path: 'pages/dashboard.vue',
     content: `<script setup lang="ts">
-import { AuthonUserButton } from '@authon/nuxt';
 import { useAuthon, useUser } from '@authon/nuxt/composables';
 
 definePageMeta({ middleware: 'auth' });
