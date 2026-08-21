@@ -20,7 +20,7 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 | [`@authon/svelte`](./packages/svelte) | 0.7.16 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
 | [`@authon/angular`](./packages/angular) | 0.7.16 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
 | [`@authon/react-native`](./packages/react-native) | 0.7.16 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
-| [`@authon/create-app`](./packages/create-authon-app) | 0.1.2 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
+| [`@authon/create-app`](./packages/create-authon-app) | 0.1.3 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
 
 ## Features
 

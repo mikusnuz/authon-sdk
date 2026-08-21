@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+
 export interface CliArgs {
   template?: string;
   projectName?: string;
@@ -18,7 +20,7 @@ export function parseArgs(argv: string[]): CliArgs {
       printHelp();
       process.exit(0);
     } else if (arg === '--version' || arg === '-v') {
-      console.log('0.1.0');
+      console.log(readPackageVersion());
       process.exit(0);
     } else if (!arg.startsWith('-')) {
       positional.push(arg);
@@ -30,6 +32,18 @@ export function parseArgs(argv: string[]): CliArgs {
   }
 
   return args;
+}
+
+export function readPackageVersion(): string {
+  const manifest = JSON.parse(
+    readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+  ) as { version?: unknown };
+
+  if (typeof manifest.version !== 'string' || manifest.version.length === 0) {
+    throw new Error('Unable to read @authon/create-app version');
+  }
+
+  return manifest.version;
 }
 
 function printHelp() {

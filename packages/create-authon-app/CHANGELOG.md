@@ -1,5 +1,11 @@
 # @authon/create-app
 
+## 0.1.3
+
+### Patch Changes
+
+- Report the installed package version from the CLI instead of returning a stale hardcoded value.
+
 ## 0.1.2
 
 ### Patch Changes
