@@ -9,7 +9,8 @@
     "dev": "pnpm -r --parallel dev",
     "test": "vitest run",
     "test:package-contents": "node scripts/check-package-contents.mjs",
-    "typecheck": "pnpm --filter './packages/*' typecheck && tsc --project tsconfig.test.json",
+    "typecheck": "pnpm build:packages && pnpm typecheck:packages",
+    "typecheck:packages": "pnpm --filter './packages/*' typecheck && tsc --project tsconfig.test.json",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "pnpm build && changeset publish"

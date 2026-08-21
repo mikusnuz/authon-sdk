@@ -24,6 +24,9 @@ describe('workspace build foundation', () => {
     expect(rootManifest.scripts['build:packages']).toBe("pnpm --filter './packages/*' build");
     expect(rootManifest.scripts['build:examples']).toBe("pnpm --filter './examples/*' build");
     expect(rootManifest.scripts.build).toBe('pnpm build:packages && pnpm build:examples');
+    expect(rootManifest.scripts.typecheck).toBe(
+      'pnpm build:packages && pnpm typecheck:packages',
+    );
   });
 
   it.each(exampleDirectories)('%s uses workspace links for internal packages', async (directory) => {
