@@ -188,9 +188,15 @@ if (typeof reactNative.AuthonMobileClient !== 'function' || typeof reactNative.A
     join(consumerDirectory, 'consumer.cjs'),
     `
 const runtimePackages = [
-  '@authon/angular', '@authon/js', '@authon/nextjs', '@authon/nuxt',
-  '@authon/react', '@authon/react-native', '@authon/shared', '@authon/svelte', '@authon/vue',
+  '@authon/angular', '@authon/js', '@authon/nextjs', '@authon/react',
+  '@authon/react-native', '@authon/shared', '@authon/vue',
 ];
+// Nuxt 3.21 requires Node >=20.19, while Svelte 5 exposes ESM-only runtime
+// dependencies that Node 18 cannot load through require(). Their ESM entries
+// are still exercised above on Node 18; supported CJS entries run on Node 20+.
+if (Number(process.versions.node.split('.')[0]) >= 20) {
+  runtimePackages.push('@authon/nuxt', '@authon/svelte');
+}
 for (const packageName of runtimePackages) {
   const loaded = require(packageName);
   if (Object.keys(loaded).length === 0) throw new Error(packageName + ' has no CJS exports');

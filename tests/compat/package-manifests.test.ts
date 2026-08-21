@@ -16,6 +16,7 @@ const packageDirectories = [
 ] as const;
 
 interface PackageManifest {
+  engines?: Record<string, string>;
   files?: string[];
   main?: string;
   module?: string;
@@ -50,6 +51,14 @@ describe('published package manifests', () => {
       import: './dist/server.js',
       require: './dist/server.cjs',
     });
+  });
+
+  it('declares the Node.js runtime supported by the current Nuxt toolchain', async () => {
+    const manifest = JSON.parse(
+      await readFile(join(process.cwd(), 'packages/nuxt/package.json'), 'utf8'),
+    ) as PackageManifest;
+
+    expect(manifest.engines?.node).toBe('^20.19.0 || >=22.12.0');
   });
 
   it('keeps the Svelte component source subpaths', async () => {

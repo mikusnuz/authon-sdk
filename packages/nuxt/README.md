@@ -4,6 +4,9 @@
 
 > Nuxt 3 authentication module with auto-imported composables and Vue components
 
+Requires Node.js `^20.19.0` or `>=22.12.0`, matching the supported runtime of
+the current Nuxt release.
+
 ## Install
 
 ```bash
