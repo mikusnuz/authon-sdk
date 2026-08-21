@@ -110,9 +110,26 @@ describe('documentation contracts', () => {
     expect(config).not.toMatch(/publishableKey:\s*['"]pk_/);
   });
 
-  it('includes create-app in the release changeset', async () => {
-    const changeset = await readFile(join(root, '.changeset/calm-pandas-build.md'), 'utf8');
+  it('keeps create-app in pending or generated release artifacts', async () => {
+    const changeset = await readFile(
+      join(root, '.changeset/calm-pandas-build.md'),
+      'utf8',
+    ).catch(() => null);
 
-    expect(changeset).toMatch(/['"]@authon\/create-app['"]:\s*patch/);
+    if (changeset) {
+      expect(changeset).toMatch(/['"]@authon\/create-app['"]:\s*patch/);
+      return;
+    }
+
+    const packageJson = JSON.parse(
+      await readFile(join(root, 'packages/create-authon-app/package.json'), 'utf8'),
+    ) as { version: string };
+    const changelog = await readFile(
+      join(root, 'packages/create-authon-app/CHANGELOG.md'),
+      'utf8',
+    );
+
+    expect(packageJson.version).not.toBe('0.1.0');
+    expect(changelog).toContain(`## ${packageJson.version}`);
   });
 });
