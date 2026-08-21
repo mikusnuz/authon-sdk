@@ -1,5 +1,7 @@
 # @authon/shared
 
+## 0.7.16
+
 ## 0.7.15
 
 ### Patch Changes

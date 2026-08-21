@@ -1,5 +1,13 @@
 # @authon/nextjs
 
+## 0.7.16
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @authon/shared@0.7.16
+  - @authon/react@0.7.16
+
 ## 0.7.15
 
 ### Patch Changes
