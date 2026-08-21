@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExample, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_SDK_VERSION,
+  generateEnvExample,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateNextjsApp(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -20,7 +25,7 @@ export function generateNextjsApp(options: ProjectOptions): FileEntry[] {
           lint: 'next lint',
         },
         dependencies: {
-          '@authon/nextjs': '^0.3.0',
+          '@authon/nextjs': AUTHON_SDK_VERSION,
           next: '^15.0.0',
           react: '^19.0.0',
           'react-dom': '^19.0.0',

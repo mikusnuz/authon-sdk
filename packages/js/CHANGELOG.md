@@ -1,5 +1,14 @@
 # @authon/js
 
+## 0.7.16
+
+### Patch Changes
+
+- No core browser runtime API changes. This release keeps the fixed Authon SDK version group synchronized.
+
+- Updated dependencies:
+  - @authon/shared@0.7.16
+
 ## 0.7.15
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @authon/create-app
 
+## 0.1.2
+
+### Patch Changes
+
+- Generate framework projects with the current Authon SDK release line and keep those dependency versions covered by contract tests.
+
 ## 0.1.1
 
 ### Patch Changes

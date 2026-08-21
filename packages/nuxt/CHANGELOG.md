@@ -1,5 +1,16 @@
 # @authon/nuxt
 
+## 0.7.16
+
+### Patch Changes
+
+- [`fbd1b23`](https://github.com/mikusnuz/authon-sdk/commit/fbd1b23b83e9d3a902f90525cf66ce15432cab41) Thanks [@mikusnuz](https://github.com/mikusnuz)! - Declare the Node.js `^20.19.0 || >=22.12.0` requirement used by Nuxt 3.21 and document it in both package READMEs. Runtime APIs are unchanged.
+
+- Updated dependencies:
+  - @authon/shared@0.7.16
+  - @authon/js@0.7.16
+  - @authon/vue@0.7.16
+
 ## 0.7.15
 
 ### Patch Changes

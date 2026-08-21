@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleVite, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_SDK_VERSION,
+  generateEnvExampleVite,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateVueVite(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -20,7 +25,7 @@ export function generateVueVite(options: ProjectOptions): FileEntry[] {
           preview: 'vite preview',
         },
         dependencies: {
-          '@authon/vue': '^0.3.0',
+          '@authon/vue': AUTHON_SDK_VERSION,
           vue: '^3.5.0',
           'vue-router': '^4.0.0',
         },

@@ -1,9 +1,10 @@
-import { readFile } from 'node:fs/promises';
+import { access, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
 
 const exampleDirectories = ['angular', 'nextjs', 'nuxt', 'react', 'svelte', 'vanilla-js', 'vue'];
+const allExampleDirectories = [...exampleDirectories, 'portal'];
 
 describe('workspace build foundation', () => {
   it('prepares the Nuxt example only after the local module can be built', async () => {
@@ -39,6 +40,12 @@ describe('workspace build foundation', () => {
 
     expect(internalDependencies.length).toBeGreaterThan(0);
     expect(internalDependencies.every(([, version]) => version === 'workspace:*')).toBe(true);
+  });
+
+  it.each(allExampleDirectories)('%s uses the workspace pnpm lockfile only', async (directory) => {
+    await expect(
+      access(join(process.cwd(), 'examples', directory, 'package-lock.json')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 
   it('injects the Nuxt example key in CI instead of baking one into source', async () => {

@@ -1,5 +1,8 @@
 import type { ProjectOptions } from '../prompts.js';
 
+export const AUTHON_SDK_VERSION = '^0.7.16';
+export const AUTHON_NODE_VERSION = '^0.3.0';
+
 export function generateEnvExample(options: ProjectOptions): string {
   const lines = [
     '# Authon Configuration',

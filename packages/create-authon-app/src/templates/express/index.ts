@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleServer, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_NODE_VERSION,
+  generateEnvExampleServer,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateExpress(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -20,7 +25,7 @@ export function generateExpress(options: ProjectOptions): FileEntry[] {
           start: 'node dist/index.js',
         },
         dependencies: {
-          '@authon/node': '^0.3.0',
+          '@authon/node': AUTHON_NODE_VERSION,
           express: '^4.21.0',
           cors: '^2.8.0',
         },

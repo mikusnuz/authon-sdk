@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleVite, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_SDK_VERSION,
+  generateEnvExampleVite,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateReactVite(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -20,7 +25,7 @@ export function generateReactVite(options: ProjectOptions): FileEntry[] {
           preview: 'vite preview',
         },
         dependencies: {
-          '@authon/react': '^0.3.0',
+          '@authon/react': AUTHON_SDK_VERSION,
           react: '^19.0.0',
           'react-dom': '^19.0.0',
           'react-router-dom': '^7.0.0',

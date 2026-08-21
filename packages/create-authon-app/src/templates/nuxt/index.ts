@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleNuxt, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_SDK_VERSION,
+  generateEnvExampleNuxt,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateNuxt(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -21,7 +26,7 @@ export function generateNuxt(options: ProjectOptions): FileEntry[] {
           preview: 'nuxt preview',
         },
         dependencies: {
-          '@authon/nuxt': '^0.3.3',
+          '@authon/nuxt': AUTHON_SDK_VERSION,
           nuxt: '^3.15.0',
           vue: '^3.5.0',
           'vue-router': '^4.0.0',

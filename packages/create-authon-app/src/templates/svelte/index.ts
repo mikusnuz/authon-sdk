@@ -1,6 +1,11 @@
 import type { FileEntry } from '../../scaffold.js';
 import type { ProjectOptions } from '../../prompts.js';
-import { generateEnvExampleSvelte, generateGitignore, generateClaudeMd } from '../shared.js';
+import {
+  AUTHON_SDK_VERSION,
+  generateEnvExampleSvelte,
+  generateGitignore,
+  generateClaudeMd,
+} from '../shared.js';
 
 export function generateSvelte(options: ProjectOptions): FileEntry[] {
   const files: FileEntry[] = [];
@@ -20,7 +25,7 @@ export function generateSvelte(options: ProjectOptions): FileEntry[] {
           preview: 'vite preview',
         },
         dependencies: {
-          '@authon/svelte': '^0.3.0',
+          '@authon/svelte': AUTHON_SDK_VERSION,
         },
         devDependencies: {
           '@sveltejs/adapter-auto': '^3.0.0',

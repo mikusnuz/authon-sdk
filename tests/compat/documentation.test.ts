@@ -35,6 +35,33 @@ async function collectFiles(path: string): Promise<string[]> {
 }
 
 describe('documentation contracts', () => {
+  it('lists the current package versions in the public README', async () => {
+    const readme = await readFile(join(root, 'README.md'), 'utf8');
+    const packageRows = [
+      ['shared', '@authon/shared'],
+      ['js', '@authon/js'],
+      ['react', '@authon/react'],
+      ['nextjs', '@authon/nextjs'],
+      ['vue', '@authon/vue'],
+      ['nuxt', '@authon/nuxt'],
+      ['svelte', '@authon/svelte'],
+      ['angular', '@authon/angular'],
+      ['react-native', '@authon/react-native'],
+      ['create-authon-app', '@authon/create-app'],
+    ] as const;
+
+    for (const [directory, packageName] of packageRows) {
+      const manifest = JSON.parse(
+        await readFile(join(root, 'packages', directory, 'package.json'), 'utf8'),
+      ) as { version: string };
+
+      expect(readme).toContain(`| [\`${packageName}\`]`);
+      expect(readme).toMatch(
+        new RegExp(`\\| \\[[^\\]]*${packageName.replace('/', '\\/')}[^\\]]*\\]\\([^)]*\\) \\| ${manifest.version.replaceAll('.', '\\.')} \\|`),
+      );
+    }
+  });
+
   it('contains no stale middleware names or publishable-key environment variables', async () => {
     const files = (await Promise.all(documentationRoots.map(collectFiles))).flat();
     const stale = [
