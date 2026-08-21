@@ -2,10 +2,11 @@
   "name": "authon-nuxt-example",
   "private": true,
   "scripts": {
+    "predev": "pnpm --filter @authon/nuxt build",
     "dev": "nuxt dev",
+    "prebuild": "pnpm --filter @authon/nuxt build",
     "build": "nuxt build",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "preview": "nuxt preview"
   },
   "dependencies": {
     "@authon/nuxt": "workspace:*",

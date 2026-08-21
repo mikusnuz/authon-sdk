@@ -6,6 +6,16 @@ import { describe, expect, it } from 'vitest';
 const exampleDirectories = ['angular', 'nextjs', 'nuxt', 'react', 'svelte', 'vanilla-js', 'vue'];
 
 describe('workspace build foundation', () => {
+  it('prepares the Nuxt example only after the local module can be built', async () => {
+    const manifest = JSON.parse(
+      await readFile(join(process.cwd(), 'examples/nuxt/package.json'), 'utf8'),
+    ) as { scripts?: Record<string, string> };
+
+    expect(manifest.scripts?.postinstall).toBeUndefined();
+    expect(manifest.scripts?.predev).toContain('pnpm --filter @authon/nuxt build');
+    expect(manifest.scripts?.prebuild).toContain('pnpm --filter @authon/nuxt build');
+  });
+
   it('builds packages before examples', async () => {
     const rootManifest = JSON.parse(await readFile(join(process.cwd(), 'package.json'), 'utf8')) as {
       scripts: Record<string, string>;
