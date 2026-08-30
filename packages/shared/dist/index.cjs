@@ -73,6 +73,7 @@ var WEBHOOK_EVENTS = [
   "user.banned",
   "user.unbanned",
   "session.created",
+  "session.rotated",
   "session.ended",
   "session.revoked",
   "provider.linked",

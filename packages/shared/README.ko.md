@@ -13,7 +13,7 @@ npm install @authon/shared
 ## 사용법
 
 ```ts
-import type { AuthonUser, AuthTokens, OAuthProviderType } from '@authon/shared';
+import type { AuthonUser, AuthTokens, AuthTokenRefreshResponse, OAuthProviderType } from '@authon/shared';
 import { OAUTH_PROVIDERS, DEFAULT_BRANDING, AUDIT_EVENTS } from '@authon/shared';
 ```
 
@@ -23,6 +23,7 @@ import { OAUTH_PROVIDERS, DEFAULT_BRANDING, AUDIT_EVENTS } from '@authon/shared'
 |------|------|
 | `AuthonUser` | 사용자 (id, email, displayName, avatarUrl 등) |
 | `AuthTokens` | 토큰 쌍 (accessToken, refreshToken, expiresIn) |
+| `AuthTokenRefreshResponse` | 회전 후 새 sessionId가 포함된 서버 갱신 응답 |
 | `OAuthProviderType` | OAuth 프로바이더 |
 | `PasskeyCredential` | 패스키 자격증명 |
 | `Web3Wallet` | Web3 지갑 |

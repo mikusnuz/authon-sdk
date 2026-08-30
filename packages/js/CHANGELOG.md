@@ -1,5 +1,9 @@
 # @authon/js
 
+## 0.8.1
+
+- Track the refresh response contract that returns the replacement Authon session ID.
+
 ## 0.8.0
 
 ### Minor Changes

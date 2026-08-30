@@ -1,6 +1,6 @@
 {
   "name": "@authon/nextjs",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "Authon Next.js SDK — middleware, server helpers, and React components",
   "type": "module",
   "main": "./dist/index.cjs",

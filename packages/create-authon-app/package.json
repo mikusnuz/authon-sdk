@@ -1,6 +1,6 @@
 {
   "name": "@authon/create-app",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Create a new project with Authon authentication pre-configured",
   "type": "module",
   "bin": {

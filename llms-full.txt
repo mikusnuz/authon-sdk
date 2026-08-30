@@ -964,6 +964,7 @@ Signature is computed as: `HMAC-SHA256(webhookSecret, timestamp + "." + rawBody)
 | `user.banned` | User banned |
 | `user.unbanned` | User unbanned |
 | `session.created` | New session created (sign-in) |
+| `session.rotated` | Refresh-token rotation replaced a session; do not treat it as sign-out |
 | `session.ended` | Session ended (sign-out) |
 | `session.revoked` | Session revoked (admin or user action) |
 | `provider.linked` | OAuth/Web3 provider linked |
@@ -1130,7 +1131,7 @@ interface OrganizationInvitation {
 
 type OAuthProviderType = 'google' | 'apple' | 'kakao' | 'naver' | 'facebook' | 'github' | 'discord' | 'x' | 'line' | 'microsoft';
 
-type WebhookEventType = 'user.created' | 'user.updated' | 'user.deleted' | 'user.banned' | 'user.unbanned' | 'session.created' | 'session.ended' | 'session.revoked' | 'provider.linked' | 'provider.unlinked';
+type WebhookEventType = 'user.created' | 'user.updated' | 'user.deleted' | 'user.banned' | 'user.unbanned' | 'session.created' | 'session.rotated' | 'session.ended' | 'session.revoked' | 'provider.linked' | 'provider.unlinked';
 ```
 
 ---

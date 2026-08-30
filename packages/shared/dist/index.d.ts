@@ -66,6 +66,10 @@ interface AuthTokens {
     expiresIn: number;
     user: AuthonUser;
 }
+interface AuthTokenRefreshResponse extends AuthTokens {
+    /** The replacement provider session created by refresh-token rotation. */
+    sessionId: string;
+}
 interface AuthorizationCodeOptions {
     responseType: 'code';
     redirectUri: string;
@@ -84,8 +88,7 @@ interface AuthorizationCodeExchangeRequest {
     codeVerifier: string;
     redirectUri: string;
 }
-interface AuthorizationCodeExchangeResponse extends AuthTokens {
-    sessionId: string;
+interface AuthorizationCodeExchangeResponse extends AuthTokenRefreshResponse {
 }
 interface WebhookEvent {
     id: string;
@@ -260,7 +263,7 @@ declare const PROVIDER_COLORS: Record<OAuthProviderType, {
     bg: string;
     text: string;
 }>;
-declare const WEBHOOK_EVENTS: readonly ["user.created", "user.updated", "user.deleted", "user.banned", "user.unbanned", "session.created", "session.ended", "session.revoked", "provider.linked", "provider.unlinked"];
+declare const WEBHOOK_EVENTS: readonly ["user.created", "user.updated", "user.deleted", "user.banned", "user.unbanned", "session.created", "session.rotated", "session.ended", "session.revoked", "provider.linked", "provider.unlinked"];
 type WebhookEventType = (typeof WEBHOOK_EVENTS)[number];
 declare const API_KEY_PREFIXES: {
     readonly PUBLISHABLE_LIVE: "pk_live_";
@@ -292,4 +295,4 @@ declare const AUDIT_EVENTS: {
     readonly ORG_INVITATION_ACCEPTED: "org.invitation.accepted";
 };
 
-export { API_KEY_PREFIXES, AUDIT_EVENTS, type AuditLogEntry, type AuditLogListResponse, type AuditLogQueryParams, type AuditLogStats, type AuthTokens, type AuthonOrganization, type AuthonProvider, type AuthonSession, type AuthonUser, type AuthorizationCodeExchangeRequest, type AuthorizationCodeExchangeResponse, type AuthorizationCodeOptions, type AuthorizationCodeResult, type BrandingConfig, type CreateJwtTemplateParams, type CreateOrganizationParams, DEFAULT_BRANDING, DEFAULT_SESSION_CONFIG, type InviteMemberParams, type JwtClaimMapping, type JwtPreviewResponse, type JwtTemplate, type MfaSetupResponse, type MfaStatus, type MfaVerifyResponse, OAUTH_PROVIDERS, type OAuthProviderType, type OrganizationInvitation, type OrganizationListResponse, type OrganizationMember, PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type PasskeyCredential, type PasswordlessResult, type SessionConfig, type SessionInfo, type UpdateJwtTemplateParams, type UpdateOrganizationParams, WEBHOOK_EVENTS, type Web3Chain, type Web3NonceResponse, type Web3Wallet, type Web3WalletType, type WebhookEvent, type WebhookEventType };
+export { API_KEY_PREFIXES, AUDIT_EVENTS, type AuditLogEntry, type AuditLogListResponse, type AuditLogQueryParams, type AuditLogStats, type AuthTokenRefreshResponse, type AuthTokens, type AuthonOrganization, type AuthonProvider, type AuthonSession, type AuthonUser, type AuthorizationCodeExchangeRequest, type AuthorizationCodeExchangeResponse, type AuthorizationCodeOptions, type AuthorizationCodeResult, type BrandingConfig, type CreateJwtTemplateParams, type CreateOrganizationParams, DEFAULT_BRANDING, DEFAULT_SESSION_CONFIG, type InviteMemberParams, type JwtClaimMapping, type JwtPreviewResponse, type JwtTemplate, type MfaSetupResponse, type MfaStatus, type MfaVerifyResponse, OAUTH_PROVIDERS, type OAuthProviderType, type OrganizationInvitation, type OrganizationListResponse, type OrganizationMember, PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type PasskeyCredential, type PasswordlessResult, type SessionConfig, type SessionInfo, type UpdateJwtTemplateParams, type UpdateOrganizationParams, WEBHOOK_EVENTS, type Web3Chain, type Web3NonceResponse, type Web3Wallet, type Web3WalletType, type WebhookEvent, type WebhookEventType };

@@ -1,4 +1,4 @@
-import type { AuthonUser, AuthTokens } from '@authon/shared';
+import type { AuthonUser, AuthTokens, AuthTokenRefreshResponse } from '@authon/shared';
 
 const DEFAULT_API_URL = 'https://api.authon.dev';
 const STORAGE_SCHEMA_VERSION = 2;
@@ -80,7 +80,7 @@ export class SessionManager {
   private readonly storageKey: string;
   private readonly persistenceEnabled: boolean;
   private refreshRetryCount = 0;
-  private refreshInFlight: Promise<AuthTokens | null> | null = null;
+  private refreshInFlight: Promise<AuthTokenRefreshResponse | null> | null = null;
   private readonly listeners = new Set<SessionChangeListener>();
   private readonly requestControllers = new Set<AbortController>();
   private ready = true;
@@ -239,7 +239,7 @@ export class SessionManager {
     this.refreshTimer = null;
   }
 
-  async refresh(): Promise<AuthTokens | null> {
+  async refresh(): Promise<AuthTokenRefreshResponse | null> {
     if (this.destroyed) return null;
     if (!this.persistenceEnabled) return null;
     if (this.refreshInFlight) return this.refreshInFlight;
@@ -259,7 +259,7 @@ export class SessionManager {
     }
   }
 
-  private async doRefresh(generation: number): Promise<AuthTokens | null> {
+  private async doRefresh(generation: number): Promise<AuthTokenRefreshResponse | null> {
     if (!this.refreshToken || this.destroyed) return null;
     const controller = new AbortController();
     this.requestControllers.add(controller);
@@ -284,7 +284,7 @@ export class SessionManager {
         this.retryRefresh();
         return null;
       }
-      const tokens: AuthTokens = await res.json();
+      const tokens: AuthTokenRefreshResponse = await res.json();
       if (this.destroyed || generation !== this.sessionGeneration) return null;
       this.refreshRetryCount = 0;
       this.setSession(tokens, 'tokenRefresh');

@@ -1,5 +1,9 @@
 # @authon/create-app
 
+## 0.1.5
+
+- Scaffold the 0.8.1 SDK release line with refresh-session rotation support.
+
 ## 0.1.4
 
 ### Patch Changes

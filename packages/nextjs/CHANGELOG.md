@@ -1,5 +1,9 @@
 # @authon/nextjs
 
+## 0.8.1
+
+- Document safe BFF refresh rotation and targeted provider-session revocation.
+
 ## 0.8.0
 
 ### Minor Changes

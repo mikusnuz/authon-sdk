@@ -39,6 +39,7 @@ npm install @authon/shared
 import type {
   AuthonUser,
   AuthTokens,
+  AuthTokenRefreshResponse,
   OAuthProviderType,
   PasskeyCredential,
   Web3Wallet,

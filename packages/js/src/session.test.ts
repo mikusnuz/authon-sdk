@@ -132,7 +132,10 @@ describe('SessionManager lifecycle and restoration', () => {
     const first = new SessionManager('pk_live_expired-restore', DEFAULT_API_URL);
     first.setSession(tokens(-10, { expiresIn: -10 }));
     first.destroy();
-    const refreshed = tokens(3600, { accessToken: jwt(3600), refreshToken: 'refresh_2' });
+    const refreshed = {
+      ...tokens(3600, { accessToken: jwt(3600), refreshToken: 'refresh_2' }),
+      sessionId: 'session_2',
+    };
     vi.mocked(fetch).mockResolvedValue(new Response(JSON.stringify(refreshed), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -253,11 +256,12 @@ describe('SessionManager change subscriptions', () => {
     manager.subscribe((change) => changes.push(change.reason));
 
     manager.setSession(tokens());
-    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify(tokens(3600, {
-      accessToken: jwt(7200),
-      refreshToken: 'refresh_2',
-    })), { status: 200, headers: { 'Content-Type': 'application/json' } }));
-    await manager.refresh();
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({
+      ...tokens(3600, { accessToken: jwt(7200), refreshToken: 'refresh_2' }),
+      sessionId: 'session_2',
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }));
+    const refreshed = await manager.refresh();
+    expect(refreshed?.sessionId).toBe('session_2');
     manager.updateUser(user({ displayName: 'Updated' }));
     manager.clearSession();
     manager.setSession(tokens());

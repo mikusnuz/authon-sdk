@@ -4,7 +4,7 @@ Use this flow when your application owns an HttpOnly server session. The browser
 
 ## Requirements
 
-- `@authon/js` and `@authon/nextjs` 0.8.0 or later
+- `@authon/js` and `@authon/nextjs` 0.8.1 or later for refresh-session rotation support
 - an Authon publishable key in the browser
 - the matching Authon secret key on the server only
 - an exact callback URL registered for the project's `live` or `test` mode
@@ -167,6 +167,44 @@ await revokeAuthonSession({
 ```
 
 This calls `POST /v1/auth/sessions/:sessionId/revoke`. An Authon outage must not prevent deletion of the application's own session cookie.
+
+### Refresh rotation
+
+Refresh Authon tokens only from the application server. Every successful refresh atomically consumes the previous Authon session and returns the replacement `sessionId`:
+
+```http
+POST /v1/auth/token/refresh
+Content-Type: application/json
+```
+
+```json
+{ "refreshToken": "CURRENT_SERVER_ONLY_REFRESH_TOKEN" }
+```
+
+```json
+{
+  "accessToken": "NEW_SERVER_ONLY_ACCESS_TOKEN",
+  "refreshToken": "NEW_SERVER_ONLY_REFRESH_TOKEN",
+  "expiresIn": 900,
+  "sessionId": "REPLACEMENT_AUTHON_SESSION_ID",
+  "user": { "id": "user-id", "email": "person@example.com" }
+}
+```
+
+Replace the tokens and `sessionId` together in one server-side session-store update. The new access token contains `sid` equal to this `sessionId`.
+
+Rotation emits `session.rotated` with the following data. It is informational and must not sign the user out:
+
+```json
+{
+  "session": { "id": "PREVIOUS_SESSION_ID" },
+  "replacementSession": { "id": "REPLACEMENT_SESSION_ID" },
+  "replacementSessionId": "REPLACEMENT_SESSION_ID",
+  "reason": "rotation"
+}
+```
+
+An explicit provider-session revoke emits `session.revoked` with `reason: "explicit_revoke"`; SDK signout emits it with `reason: "signout"`. Consumers must revoke only the local session whose stored Authon `sessionId` equals `data.session.id`. User-wide removal is reserved for user-level events such as `user.deleted` and `user.banned`.
 
 ## Environment variables
 

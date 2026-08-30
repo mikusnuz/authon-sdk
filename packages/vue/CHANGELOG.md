@@ -1,5 +1,9 @@
 # @authon/vue
 
+## 0.8.1
+
+- Adopt the updated shared refresh-session rotation contract.
+
 ## 0.8.0
 
 ### Patch Changes

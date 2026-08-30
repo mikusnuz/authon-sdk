@@ -1,5 +1,9 @@
 # @authon/shared
 
+## 0.8.1
+
+- Add the refresh-token rotation response and `session.rotated` webhook contracts.
+
 ## 0.8.0
 
 ### Minor Changes

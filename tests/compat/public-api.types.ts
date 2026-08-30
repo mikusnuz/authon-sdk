@@ -7,6 +7,7 @@ import type {
   AuthonProvider,
   AuthonSession,
   AuthonUser,
+  AuthTokenRefreshResponse,
   AuthTokens,
   BrandingConfig,
   CreateJwtTemplateParams,
@@ -336,6 +337,16 @@ type SharedTokenContract = Expect<Equal<
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
+    user: AuthonUser;
+  }
+>>;
+type SharedRefreshContract = Expect<Equal<
+  Pick<AuthTokenRefreshResponse, 'accessToken' | 'refreshToken' | 'expiresIn' | 'sessionId' | 'user'>,
+  {
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
+    sessionId: string;
     user: AuthonUser;
   }
 >>;

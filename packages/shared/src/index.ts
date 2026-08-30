@@ -74,6 +74,11 @@ export interface AuthTokens {
   user: AuthonUser;
 }
 
+export interface AuthTokenRefreshResponse extends AuthTokens {
+  /** The replacement provider session created by refresh-token rotation. */
+  sessionId: string;
+}
+
 export interface AuthorizationCodeOptions {
   responseType: 'code';
   redirectUri: string;
@@ -95,9 +100,7 @@ export interface AuthorizationCodeExchangeRequest {
   redirectUri: string;
 }
 
-export interface AuthorizationCodeExchangeResponse extends AuthTokens {
-  sessionId: string;
-}
+export interface AuthorizationCodeExchangeResponse extends AuthTokenRefreshResponse {}
 
 export interface WebhookEvent {
   id: string;
@@ -364,6 +367,7 @@ export const WEBHOOK_EVENTS = [
   'user.banned',
   'user.unbanned',
   'session.created',
+  'session.rotated',
   'session.ended',
   'session.revoked',
   'provider.linked',
