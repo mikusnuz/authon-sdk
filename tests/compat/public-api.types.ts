@@ -42,6 +42,7 @@ import type {
   AuthonLocale,
   OAuthFlowMode,
   OAuthSignInOptions,
+  OpenSignInOptions,
   ProviderButtonConfig,
   TranslationStrings,
 } from '../../packages/js/src/index';
@@ -386,8 +387,8 @@ type ReactContextActionsContract = Expect<Equal<
   Pick<AuthonContextValue, 'signOut' | 'openSignIn' | 'openSignUp' | 'getToken'>,
   {
     signOut: () => Promise<void>;
-    openSignIn: () => Promise<void>;
-    openSignUp: () => Promise<void>;
+    openSignIn: (options?: OpenSignInOptions) => Promise<void>;
+    openSignUp: (options?: OpenSignInOptions) => Promise<void>;
     getToken: () => string | null;
   }
 >>;

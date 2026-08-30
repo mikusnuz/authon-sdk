@@ -175,7 +175,13 @@ for (const packageName of runtimePackages) {
   if (Object.keys(loaded).length === 0) throw new Error(packageName + ' has no ESM exports');
 }
 const nextServer = await import('@authon/nextjs/server');
-if (typeof nextServer.auth !== 'function' || typeof nextServer.currentUser !== 'function') {
+if (
+  typeof nextServer.auth !== 'function'
+  || typeof nextServer.currentUser !== 'function'
+  || typeof nextServer.createAuthonAuthorizationRequest !== 'function'
+  || typeof nextServer.handleAuthonAuthorizationCallback !== 'function'
+  || typeof nextServer.revokeAuthonSession !== 'function'
+) {
   throw new Error('@authon/nextjs/server ESM exports are incomplete');
 }
 const reactNative = await import('@authon/react-native');
@@ -202,7 +208,13 @@ for (const packageName of runtimePackages) {
   if (Object.keys(loaded).length === 0) throw new Error(packageName + ' has no CJS exports');
 }
 const nextServer = require('@authon/nextjs/server');
-if (typeof nextServer.auth !== 'function' || typeof nextServer.currentUser !== 'function') {
+if (
+  typeof nextServer.auth !== 'function'
+  || typeof nextServer.currentUser !== 'function'
+  || typeof nextServer.createAuthonAuthorizationRequest !== 'function'
+  || typeof nextServer.handleAuthonAuthorizationCallback !== 'function'
+  || typeof nextServer.revokeAuthonSession !== 'function'
+) {
   throw new Error('@authon/nextjs/server CJS exports are incomplete');
 }
 `,
@@ -213,7 +225,13 @@ if (typeof nextServer.auth !== 'function' || typeof nextServer.currentUser !== '
 import { AuthonService } from '@authon/angular';
 import { Authon } from '@authon/js';
 import { authonMiddleware } from '@authon/nextjs';
-import { auth, currentUser } from '@authon/nextjs/server';
+import {
+  auth,
+  createAuthonAuthorizationRequest,
+  currentUser,
+  handleAuthonAuthorizationCallback,
+  revokeAuthonSession,
+} from '@authon/nextjs/server';
 import { authonModule } from '@authon/nuxt';
 import { AuthonProvider } from '@authon/react';
 import { AuthonMobileClient } from '@authon/react-native';
@@ -231,7 +249,10 @@ const svelte = createAuthonStore('pk_test_consumer');
 const vue = createAuthon({ publishableKey: 'pk_test_consumer' });
 type User = AuthonUser;
 type MobileContext = ReactNativeAuthonContextValue;
-void [core, angular, mobile, middleware, nuxt, svelte, vue, AuthonProvider, auth, currentUser];
+void [
+  core, angular, mobile, middleware, nuxt, svelte, vue, AuthonProvider, auth, currentUser,
+  createAuthonAuthorizationRequest, handleAuthonAuthorizationCallback, revokeAuthonSession,
+];
 void (null as User | MobileContext | null);
 `,
   );

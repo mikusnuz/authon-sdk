@@ -1,5 +1,13 @@
 # @authon/svelte
 
+## 0.8.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @authon/shared@0.8.0
+  - @authon/js@0.8.0
+
 ## 0.7.17
 
 ### Patch Changes

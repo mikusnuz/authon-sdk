@@ -157,4 +157,18 @@ describe('Next.js AuthonProvider compatibility cookie bridge', () => {
 
     expect(cookieSetter).toHaveBeenCalledTimes(1);
   });
+
+  it('never creates a JavaScript-readable token cookie in BFF mode', async () => {
+    const cookieSetter = vi.spyOn(document, 'cookie', 'set');
+
+    render(
+      <AuthonProvider publishableKey="pk_live_next-bff" config={{ sessionMode: 'bff' }}>
+        <div>BFF child</div>
+      </AuthonProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText('BFF child')).toBeTruthy());
+    expect(cookieSetter).not.toHaveBeenCalled();
+    expect(document.cookie).not.toContain('authon-token=');
+  });
 });

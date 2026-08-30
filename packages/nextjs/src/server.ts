@@ -1,6 +1,16 @@
 import type { AuthonUser } from '@authon/shared';
 import { verifyAuthonToken } from './verify';
 import type { TokenVerificationOptions } from './verify';
+export {
+  createAuthonAuthorizationRequest,
+  exchangeAuthonAuthorizationCode,
+  handleAuthonAuthorizationCallback,
+  revokeAuthonSession,
+} from './authorization-code';
+export type {
+  CreateAuthonAuthorizationRequestOptions,
+  HandleAuthonAuthorizationCallbackOptions,
+} from './authorization-code';
 
 const DEFAULT_COOKIE_NAME = 'authon-token';
 

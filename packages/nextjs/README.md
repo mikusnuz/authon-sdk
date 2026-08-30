@@ -187,6 +187,8 @@ export function SignOutButton() {
 
 ## Security and verification
 
+For BFF and server-session applications, prefer the token-free browser flow documented in [BFF authentication with Authorization Code + PKCE](../../docs/bff-authorization-code-pkce.md). It uses `sessionMode: 'bff'` and the `@authon/nextjs/server` transaction, exchange, and revoke helpers.
+
 `AuthonProvider` keeps the browser session compatible with Next.js middleware by
 copying the access token to a JavaScript-readable cookie. The default cookie name
 is `authon-token`; set `cookieName` on both the provider and middleware when you

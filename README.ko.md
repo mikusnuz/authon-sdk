@@ -176,3 +176,5 @@ pnpm dev
 ## 라이선스
 
 [MIT](./LICENSE)
+
+자체 HttpOnly 서버 세션을 사용하는 앱은 브라우저 토큰 저장 대신 BFF용 Authorization Code + PKCE 흐름을 사용하세요. 자세한 계약과 예제는 [BFF Authorization Code + PKCE 문서](./docs/bff-authorization-code-pkce.md)를 참고하세요.

@@ -1,7 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Authon } from '@authon/js';
-import type { AuthonConfig } from '@authon/js';
+import type { AuthonConfig, OpenSignInOptions } from '@authon/js';
 import type { AuthonUser, AuthonOrganization } from '@authon/shared';
 
 export interface AuthonContextValue {
@@ -11,8 +11,8 @@ export interface AuthonContextValue {
   activeOrganization: AuthonOrganization | null;
   setActiveOrganization: (org: AuthonOrganization | null) => void;
   signOut: () => Promise<void>;
-  openSignIn: () => Promise<void>;
-  openSignUp: () => Promise<void>;
+  openSignIn: (options?: OpenSignInOptions) => Promise<void>;
+  openSignUp: (options?: OpenSignInOptions) => Promise<void>;
   getToken: () => string | null;
   client: Authon | null;
 }
@@ -77,12 +77,12 @@ export function AuthonProvider({ publishableKey, children, config }: AuthonProvi
     await clientRef.current?.signOut();
   }, []);
 
-  const openSignIn = useCallback(async () => {
-    await clientRef.current?.openSignIn();
+  const openSignIn = useCallback(async (options?: OpenSignInOptions) => {
+    await clientRef.current?.openSignIn(options);
   }, []);
 
-  const openSignUp = useCallback(async () => {
-    await clientRef.current?.openSignUp();
+  const openSignUp = useCallback(async (options?: OpenSignInOptions) => {
+    await clientRef.current?.openSignUp(options);
   }, []);
 
   const getToken = useCallback(() => {

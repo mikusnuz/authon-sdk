@@ -78,6 +78,7 @@ export class SessionManager {
   private readonly apiUrl: string;
   private readonly publishableKey: string;
   private readonly storageKey: string;
+  private readonly persistenceEnabled: boolean;
   private refreshRetryCount = 0;
   private refreshInFlight: Promise<AuthTokens | null> | null = null;
   private readonly listeners = new Set<SessionChangeListener>();
@@ -90,11 +91,12 @@ export class SessionManager {
   private static readonly MAX_REFRESH_RETRIES = 3;
   private static readonly RETRY_DELAYS = [3, 10, 30]; // seconds
 
-  constructor(publishableKey: string, apiUrl: string) {
+  constructor(publishableKey: string, apiUrl: string, sessionMode: 'browser' | 'bff' = 'browser') {
     this.publishableKey = publishableKey;
     this.apiUrl = normalizeApiUrl(apiUrl);
     this.storageKey = `authon_session_v${STORAGE_SCHEMA_VERSION}_${encodeURIComponent(this.apiUrl)}_${stableDigest(publishableKey)}`;
-    this.restoreFromStorage();
+    this.persistenceEnabled = sessionMode === 'browser';
+    if (this.persistenceEnabled) this.restoreFromStorage();
   }
 
   private restoreFromStorage(): void {
@@ -142,6 +144,7 @@ export class SessionManager {
   }
 
   private persistToStorage(): boolean {
+    if (!this.persistenceEnabled) return false;
     if (typeof window === 'undefined') return false;
     try {
       if (this.accessToken && this.refreshToken && this.user) {
@@ -183,6 +186,7 @@ export class SessionManager {
 
   setSession(tokens: AuthTokens, reason: 'setSession' | 'tokenRefresh' = 'setSession'): void {
     if (this.destroyed) return;
+    if (!this.persistenceEnabled) throw new Error('Browser token sessions are disabled in BFF mode');
     this.cancelRefreshTimer();
     if (reason === 'setSession') this.invalidateRequests();
     this.accessToken = tokens.accessToken;
@@ -237,6 +241,7 @@ export class SessionManager {
 
   async refresh(): Promise<AuthTokens | null> {
     if (this.destroyed) return null;
+    if (!this.persistenceEnabled) return null;
     if (this.refreshInFlight) return this.refreshInFlight;
 
     if (!this.refreshToken) {

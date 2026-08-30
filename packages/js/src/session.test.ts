@@ -88,6 +88,21 @@ describe('SessionManager lifecycle and restoration', () => {
     expect(remounted.getToken()).not.toBeNull();
   });
 
+  it('never reads, writes, refreshes, or accepts tokens in BFF mode', async () => {
+    const storage = localStorage as MemoryStorage;
+    const getSpy = vi.spyOn(storage, 'getItem');
+    const setSpy = vi.spyOn(storage, 'setItem');
+    const removeSpy = vi.spyOn(storage, 'removeItem');
+    const manager = new SessionManager('pk_live_bff', DEFAULT_API_URL, 'bff');
+
+    expect(getSpy).not.toHaveBeenCalled();
+    expect(() => manager.setSession(tokens())).toThrow('disabled in BFF mode');
+    await expect(manager.refresh()).resolves.toBeNull();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(removeSpy).not.toHaveBeenCalled();
+  });
+
   it('keeps persisted storage on destroy but hides memory from the destroyed instance', () => {
     const manager = new SessionManager('pk_live_destroyed-getters', DEFAULT_API_URL);
     manager.setSession(tokens());

@@ -49,9 +49,10 @@ function SessionCookieBridge({ cookieName }: { cookieName?: string }) {
  * protected with the same XSS controls as the browser access token.
  */
 export function AuthonProvider({ cookieName, children, ...props }: AuthonProviderProps) {
+  const bffMode = props.config?.sessionMode === 'bff';
   return (
     <ReactAuthonProvider {...props}>
-      <SessionCookieBridge cookieName={cookieName} />
+      {!bffMode && <SessionCookieBridge cookieName={cookieName} />}
       {children}
     </ReactAuthonProvider>
   );

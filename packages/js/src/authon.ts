@@ -8,6 +8,8 @@ import type {
   UpdateOrganizationParams,
   InviteMemberParams,
   AuthTokens,
+  AuthorizationCodeOptions,
+  AuthorizationCodeResult,
   BrandingConfig,
   MfaSetupResponse,
   MfaStatus,
@@ -25,6 +27,7 @@ import type {
   AuthonEvents,
   OAuthFlowMode,
   OAuthSignInOptions,
+  OpenSignInOptions,
 } from './types';
 import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
@@ -54,6 +57,8 @@ export class Authon {
   private initialized = false;
   private captchaEnabled = false;
   private turnstileSiteKey = '';
+  private authorizationContext: { options: AuthorizationCodeOptions; requestId: string } | null = null;
+  private verificationToken: string | null = null;
 
   constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
@@ -64,8 +69,9 @@ export class Authon {
       locale: config?.locale || 'en',
       containerId: config?.containerId,
       appearance: config?.appearance,
+      sessionMode: config?.sessionMode || 'browser',
     };
-    this.session = new SessionManager(publishableKey, this.config.apiUrl);
+    this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
     this.session.subscribe((change) => {
       this.emit('sessionChanged', change);
       if (change.reason === 'setSession' && change.user) {
@@ -80,7 +86,7 @@ export class Authon {
         this.emit('signedOut');
       }
     });
-    this.consumeRedirectResultFromUrl();
+    if (this.config.sessionMode === 'browser') this.consumeRedirectResultFromUrl();
   }
 
   // ── Public API ──
@@ -90,14 +96,71 @@ export class Authon {
     return [...this.providers];
   }
 
-  async openSignIn(): Promise<void> {
+  async openSignIn(options?: OpenSignInOptions): Promise<void> {
     await this.ensureInitialized();
+    await this.prepareAuthorization(options);
     this.getModal().open('signIn');
   }
 
-  async openSignUp(): Promise<void> {
+  async openSignUp(options?: OpenSignInOptions): Promise<void> {
     await this.ensureInitialized();
+    await this.prepareAuthorization(options);
     this.getModal().open('signUp');
+  }
+
+  private async prepareAuthorization(options?: OpenSignInOptions): Promise<void> {
+    this.authorizationContext = null;
+    this.verificationToken = null;
+    if (!options || options.responseType !== 'code') return;
+    if (this.config.sessionMode !== 'bff') {
+      throw new Error("Authorization code flow requires sessionMode: 'bff'");
+    }
+    if (options.codeChallengeMethod !== 'S256') throw new Error('Only S256 PKCE is supported');
+    const result = await this.apiPost<{ authorizationRequestId: string; expiresIn: number }>(
+      '/v1/auth/authorize',
+      options,
+    );
+    this.authorizationContext = {
+      options: { ...options },
+      requestId: result.authorizationRequestId,
+    };
+  }
+
+  private authorizationRequestBody(): { authorizationRequestId?: string } {
+    return this.authorizationContext ? { authorizationRequestId: this.authorizationContext.requestId } : {};
+  }
+
+  private handleAuthCompletion(response: AuthTokens | AuthorizationCodeResult): AuthonUser {
+    if (this.authorizationContext) {
+      const candidate = response as Partial<AuthTokens & AuthorizationCodeResult>;
+      if (candidate.accessToken || candidate.refreshToken || !candidate.authorizationCode) {
+        throw new Error('Authon returned an unsafe token response for authorization code mode');
+      }
+      if (candidate.state !== this.authorizationContext.options.state) {
+        throw new Error('Authorization state mismatch');
+      }
+      if (!Number.isFinite(candidate.expiresIn) || candidate.expiresIn! <= 0 || candidate.expiresIn! > 60) {
+        throw new Error('Invalid authorization code expiry');
+      }
+      const result: AuthorizationCodeResult = {
+        authorizationCode: candidate.authorizationCode,
+        state: candidate.state,
+        expiresIn: candidate.expiresIn!,
+      };
+      const redirect = new URL(this.authorizationContext.options.redirectUri);
+      redirect.searchParams.set('code', result.authorizationCode);
+      redirect.searchParams.set('state', result.state);
+      redirect.searchParams.set('expires_in', String(result.expiresIn));
+      this.authorizationContext = null;
+      this.verificationToken = null;
+      this.emit('authorizationCompleted', result);
+      window.location.assign(redirect.toString());
+      return result as unknown as AuthonUser;
+    }
+    const tokens = response as AuthTokens;
+    if (!tokens.accessToken || !tokens.refreshToken || !tokens.user) throw new Error('Invalid token response');
+    this.session.setSession(tokens);
+    return tokens.user;
   }
 
   async openProfile(): Promise<void> {
@@ -164,14 +227,15 @@ export class Authon {
   }
 
   async signInWithEmail(email: string, password: string, turnstileToken?: string): Promise<AuthonUser | { needsVerification: true; email: string }> {
-    const body: Record<string, string> = { email, password };
+    const body: Record<string, string> = { email, password, ...this.authorizationRequestBody() };
     if (turnstileToken) body.turnstileToken = turnstileToken;
-    const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string; needsVerification?: boolean; email?: string }>(
+    const res = await this.apiPost<(AuthTokens | AuthorizationCodeResult) & { mfaRequired?: boolean; mfaToken?: string; needsVerification?: boolean; email?: string; verificationToken?: string }>(
       '/v1/auth/signin',
       body,
     );
     if (res.needsVerification) {
       const verificationEmail = res.email || email;
+      this.verificationToken = res.verificationToken ?? null;
       this.emit('verificationRequired', verificationEmail);
       return { needsVerification: true, email: verificationEmail };
     }
@@ -179,8 +243,7 @@ export class Authon {
       this.emit('mfaRequired', res.mfaToken);
       throw new AuthonMfaRequiredError(res.mfaToken);
     }
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
 
   async signUpWithEmail(
@@ -188,28 +251,36 @@ export class Authon {
     password: string,
     meta?: { displayName?: string; turnstileToken?: string },
   ): Promise<AuthonUser | { needsVerification: true; email: string }> {
-    const res = await this.apiPost<AuthTokens & { needsVerification?: boolean; email?: string }>('/v1/auth/signup', {
+    const res = await this.apiPost<(AuthTokens | AuthorizationCodeResult) & { needsVerification?: boolean; email?: string; verificationToken?: string }>('/v1/auth/signup', {
       email,
       password,
       ...meta,
+      ...this.authorizationRequestBody(),
     });
     if (res.needsVerification) {
       const verificationEmail = res.email || email;
+      this.verificationToken = res.verificationToken ?? null;
       this.emit('verificationRequired', verificationEmail);
       return { needsVerification: true, email: verificationEmail };
     }
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
 
   async verifyEmail(email: string, code: string): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens>('/v1/auth/verify-email', { email, code });
-    this.session.setSession(res);
-    return res.user;
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/verify-email', {
+      email,
+      code,
+      ...(this.verificationToken ? { verificationToken: this.verificationToken } : {}),
+    });
+    return this.handleAuthCompletion(res);
   }
 
   async resendVerificationCode(email: string): Promise<void> {
-    await this.apiPost<{ sent: true }>('/v1/auth/resend-code', { email });
+    const result = await this.apiPost<{ sent: true; verificationToken?: string }>('/v1/auth/resend-code', {
+      email,
+      ...this.authorizationRequestBody(),
+    });
+    if (result.verificationToken) this.verificationToken = result.verificationToken;
   }
 
   async signOut(): Promise<void> {
@@ -274,9 +345,8 @@ export class Authon {
   }
 
   async verifyMfa(mfaToken: string, code: string): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens>('/v1/auth/mfa/verify', { mfaToken, code });
-    this.session.setSession(res);
-    return res.user;
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/mfa/verify', { mfaToken, code });
+    return this.handleAuthCompletion(res);
   }
 
   async disableMfa(code: string): Promise<void> {
@@ -313,11 +383,11 @@ export class Authon {
   // ── Passwordless ──
 
   async sendMagicLink(email: string): Promise<void> {
-    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', { email });
+    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', { email, ...this.authorizationRequestBody() });
   }
 
   async sendEmailOtp(email: string): Promise<void> {
-    await this.apiPost<{ message: string }>('/v1/auth/passwordless/email-otp', { email });
+    await this.apiPost<{ message: string }>('/v1/auth/passwordless/email-otp', { email, ...this.authorizationRequestBody() });
   }
 
   async verifyPasswordless(options: {
@@ -325,9 +395,8 @@ export class Authon {
     email?: string;
     code?: string;
   }): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens>('/v1/auth/passwordless/verify', options);
-    this.session.setSession(res);
-    return res.user;
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/passwordless/verify', options);
+    return this.handleAuthCompletion(res);
   }
 
   // ── Passkeys ──
@@ -368,7 +437,7 @@ export class Authon {
   async authenticateWithPasskey(email?: string): Promise<AuthonUser> {
     const options = await this.apiPost<{ options: Record<string, unknown> }>(
       '/v1/auth/passkeys/authenticate/options',
-      email ? { email } : undefined,
+      { ...(email ? { email } : {}), ...this.authorizationRequestBody() },
     );
 
     const credential = await navigator.credentials.get({
@@ -376,7 +445,7 @@ export class Authon {
     }) as PublicKeyCredential;
 
     const assertion = credential.response as AuthenticatorAssertionResponse;
-    const res = await this.apiPost<AuthTokens>('/v1/auth/passkeys/authenticate/verify', {
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/passkeys/authenticate/verify', {
       id: credential.id,
       rawId: this.bufferToBase64url(credential.rawId),
       type: credential.type,
@@ -388,8 +457,7 @@ export class Authon {
       },
     });
 
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
 
   async listPasskeys(): Promise<PasskeyCredential[]> {
@@ -423,6 +491,7 @@ export class Authon {
       chain,
       walletType,
       ...(chainId != null ? { chainId } : {}),
+      ...this.authorizationRequestBody(),
     });
   }
 
@@ -433,15 +502,14 @@ export class Authon {
     chain: Web3Chain,
     walletType: Web3WalletType,
   ): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens>('/v1/auth/web3/verify', {
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/web3/verify', {
       message,
       signature,
       address,
       chain,
       walletType,
     });
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
 
   async listWallets(): Promise<Web3Wallet[]> {
@@ -816,13 +884,16 @@ export class Authon {
       let cleaned = false;
       const storageKey = `authon-oauth-${state}`;
 
-      const resolve = (tokens: AuthTokens) => {
+      const codeMode = Boolean(this.authorizationContext);
+      const resolve = (response: AuthTokens | AuthorizationCodeResult) => {
         if (resolved) return;
         resolved = true;
         cleanup();
         try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
-        try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
-        this.session.setSession(tokens);
+        if (!codeMode) {
+          try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
+        }
+        this.handleAuthCompletion(response);
         this.modal?.close();
       };
 
@@ -838,10 +909,12 @@ export class Authon {
       const pollApi = async () => {
         if (resolved || cleaned) return;
         try {
-          const result = await this.apiGet<{ status: string; accessToken?: string; refreshToken?: string; expiresIn?: number; user?: AuthonUser; message?: string }>(
+          const result = await this.apiGet<{ status: string; accessToken?: string; refreshToken?: string; authorizationCode?: string; state?: string; expiresIn?: number; user?: AuthonUser; message?: string }>(
             `/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`,
           );
-          if (result.status === 'completed' && result.accessToken) {
+          if (codeMode && result.status === 'completed' && result.authorizationCode) {
+            resolve({ authorizationCode: result.authorizationCode, state: result.state!, expiresIn: result.expiresIn! });
+          } else if (result.status === 'completed' && result.accessToken) {
             resolve({
               accessToken: result.accessToken,
               refreshToken: result.refreshToken!,
@@ -870,9 +943,26 @@ export class Authon {
       // 1. postMessage handler (fast path — Chrome/Firefox desktop)
       const expectedOrigin = new URL(this.config.apiUrl).origin;
       const messageHandler = (e: MessageEvent) => {
-        if (e.origin !== expectedOrigin && e.origin !== window.location.origin) return;
-        if (e.data?.type !== 'authon-oauth-callback') return;
-        if (e.data.tokens) {
+        if (e.origin !== expectedOrigin || e.source !== popup) return;
+        if (codeMode) {
+          if (e.data?.type === 'authon-oauth-error') {
+            handleError('Authentication failed');
+            return;
+          }
+          if (e.data?.type !== 'authon-oauth-code') return;
+          if (e.data.state !== this.authorizationContext?.options.state) return;
+          if (
+            e.data.accessToken
+            || e.data.refreshToken
+            || typeof e.data.authorizationCode !== 'string'
+            || !Number.isFinite(e.data.expiresIn)
+            || e.data.expiresIn <= 0
+            || e.data.expiresIn > 60
+          ) return;
+          resolve({ authorizationCode: e.data.authorizationCode, state: e.data.state, expiresIn: e.data.expiresIn });
+          return;
+        }
+        if (e.data?.type === 'authon-oauth-callback' && e.data.tokens) {
           resolve(e.data.tokens as AuthTokens);
         }
       };
@@ -887,16 +977,18 @@ export class Authon {
           else if (data.error) handleError(data.error);
         } catch { /* ignore */ }
       };
-      window.addEventListener('storage', storageHandler);
+      if (!codeMode) window.addEventListener('storage', storageHandler);
 
       // Also check localStorage immediately in case it was set before listener
-      try {
-        const existing = localStorage.getItem(storageKey);
-        if (existing) {
-          const data = JSON.parse(existing);
-          if (data.tokens) { resolve(data.tokens as AuthTokens); return; }
-        }
-      } catch { /* ignore */ }
+      if (!codeMode) {
+        try {
+          const existing = localStorage.getItem(storageKey);
+          if (existing) {
+            const data = JSON.parse(existing);
+            if (data.tokens) { resolve(data.tokens as AuthTokens); return; }
+          }
+        } catch { /* ignore */ }
+      }
 
       // 3. API polling (fallback for all browsers)
       const apiPollTimer = setInterval(pollApi, 1500);
@@ -963,6 +1055,9 @@ export class Authon {
 
     if (returnTo) {
       params.set('returnTo', returnTo);
+    }
+    if (this.authorizationContext) {
+      params.set('authorizationRequestId', this.authorizationContext.requestId);
     }
 
     return this.apiGet<{ url: string; state: string; flowMode?: 'popup' | 'redirect' }>(

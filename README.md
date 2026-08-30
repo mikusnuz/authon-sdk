@@ -11,15 +11,15 @@ Official SDKs for [Authon](https://authon.dev) — a modern authentication platf
 
 | Package | Version | Description | npm |
 |---------|---------|-------------|-----|
-| [`@authon/shared`](./packages/shared) | 0.7.17 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
-| [`@authon/js`](./packages/js) | 0.7.17 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
-| [`@authon/react`](./packages/react) | 0.7.17 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
-| [`@authon/nextjs`](./packages/nextjs) | 0.7.17 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
-| [`@authon/vue`](./packages/vue) | 0.7.17 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
-| [`@authon/nuxt`](./packages/nuxt) | 0.7.17 | Auto-imported composables, components, and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
-| [`@authon/svelte`](./packages/svelte) | 0.7.17 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
-| [`@authon/angular`](./packages/angular) | 0.7.17 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
-| [`@authon/react-native`](./packages/react-native) | 0.7.17 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
+| [`@authon/shared`](./packages/shared) | 0.8.0 | Shared types and constants for all Authon SDKs | [npm](https://www.npmjs.com/package/@authon/shared) |
+| [`@authon/js`](./packages/js) | 0.8.0 | Core browser SDK — ShadowDOM modal, OAuth, sessions, CAPTCHA, i18n (21 languages) | [npm](https://www.npmjs.com/package/@authon/js) |
+| [`@authon/react`](./packages/react) | 0.8.0 | Provider, hooks, and components for React | [npm](https://www.npmjs.com/package/@authon/react) |
+| [`@authon/nextjs`](./packages/nextjs) | 0.8.0 | Middleware and React components for Next.js | [npm](https://www.npmjs.com/package/@authon/nextjs) |
+| [`@authon/vue`](./packages/vue) | 0.8.0 | Plugin, composables, and components for Vue 3 | [npm](https://www.npmjs.com/package/@authon/vue) |
+| [`@authon/nuxt`](./packages/nuxt) | 0.8.0 | Auto-imported composables, components, and middleware for Nuxt 3 | [npm](https://www.npmjs.com/package/@authon/nuxt) |
+| [`@authon/svelte`](./packages/svelte) | 0.8.0 | Stores and components for Svelte | [npm](https://www.npmjs.com/package/@authon/svelte) |
+| [`@authon/angular`](./packages/angular) | 0.8.0 | Service, guard, and components for Angular | [npm](https://www.npmjs.com/package/@authon/angular) |
+| [`@authon/react-native`](./packages/react-native) | 0.8.0 | Mobile authentication for React Native | [npm](https://www.npmjs.com/package/@authon/react-native) |
 | [`@authon/create-app`](./packages/create-authon-app) | 0.1.4 | CLI scaffolding tool — create new projects with Authon pre-configured | [npm](https://www.npmjs.com/package/@authon/create-app) |
 
 ## Features
@@ -237,3 +237,5 @@ pnpm dev
 ## License
 
 [MIT](./LICENSE)
+
+For applications with their own HttpOnly server session, use the BFF-safe Authorization Code + PKCE flow instead of browser token storage. See [BFF authentication with Authorization Code + PKCE](./docs/bff-authorization-code-pkce.md).

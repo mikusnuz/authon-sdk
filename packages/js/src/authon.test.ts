@@ -80,6 +80,51 @@ describe('Authon session event contracts', () => {
     ]);
   });
 
+  it('keeps authorization-code responses out of storage, cookies and signedIn events', async () => {
+    const authon = new Authon('pk_live_bff-events', { sessionMode: 'bff' });
+    const signedIn = vi.fn();
+    const completed = vi.fn();
+    authon.on('signedIn', signedIn);
+    authon.on('authorizationCompleted', completed);
+    (authon as any).authorizationContext = {
+      requestId: 'request-id',
+      options: {
+        responseType: 'code',
+        redirectUri: 'https://app.example.com/api/auth/callback',
+        codeChallenge: 'challenge',
+        codeChallengeMethod: 'S256',
+        state: 'expected-state',
+      },
+    };
+    const setSpy = vi.spyOn(localStorage, 'setItem');
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({
+      authorizationCode: 'authorization-code', state: 'expected-state', expiresIn: 60,
+    }));
+
+    await authon.signInWithEmail('person@example.com', 'secret');
+
+    expect(completed).toHaveBeenCalledWith({ authorizationCode: 'authorization-code', state: 'expected-state', expiresIn: 60 });
+    expect(signedIn).not.toHaveBeenCalled();
+    expect(setSpy).not.toHaveBeenCalled();
+    expect(document.cookie).not.toContain('authorization-code');
+  });
+
+  it('fails closed when code mode receives tokens or the wrong state', async () => {
+    const make = () => {
+      const authon = new Authon('pk_live_bff-fail-closed', { sessionMode: 'bff' });
+      (authon as any).authorizationContext = {
+        requestId: 'request-id',
+        options: { responseType: 'code', redirectUri: 'https://app.example.com/callback', codeChallenge: 'challenge', codeChallengeMethod: 'S256', state: 'expected-state' },
+      };
+      return authon;
+    };
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    await expect(make().signInWithEmail('person@example.com', 'secret')).rejects.toThrow('unsafe token response');
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ authorizationCode: 'code', state: 'wrong-state', expiresIn: 60 }));
+    await expect(make().signInWithEmail('person@example.com', 'secret')).rejects.toThrow('state mismatch');
+    expect(localStorage.length).toBe(0);
+  });
+
   it('emits tokenRefreshed and sessionChanged exactly once after refresh', async () => {
     const authon = new Authon('pk_live_authon-refresh');
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));

@@ -2498,6 +2498,7 @@ var SessionManager = class _SessionManager {
   apiUrl;
   publishableKey;
   storageKey;
+  persistenceEnabled;
   refreshRetryCount = 0;
   refreshInFlight = null;
   listeners = /* @__PURE__ */ new Set();
@@ -2509,11 +2510,12 @@ var SessionManager = class _SessionManager {
   static MAX_REFRESH_RETRIES = 3;
   static RETRY_DELAYS = [3, 10, 30];
   // seconds
-  constructor(publishableKey, apiUrl) {
+  constructor(publishableKey, apiUrl, sessionMode = "browser") {
     this.publishableKey = publishableKey;
     this.apiUrl = normalizeApiUrl(apiUrl);
     this.storageKey = `authon_session_v${STORAGE_SCHEMA_VERSION}_${encodeURIComponent(this.apiUrl)}_${stableDigest(publishableKey)}`;
-    this.restoreFromStorage();
+    this.persistenceEnabled = sessionMode === "browser";
+    if (this.persistenceEnabled) this.restoreFromStorage();
   }
   restoreFromStorage() {
     if (typeof window === "undefined") return;
@@ -2552,6 +2554,7 @@ var SessionManager = class _SessionManager {
     }
   }
   persistToStorage() {
+    if (!this.persistenceEnabled) return false;
     if (typeof window === "undefined") return false;
     try {
       if (this.accessToken && this.refreshToken && this.user) {
@@ -2587,6 +2590,7 @@ var SessionManager = class _SessionManager {
   }
   setSession(tokens, reason = "setSession") {
     if (this.destroyed) return;
+    if (!this.persistenceEnabled) throw new Error("Browser token sessions are disabled in BFF mode");
     this.cancelRefreshTimer();
     if (reason === "setSession") this.invalidateRequests();
     this.accessToken = tokens.accessToken;
@@ -2636,6 +2640,7 @@ var SessionManager = class _SessionManager {
   }
   async refresh() {
     if (this.destroyed) return null;
+    if (!this.persistenceEnabled) return null;
     if (this.refreshInFlight) return this.refreshInFlight;
     if (!this.refreshToken) {
       this.clearSession("refreshFailed");
@@ -3170,6 +3175,8 @@ var Authon = class {
   initialized = false;
   captchaEnabled = false;
   turnstileSiteKey = "";
+  authorizationContext = null;
+  verificationToken = null;
   constructor(publishableKey, config) {
     this.publishableKey = publishableKey;
     this.config = {
@@ -3178,9 +3185,10 @@ var Authon = class {
       theme: config?.theme || "auto",
       locale: config?.locale || "en",
       containerId: config?.containerId,
-      appearance: config?.appearance
+      appearance: config?.appearance,
+      sessionMode: config?.sessionMode || "browser"
     };
-    this.session = new SessionManager(publishableKey, this.config.apiUrl);
+    this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
     this.session.subscribe((change) => {
       this.emit("sessionChanged", change);
       if (change.reason === "setSession" && change.user) {
@@ -3191,20 +3199,74 @@ var Authon = class {
         this.emit("signedOut");
       }
     });
-    this.consumeRedirectResultFromUrl();
+    if (this.config.sessionMode === "browser") this.consumeRedirectResultFromUrl();
   }
   // ── Public API ──
   async getProviders() {
     await this.ensureInitialized();
     return [...this.providers];
   }
-  async openSignIn() {
+  async openSignIn(options) {
     await this.ensureInitialized();
+    await this.prepareAuthorization(options);
     this.getModal().open("signIn");
   }
-  async openSignUp() {
+  async openSignUp(options) {
     await this.ensureInitialized();
+    await this.prepareAuthorization(options);
     this.getModal().open("signUp");
+  }
+  async prepareAuthorization(options) {
+    this.authorizationContext = null;
+    this.verificationToken = null;
+    if (!options || options.responseType !== "code") return;
+    if (this.config.sessionMode !== "bff") {
+      throw new Error("Authorization code flow requires sessionMode: 'bff'");
+    }
+    if (options.codeChallengeMethod !== "S256") throw new Error("Only S256 PKCE is supported");
+    const result = await this.apiPost(
+      "/v1/auth/authorize",
+      options
+    );
+    this.authorizationContext = {
+      options: { ...options },
+      requestId: result.authorizationRequestId
+    };
+  }
+  authorizationRequestBody() {
+    return this.authorizationContext ? { authorizationRequestId: this.authorizationContext.requestId } : {};
+  }
+  handleAuthCompletion(response) {
+    if (this.authorizationContext) {
+      const candidate = response;
+      if (candidate.accessToken || candidate.refreshToken || !candidate.authorizationCode) {
+        throw new Error("Authon returned an unsafe token response for authorization code mode");
+      }
+      if (candidate.state !== this.authorizationContext.options.state) {
+        throw new Error("Authorization state mismatch");
+      }
+      if (!Number.isFinite(candidate.expiresIn) || candidate.expiresIn <= 0 || candidate.expiresIn > 60) {
+        throw new Error("Invalid authorization code expiry");
+      }
+      const result = {
+        authorizationCode: candidate.authorizationCode,
+        state: candidate.state,
+        expiresIn: candidate.expiresIn
+      };
+      const redirect = new URL(this.authorizationContext.options.redirectUri);
+      redirect.searchParams.set("code", result.authorizationCode);
+      redirect.searchParams.set("state", result.state);
+      redirect.searchParams.set("expires_in", String(result.expiresIn));
+      this.authorizationContext = null;
+      this.verificationToken = null;
+      this.emit("authorizationCompleted", result);
+      window.location.assign(redirect.toString());
+      return result;
+    }
+    const tokens = response;
+    if (!tokens.accessToken || !tokens.refreshToken || !tokens.user) throw new Error("Invalid token response");
+    this.session.setSession(tokens);
+    return tokens.user;
   }
   async openProfile() {
     const user = this.getUser();
@@ -3262,7 +3324,7 @@ var Authon = class {
     await this.startOAuthFlow(provider, options);
   }
   async signInWithEmail(email, password, turnstileToken) {
-    const body = { email, password };
+    const body = { email, password, ...this.authorizationRequestBody() };
     if (turnstileToken) body.turnstileToken = turnstileToken;
     const res = await this.apiPost(
       "/v1/auth/signin",
@@ -3270,6 +3332,7 @@ var Authon = class {
     );
     if (res.needsVerification) {
       const verificationEmail = res.email || email;
+      this.verificationToken = res.verificationToken ?? null;
       this.emit("verificationRequired", verificationEmail);
       return { needsVerification: true, email: verificationEmail };
     }
@@ -3277,30 +3340,37 @@ var Authon = class {
       this.emit("mfaRequired", res.mfaToken);
       throw new AuthonMfaRequiredError(res.mfaToken);
     }
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   async signUpWithEmail(email, password, meta) {
     const res = await this.apiPost("/v1/auth/signup", {
       email,
       password,
-      ...meta
+      ...meta,
+      ...this.authorizationRequestBody()
     });
     if (res.needsVerification) {
       const verificationEmail = res.email || email;
+      this.verificationToken = res.verificationToken ?? null;
       this.emit("verificationRequired", verificationEmail);
       return { needsVerification: true, email: verificationEmail };
     }
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   async verifyEmail(email, code) {
-    const res = await this.apiPost("/v1/auth/verify-email", { email, code });
-    this.session.setSession(res);
-    return res.user;
+    const res = await this.apiPost("/v1/auth/verify-email", {
+      email,
+      code,
+      ...this.verificationToken ? { verificationToken: this.verificationToken } : {}
+    });
+    return this.handleAuthCompletion(res);
   }
   async resendVerificationCode(email) {
-    await this.apiPost("/v1/auth/resend-code", { email });
+    const result = await this.apiPost("/v1/auth/resend-code", {
+      email,
+      ...this.authorizationRequestBody()
+    });
+    if (result.verificationToken) this.verificationToken = result.verificationToken;
   }
   async signOut() {
     await this.session.signOut();
@@ -3353,8 +3423,7 @@ var Authon = class {
   }
   async verifyMfa(mfaToken, code) {
     const res = await this.apiPost("/v1/auth/mfa/verify", { mfaToken, code });
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   async disableMfa(code) {
     const token = this.session.getToken();
@@ -3386,15 +3455,14 @@ var Authon = class {
   }
   // ── Passwordless ──
   async sendMagicLink(email) {
-    await this.apiPost("/v1/auth/passwordless/magic-link", { email });
+    await this.apiPost("/v1/auth/passwordless/magic-link", { email, ...this.authorizationRequestBody() });
   }
   async sendEmailOtp(email) {
-    await this.apiPost("/v1/auth/passwordless/email-otp", { email });
+    await this.apiPost("/v1/auth/passwordless/email-otp", { email, ...this.authorizationRequestBody() });
   }
   async verifyPasswordless(options) {
     const res = await this.apiPost("/v1/auth/passwordless/verify", options);
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   // ── Passkeys ──
   async registerPasskey(name) {
@@ -3428,7 +3496,7 @@ var Authon = class {
   async authenticateWithPasskey(email) {
     const options = await this.apiPost(
       "/v1/auth/passkeys/authenticate/options",
-      email ? { email } : void 0
+      { ...email ? { email } : {}, ...this.authorizationRequestBody() }
     );
     const credential = await navigator.credentials.get({
       publicKey: this.deserializeRequestOptions(options.options)
@@ -3445,8 +3513,7 @@ var Authon = class {
         userHandle: assertion.userHandle ? this.bufferToBase64url(assertion.userHandle) : void 0
       }
     });
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   async listPasskeys() {
     const token = this.session.getToken();
@@ -3469,7 +3536,8 @@ var Authon = class {
       address,
       chain,
       walletType,
-      ...chainId != null ? { chainId } : {}
+      ...chainId != null ? { chainId } : {},
+      ...this.authorizationRequestBody()
     });
   }
   async web3Verify(message, signature, address, chain, walletType) {
@@ -3480,8 +3548,7 @@ var Authon = class {
       chain,
       walletType
     });
-    this.session.setSession(res);
-    return res.user;
+    return this.handleAuthCompletion(res);
   }
   async listWallets() {
     const token = this.session.getToken();
@@ -3801,7 +3868,8 @@ var Authon = class {
       let resolved = false;
       let cleaned = false;
       const storageKey = `authon-oauth-${state}`;
-      const resolve = (tokens) => {
+      const codeMode = Boolean(this.authorizationContext);
+      const resolve = (response) => {
         if (resolved) return;
         resolved = true;
         cleanup();
@@ -3809,11 +3877,13 @@ var Authon = class {
           if (popup && !popup.closed) popup.close();
         } catch {
         }
-        try {
-          localStorage.removeItem(storageKey);
-        } catch {
+        if (!codeMode) {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {
+          }
         }
-        this.session.setSession(tokens);
+        this.handleAuthCompletion(response);
         this.modal?.close();
       };
       const handleError = (msg) => {
@@ -3830,7 +3900,9 @@ var Authon = class {
           const result = await this.apiGet(
             `/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`
           );
-          if (result.status === "completed" && result.accessToken) {
+          if (codeMode && result.status === "completed" && result.authorizationCode) {
+            resolve({ authorizationCode: result.authorizationCode, state: result.state, expiresIn: result.expiresIn });
+          } else if (result.status === "completed" && result.accessToken) {
             resolve({
               accessToken: result.accessToken,
               refreshToken: result.refreshToken,
@@ -3855,9 +3927,19 @@ var Authon = class {
       };
       const expectedOrigin = new URL(this.config.apiUrl).origin;
       const messageHandler = (e) => {
-        if (e.origin !== expectedOrigin && e.origin !== window.location.origin) return;
-        if (e.data?.type !== "authon-oauth-callback") return;
-        if (e.data.tokens) {
+        if (e.origin !== expectedOrigin || e.source !== popup) return;
+        if (codeMode) {
+          if (e.data?.type === "authon-oauth-error") {
+            handleError("Authentication failed");
+            return;
+          }
+          if (e.data?.type !== "authon-oauth-code") return;
+          if (e.data.state !== this.authorizationContext?.options.state) return;
+          if (e.data.accessToken || e.data.refreshToken || typeof e.data.authorizationCode !== "string" || !Number.isFinite(e.data.expiresIn) || e.data.expiresIn <= 0 || e.data.expiresIn > 60) return;
+          resolve({ authorizationCode: e.data.authorizationCode, state: e.data.state, expiresIn: e.data.expiresIn });
+          return;
+        }
+        if (e.data?.type === "authon-oauth-callback" && e.data.tokens) {
           resolve(e.data.tokens);
         }
       };
@@ -3871,17 +3953,19 @@ var Authon = class {
         } catch {
         }
       };
-      window.addEventListener("storage", storageHandler);
-      try {
-        const existing = localStorage.getItem(storageKey);
-        if (existing) {
-          const data = JSON.parse(existing);
-          if (data.tokens) {
-            resolve(data.tokens);
-            return;
+      if (!codeMode) window.addEventListener("storage", storageHandler);
+      if (!codeMode) {
+        try {
+          const existing = localStorage.getItem(storageKey);
+          if (existing) {
+            const data = JSON.parse(existing);
+            if (data.tokens) {
+              resolve(data.tokens);
+              return;
+            }
           }
+        } catch {
         }
-      } catch {
       }
       const apiPollTimer = setInterval(pollApi, 1500);
       const visibilityHandler = () => {
@@ -3932,6 +4016,9 @@ var Authon = class {
     });
     if (returnTo) {
       params.set("returnTo", returnTo);
+    }
+    if (this.authorizationContext) {
+      params.set("authorizationRequestId", this.authorizationContext.requestId);
     }
     return this.apiGet(
       `/v1/auth/oauth/${provider}/url?${params.toString()}`

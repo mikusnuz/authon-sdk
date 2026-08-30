@@ -74,6 +74,31 @@ export interface AuthTokens {
   user: AuthonUser;
 }
 
+export interface AuthorizationCodeOptions {
+  responseType: 'code';
+  redirectUri: string;
+  codeChallenge: string;
+  codeChallengeMethod: 'S256';
+  state: string;
+}
+
+export interface AuthorizationCodeResult {
+  authorizationCode: string;
+  state: string;
+  expiresIn: number;
+}
+
+export interface AuthorizationCodeExchangeRequest {
+  grantType: 'authorization_code';
+  code: string;
+  codeVerifier: string;
+  redirectUri: string;
+}
+
+export interface AuthorizationCodeExchangeResponse extends AuthTokens {
+  sessionId: string;
+}
+
 export interface WebhookEvent {
   id: string;
   type: string;

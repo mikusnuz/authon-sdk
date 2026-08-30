@@ -66,6 +66,27 @@ interface AuthTokens {
     expiresIn: number;
     user: AuthonUser;
 }
+interface AuthorizationCodeOptions {
+    responseType: 'code';
+    redirectUri: string;
+    codeChallenge: string;
+    codeChallengeMethod: 'S256';
+    state: string;
+}
+interface AuthorizationCodeResult {
+    authorizationCode: string;
+    state: string;
+    expiresIn: number;
+}
+interface AuthorizationCodeExchangeRequest {
+    grantType: 'authorization_code';
+    code: string;
+    codeVerifier: string;
+    redirectUri: string;
+}
+interface AuthorizationCodeExchangeResponse extends AuthTokens {
+    sessionId: string;
+}
 interface WebhookEvent {
     id: string;
     type: string;
@@ -271,4 +292,4 @@ declare const AUDIT_EVENTS: {
     readonly ORG_INVITATION_ACCEPTED: "org.invitation.accepted";
 };
 
-export { API_KEY_PREFIXES, AUDIT_EVENTS, type AuditLogEntry, type AuditLogListResponse, type AuditLogQueryParams, type AuditLogStats, type AuthTokens, type AuthonOrganization, type AuthonProvider, type AuthonSession, type AuthonUser, type BrandingConfig, type CreateJwtTemplateParams, type CreateOrganizationParams, DEFAULT_BRANDING, DEFAULT_SESSION_CONFIG, type InviteMemberParams, type JwtClaimMapping, type JwtPreviewResponse, type JwtTemplate, type MfaSetupResponse, type MfaStatus, type MfaVerifyResponse, OAUTH_PROVIDERS, type OAuthProviderType, type OrganizationInvitation, type OrganizationListResponse, type OrganizationMember, PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type PasskeyCredential, type PasswordlessResult, type SessionConfig, type SessionInfo, type UpdateJwtTemplateParams, type UpdateOrganizationParams, WEBHOOK_EVENTS, type Web3Chain, type Web3NonceResponse, type Web3Wallet, type Web3WalletType, type WebhookEvent, type WebhookEventType };
+export { API_KEY_PREFIXES, AUDIT_EVENTS, type AuditLogEntry, type AuditLogListResponse, type AuditLogQueryParams, type AuditLogStats, type AuthTokens, type AuthonOrganization, type AuthonProvider, type AuthonSession, type AuthonUser, type AuthorizationCodeExchangeRequest, type AuthorizationCodeExchangeResponse, type AuthorizationCodeOptions, type AuthorizationCodeResult, type BrandingConfig, type CreateJwtTemplateParams, type CreateOrganizationParams, DEFAULT_BRANDING, DEFAULT_SESSION_CONFIG, type InviteMemberParams, type JwtClaimMapping, type JwtPreviewResponse, type JwtTemplate, type MfaSetupResponse, type MfaStatus, type MfaVerifyResponse, OAUTH_PROVIDERS, type OAuthProviderType, type OrganizationInvitation, type OrganizationListResponse, type OrganizationMember, PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type PasskeyCredential, type PasswordlessResult, type SessionConfig, type SessionInfo, type UpdateJwtTemplateParams, type UpdateOrganizationParams, WEBHOOK_EVENTS, type Web3Chain, type Web3NonceResponse, type Web3Wallet, type Web3WalletType, type WebhookEvent, type WebhookEventType };

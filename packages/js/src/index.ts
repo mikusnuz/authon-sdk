@@ -5,6 +5,7 @@ export type {
   AuthonEventType,
   OAuthFlowMode,
   OAuthSignInOptions,
+  OpenSignInOptions,
 } from './types';
 export { AuthonMfaRequiredError } from './types';
 export type { SessionChange, SessionChangeListener, SessionChangeReason } from './session';

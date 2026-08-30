@@ -1,4 +1,4 @@
-import type { AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet } from '@authon/shared';
+import type { AuthorizationCodeOptions, AuthorizationCodeResult, AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet } from '@authon/shared';
 import type { SessionChange } from './session';
 
 export type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
@@ -10,6 +10,7 @@ export interface AuthonConfig {
   theme?: 'light' | 'dark' | 'auto';
   locale?: string;
   appearance?: Partial<BrandingConfig>;
+  sessionMode?: 'browser' | 'bff';
 }
 
 export interface OAuthSignInOptions {
@@ -26,7 +27,10 @@ export interface AuthonEvents {
   passkeyRegistered: (credential: PasskeyCredential) => void;
   web3Connected: (wallet: Web3Wallet) => void;
   error: (error: Error) => void;
+  authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
+
+export type OpenSignInOptions = AuthorizationCodeOptions | { responseType?: 'token' };
 
 export type AuthonEventType = keyof AuthonEvents;
 

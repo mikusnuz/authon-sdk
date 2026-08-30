@@ -1,5 +1,17 @@
 # @authon/react
 
+## 0.8.0
+
+### Minor Changes
+
+- Add BFF-safe Authorization Code + PKCE authentication, browser-storage-free JS mode, and Next.js server transaction/exchange/revoke helpers.
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @authon/shared@0.8.0
+  - @authon/js@0.8.0
+
 ## 0.7.17
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import { AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet, OAuthProviderType, MfaSetupResponse, MfaStatus, Web3Chain, Web3WalletType, Web3NonceResponse, SessionInfo, OrganizationListResponse, CreateOrganizationParams, AuthonOrganization, UpdateOrganizationParams, OrganizationMember, InviteMemberParams, OrganizationInvitation } from '@authon/shared';
+import { AuthonUser, BrandingConfig, AuthorizationCodeOptions, PasskeyCredential, Web3Wallet, AuthorizationCodeResult, OAuthProviderType, MfaSetupResponse, MfaStatus, Web3Chain, Web3WalletType, Web3NonceResponse, SessionInfo, OrganizationListResponse, CreateOrganizationParams, AuthonOrganization, UpdateOrganizationParams, OrganizationMember, InviteMemberParams, OrganizationInvitation } from '@authon/shared';
 
 type SessionChangeReason = 'setSession' | 'tokenRefresh' | 'updateUser' | 'clearSession' | 'signOut' | 'refreshFailed';
 interface SessionChange {
@@ -16,6 +16,7 @@ interface AuthonConfig {
     theme?: 'light' | 'dark' | 'auto';
     locale?: string;
     appearance?: Partial<BrandingConfig>;
+    sessionMode?: 'browser' | 'bff';
 }
 interface OAuthSignInOptions {
     flowMode?: OAuthFlowMode;
@@ -30,7 +31,11 @@ interface AuthonEvents {
     passkeyRegistered: (credential: PasskeyCredential) => void;
     web3Connected: (wallet: Web3Wallet) => void;
     error: (error: Error) => void;
+    authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
+type OpenSignInOptions = AuthorizationCodeOptions | {
+    responseType?: 'token';
+};
 type AuthonEventType = keyof AuthonEvents;
 declare class AuthonMfaRequiredError extends Error {
     readonly mfaToken: string;
@@ -50,10 +55,15 @@ declare class Authon {
     private initialized;
     private captchaEnabled;
     private turnstileSiteKey;
+    private authorizationContext;
+    private verificationToken;
     constructor(publishableKey: string, config?: AuthonConfig);
     getProviders(): Promise<OAuthProviderType[]>;
-    openSignIn(): Promise<void>;
-    openSignUp(): Promise<void>;
+    openSignIn(options?: OpenSignInOptions): Promise<void>;
+    openSignUp(options?: OpenSignInOptions): Promise<void>;
+    private prepareAuthorization;
+    private authorizationRequestBody;
+    private handleAuthCompletion;
     openProfile(): Promise<void>;
     closeProfile(): void;
     /** Update theme at runtime without destroying form state */
@@ -781,4 +791,4 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
