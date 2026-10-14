@@ -97,12 +97,14 @@ declare class WalletClient {
         ui?: WalletConfirmUi;
     }): Promise<void>;
     /**
-     * Recovers the wallet on a new browser with the passkey. Must be called from a
-     * user click handler: the browser only allows the passkey prompt (or the popup
-     * fallback) during a user gesture.
+     * Restores the wallet on this browser with the passkey (one confirmation tap and
+     * the system prompt). By default this browser is added as another device and
+     * other devices keep working. Pass `resetOtherDevices: true` when a device was
+     * lost: the key is re-split and every other device must restore again.
      */
     restore(options?: {
         ui?: WalletConfirmUi;
+        resetOtherDevices?: boolean;
     }): Promise<void>;
     revokeDevice(deviceId: string): Promise<void>;
     onChange(listener: WalletChangeListener): () => void;

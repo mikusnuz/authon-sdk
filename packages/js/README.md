@@ -192,7 +192,8 @@ const signature = await authon.wallet.signMessage('hello');
 button.onclick = () => authon.wallet.protect({
   ui: { title: 'Secure your account', confirmLabel: 'Continue with Face ID', accentColor: '#16a34a' },
 });
-restoreButton.onclick = () => authon.wallet.restore(); // when wallet.needsRestore is true
+restoreButton.onclick = () => authon.wallet.restore(); // when wallet.needsRestore is true; other devices keep working
+lostDeviceButton.onclick = () => authon.wallet.restore({ resetOtherDevices: true }); // a device was lost
 
 const provider = authon.wallet.provider(1);           // EIP-1193: eth_accounts, eth_requestAccounts,
                                                       // eth_chainId, personal_sign,
