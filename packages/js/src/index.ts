@@ -1,4 +1,4 @@
-export { Authon } from './authon';
+export { Authon, MAGIC_LINK_PARAM } from './authon';
 export type {
   AuthonConfig,
   AuthonEvents,
@@ -8,6 +8,7 @@ export type {
   OAuthFlowMode,
   OAuthSignInOptions,
   OpenSignInOptions,
+  SendMagicLinkOptions,
 } from './types';
 export { AuthonMfaRequiredError } from './types';
 export type { SessionChange, SessionChangeListener, SessionChangeReason } from './session';

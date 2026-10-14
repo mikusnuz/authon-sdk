@@ -95,7 +95,18 @@ var translations = {
     displayName: "Display Name",
     save: "Save",
     signOut: "Sign Out",
-    sessions: "Active Sessions"
+    sessions: "Active Sessions",
+    emailCode: "Continue with email code",
+    enterEmail: "Enter your email",
+    sendMagicLink: "Send Magic Link",
+    sendCode: "Send code",
+    sendingMagicLink: "Sending magic link...",
+    sendingCode: "Sending code...",
+    magicLinkSent: "Magic link sent!",
+    checkInbox: "Check your email inbox",
+    enterCode: "Enter verification code",
+    codeSentTo: "6-digit code sent to {email}",
+    cancel: "Cancel"
   },
   ko: {
     welcomeBack: "\uB2E4\uC2DC \uC624\uC2E0 \uAC78 \uD658\uC601\uD569\uB2C8\uB2E4",
@@ -119,7 +130,18 @@ var translations = {
     displayName: "\uD45C\uC2DC \uC774\uB984",
     save: "\uC800\uC7A5",
     signOut: "\uB85C\uADF8\uC544\uC6C3",
-    sessions: "\uD65C\uC131 \uC138\uC158"
+    sessions: "\uD65C\uC131 \uC138\uC158",
+    emailCode: "\uC774\uBA54\uC77C \uCF54\uB4DC\uB85C \uACC4\uC18D\uD558\uAE30",
+    enterEmail: "\uC774\uBA54\uC77C\uC744 \uC785\uB825\uD558\uC138\uC694",
+    sendMagicLink: "\uB9E4\uC9C1 \uB9C1\uD06C \uBCF4\uB0B4\uAE30",
+    sendCode: "\uCF54\uB4DC \uBCF4\uB0B4\uAE30",
+    sendingMagicLink: "\uB9E4\uC9C1 \uB9C1\uD06C\uB97C \uBCF4\uB0B4\uB294 \uC911...",
+    sendingCode: "\uCF54\uB4DC\uB97C \uBCF4\uB0B4\uB294 \uC911...",
+    magicLinkSent: "\uB9E4\uC9C1 \uB9C1\uD06C\uB97C \uBCF4\uB0C8\uC2B5\uB2C8\uB2E4",
+    checkInbox: "\uBA54\uC77C\uD568\uC5D0\uC11C \uB9C1\uD06C\uB97C \uB20C\uB7EC \uC8FC\uC138\uC694",
+    enterCode: "\uBC1B\uC740 \uCF54\uB4DC\uB97C \uC785\uB825\uD558\uC138\uC694",
+    codeSentTo: "{email}(\uC73C)\uB85C 6\uC790\uB9AC \uCF54\uB4DC\uB97C \uBCF4\uB0C8\uC2B5\uB2C8\uB2E4",
+    cancel: "\uCDE8\uC18C"
   },
   ja: {
     welcomeBack: "\u304A\u304B\u3048\u308A\u306A\u3055\u3044",
@@ -143,7 +165,18 @@ var translations = {
     displayName: "\u8868\u793A\u540D",
     save: "\u4FDD\u5B58",
     signOut: "\u30B5\u30A4\u30F3\u30A2\u30A6\u30C8",
-    sessions: "\u30A2\u30AF\u30C6\u30A3\u30D6\u30BB\u30C3\u30B7\u30E7\u30F3"
+    sessions: "\u30A2\u30AF\u30C6\u30A3\u30D6\u30BB\u30C3\u30B7\u30E7\u30F3",
+    emailCode: "\u30E1\u30FC\u30EB\u30B3\u30FC\u30C9\u3067\u7D9A\u884C",
+    enterEmail: "\u30E1\u30FC\u30EB\u30A2\u30C9\u30EC\u30B9\u3092\u5165\u529B",
+    sendMagicLink: "\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3092\u9001\u4FE1",
+    sendCode: "\u30B3\u30FC\u30C9\u3092\u9001\u4FE1",
+    sendingMagicLink: "\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3092\u9001\u4FE1\u4E2D...",
+    sendingCode: "\u30B3\u30FC\u30C9\u3092\u9001\u4FE1\u4E2D...",
+    magicLinkSent: "\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3092\u9001\u4FE1\u3057\u307E\u3057\u305F",
+    checkInbox: "\u30E1\u30FC\u30EB\u306E\u53D7\u4FE1\u30C8\u30EC\u30A4\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044",
+    enterCode: "\u8A8D\u8A3C\u30B3\u30FC\u30C9\u3092\u5165\u529B",
+    codeSentTo: "{email} \u306B6\u6841\u306E\u30B3\u30FC\u30C9\u3092\u9001\u4FE1\u3057\u307E\u3057\u305F",
+    cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB"
   },
   "zh-CN": {
     welcomeBack: "\u6B22\u8FCE\u56DE\u6765",
@@ -167,7 +200,18 @@ var translations = {
     displayName: "\u663E\u793A\u540D\u79F0",
     save: "\u4FDD\u5B58",
     signOut: "\u9000\u51FA\u767B\u5F55",
-    sessions: "\u6D3B\u8DC3\u4F1A\u8BDD"
+    sessions: "\u6D3B\u8DC3\u4F1A\u8BDD",
+    emailCode: "\u4F7F\u7528\u90AE\u7BB1\u9A8C\u8BC1\u7801\u7EE7\u7EED",
+    enterEmail: "\u8BF7\u8F93\u5165\u90AE\u7BB1",
+    sendMagicLink: "\u53D1\u9001\u9B54\u6CD5\u94FE\u63A5",
+    sendCode: "\u53D1\u9001\u9A8C\u8BC1\u7801",
+    sendingMagicLink: "\u6B63\u5728\u53D1\u9001\u9B54\u6CD5\u94FE\u63A5...",
+    sendingCode: "\u6B63\u5728\u53D1\u9001\u9A8C\u8BC1\u7801...",
+    magicLinkSent: "\u9B54\u6CD5\u94FE\u63A5\u5DF2\u53D1\u9001\uFF01",
+    checkInbox: "\u8BF7\u67E5\u770B\u90AE\u7BB1\u6536\u4EF6\u7BB1",
+    enterCode: "\u8F93\u5165\u9A8C\u8BC1\u7801",
+    codeSentTo: "6 \u4F4D\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001\u81F3 {email}",
+    cancel: "\u53D6\u6D88"
   },
   "zh-TW": {
     welcomeBack: "\u6B61\u8FCE\u56DE\u4F86",
@@ -191,7 +235,18 @@ var translations = {
     displayName: "\u986F\u793A\u540D\u7A31",
     save: "\u5132\u5B58",
     signOut: "\u767B\u51FA",
-    sessions: "\u6D3B\u8E8D\u5DE5\u4F5C\u968E\u6BB5"
+    sessions: "\u6D3B\u8E8D\u5DE5\u4F5C\u968E\u6BB5",
+    emailCode: "\u4F7F\u7528\u96FB\u5B50\u90F5\u4EF6\u9A57\u8B49\u78BC\u7E7C\u7E8C",
+    enterEmail: "\u8ACB\u8F38\u5165\u96FB\u5B50\u90F5\u4EF6",
+    sendMagicLink: "\u50B3\u9001\u9B54\u6CD5\u9023\u7D50",
+    sendCode: "\u50B3\u9001\u9A57\u8B49\u78BC",
+    sendingMagicLink: "\u6B63\u5728\u50B3\u9001\u9B54\u6CD5\u9023\u7D50...",
+    sendingCode: "\u6B63\u5728\u50B3\u9001\u9A57\u8B49\u78BC...",
+    magicLinkSent: "\u9B54\u6CD5\u9023\u7D50\u5DF2\u50B3\u9001\uFF01",
+    checkInbox: "\u8ACB\u67E5\u770B\u96FB\u5B50\u90F5\u4EF6\u6536\u4EF6\u5323",
+    enterCode: "\u8F38\u5165\u9A57\u8B49\u78BC",
+    codeSentTo: "6 \u4F4D\u6578\u9A57\u8B49\u78BC\u5DF2\u50B3\u9001\u81F3 {email}",
+    cancel: "\u53D6\u6D88"
   },
   "pt-BR": {
     welcomeBack: "Bem-vindo de volta",
@@ -215,7 +270,18 @@ var translations = {
     displayName: "Nome de exibicao",
     save: "Salvar",
     signOut: "Sair",
-    sessions: "Sessoes ativas"
+    sessions: "Sessoes ativas",
+    emailCode: "Continuar com codigo por e-mail",
+    enterEmail: "Digite seu e-mail",
+    sendMagicLink: "Enviar Magic Link",
+    sendCode: "Enviar codigo",
+    sendingMagicLink: "Enviando magic link...",
+    sendingCode: "Enviando codigo...",
+    magicLinkSent: "Magic link enviado!",
+    checkInbox: "Verifique sua caixa de entrada",
+    enterCode: "Digite o codigo de verificacao",
+    codeSentTo: "Codigo de 6 digitos enviado para {email}",
+    cancel: "Cancelar"
   },
   es: {
     welcomeBack: "Bienvenido de nuevo",
@@ -239,7 +305,18 @@ var translations = {
     displayName: "Nombre de visualizacion",
     save: "Guardar",
     signOut: "Cerrar sesion",
-    sessions: "Sesiones activas"
+    sessions: "Sesiones activas",
+    emailCode: "Continuar con codigo por correo",
+    enterEmail: "Introduce tu correo electronico",
+    sendMagicLink: "Enviar Magic Link",
+    sendCode: "Enviar codigo",
+    sendingMagicLink: "Enviando magic link...",
+    sendingCode: "Enviando codigo...",
+    magicLinkSent: "Magic link enviado!",
+    checkInbox: "Revisa tu bandeja de entrada",
+    enterCode: "Introduce el codigo de verificacion",
+    codeSentTo: "Codigo de 6 digitos enviado a {email}",
+    cancel: "Cancelar"
   },
   de: {
     welcomeBack: "Willkommen zuruck",
@@ -263,7 +340,18 @@ var translations = {
     displayName: "Anzeigename",
     save: "Speichern",
     signOut: "Abmelden",
-    sessions: "Aktive Sitzungen"
+    sessions: "Aktive Sitzungen",
+    emailCode: "Weiter mit E-Mail-Code",
+    enterEmail: "E-Mail-Adresse eingeben",
+    sendMagicLink: "Magic Link senden",
+    sendCode: "Code senden",
+    sendingMagicLink: "Magic Link wird gesendet...",
+    sendingCode: "Code wird gesendet...",
+    magicLinkSent: "Magic Link gesendet!",
+    checkInbox: "Prufe dein E-Mail-Postfach",
+    enterCode: "Bestatigungscode eingeben",
+    codeSentTo: "6-stelliger Code an {email} gesendet",
+    cancel: "Abbrechen"
   },
   fr: {
     welcomeBack: "Bon retour",
@@ -287,7 +375,18 @@ var translations = {
     displayName: "Nom d'affichage",
     save: "Enregistrer",
     signOut: "Se deconnecter",
-    sessions: "Sessions actives"
+    sessions: "Sessions actives",
+    emailCode: "Continuer avec un code par e-mail",
+    enterEmail: "Saisissez votre e-mail",
+    sendMagicLink: "Envoyer le Magic Link",
+    sendCode: "Envoyer le code",
+    sendingMagicLink: "Envoi du magic link...",
+    sendingCode: "Envoi du code...",
+    magicLinkSent: "Magic link envoye !",
+    checkInbox: "Verifiez votre boite de reception",
+    enterCode: "Saisissez le code de verification",
+    codeSentTo: "Code a 6 chiffres envoye a {email}",
+    cancel: "Annuler"
   },
   hi: {
     welcomeBack: "\u0935\u093E\u092A\u0938\u0940 \u092A\u0930 \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
@@ -311,7 +410,18 @@ var translations = {
     displayName: "\u092A\u094D\u0930\u0926\u0930\u094D\u0936\u0928 \u0928\u093E\u092E",
     save: "\u0938\u0939\u0947\u091C\u0947\u0902",
     signOut: "\u0938\u093E\u0907\u0928 \u0906\u0909\u091F",
-    sessions: "\u0938\u0915\u094D\u0930\u093F\u092F \u0938\u0924\u094D\u0930"
+    sessions: "\u0938\u0915\u094D\u0930\u093F\u092F \u0938\u0924\u094D\u0930",
+    emailCode: "\u0908\u092E\u0947\u0932 \u0915\u094B\u0921 \u0938\u0947 \u091C\u093E\u0930\u0940 \u0930\u0916\u0947\u0902",
+    enterEmail: "\u0905\u092A\u0928\u093E \u0908\u092E\u0947\u0932 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
+    sendMagicLink: "\u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u092D\u0947\u091C\u0947\u0902",
+    sendCode: "\u0915\u094B\u0921 \u092D\u0947\u091C\u0947\u0902",
+    sendingMagicLink: "\u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u092D\u0947\u091C\u093E \u091C\u093E \u0930\u0939\u093E \u0939\u0948...",
+    sendingCode: "\u0915\u094B\u0921 \u092D\u0947\u091C\u093E \u091C\u093E \u0930\u0939\u093E \u0939\u0948...",
+    magicLinkSent: "\u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u092D\u0947\u091C \u0926\u093F\u092F\u093E \u0917\u092F\u093E!",
+    checkInbox: "\u0905\u092A\u0928\u093E \u0908\u092E\u0947\u0932 \u0907\u0928\u092C\u0949\u0915\u094D\u0938 \u0926\u0947\u0916\u0947\u0902",
+    enterCode: "\u0938\u0924\u094D\u092F\u093E\u092A\u0928 \u0915\u094B\u0921 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
+    codeSentTo: "{email} \u092A\u0930 6 \u0905\u0902\u0915\u094B\u0902 \u0915\u093E \u0915\u094B\u0921 \u092D\u0947\u091C\u093E \u0917\u092F\u093E",
+    cancel: "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902"
   },
   tr: {
     welcomeBack: "Tekrar hos geldiniz",
@@ -335,7 +445,18 @@ var translations = {
     displayName: "Goruntu adi",
     save: "Kaydet",
     signOut: "Cikis yap",
-    sessions: "Aktif oturumlar"
+    sessions: "Aktif oturumlar",
+    emailCode: "E-posta kodu ile devam et",
+    enterEmail: "E-posta adresinizi girin",
+    sendMagicLink: "Magic Link gonder",
+    sendCode: "Kod gonder",
+    sendingMagicLink: "Magic Link gonderiliyor...",
+    sendingCode: "Kod gonderiliyor...",
+    magicLinkSent: "Magic Link gonderildi!",
+    checkInbox: "E-posta kutunuzu kontrol edin",
+    enterCode: "Dogrulama kodunu girin",
+    codeSentTo: "{email} adresine 6 haneli kod gonderildi",
+    cancel: "Iptal"
   },
   id: {
     welcomeBack: "Selamat datang kembali",
@@ -359,7 +480,18 @@ var translations = {
     displayName: "Nama tampilan",
     save: "Simpan",
     signOut: "Keluar",
-    sessions: "Sesi aktif"
+    sessions: "Sesi aktif",
+    emailCode: "Lanjutkan dengan kode email",
+    enterEmail: "Masukkan email Anda",
+    sendMagicLink: "Kirim Magic Link",
+    sendCode: "Kirim kode",
+    sendingMagicLink: "Mengirim magic link...",
+    sendingCode: "Mengirim kode...",
+    magicLinkSent: "Magic link terkirim!",
+    checkInbox: "Periksa kotak masuk email Anda",
+    enterCode: "Masukkan kode verifikasi",
+    codeSentTo: "Kode 6 digit dikirim ke {email}",
+    cancel: "Batal"
   },
   vi: {
     welcomeBack: "Chao mung tro lai",
@@ -383,7 +515,18 @@ var translations = {
     displayName: "Ten hien thi",
     save: "Luu",
     signOut: "Dang xuat",
-    sessions: "Phien dang nhap hoat dong"
+    sessions: "Phien dang nhap hoat dong",
+    emailCode: "Tiep tuc voi ma qua email",
+    enterEmail: "Nhap email cua ban",
+    sendMagicLink: "Gui Magic Link",
+    sendCode: "Gui ma",
+    sendingMagicLink: "Dang gui magic link...",
+    sendingCode: "Dang gui ma...",
+    magicLinkSent: "Da gui magic link!",
+    checkInbox: "Kiem tra hop thu email cua ban",
+    enterCode: "Nhap ma xac minh",
+    codeSentTo: "Ma 6 chu so da gui den {email}",
+    cancel: "Huy"
   },
   th: {
     welcomeBack: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E01\u0E25\u0E31\u0E1A",
@@ -407,7 +550,18 @@ var translations = {
     displayName: "\u0E0A\u0E37\u0E48\u0E2D\u0E17\u0E35\u0E48\u0E41\u0E2A\u0E14\u0E07",
     save: "\u0E1A\u0E31\u0E19\u0E17\u0E36\u0E01",
     signOut: "\u0E2D\u0E2D\u0E01\u0E08\u0E32\u0E01\u0E23\u0E30\u0E1A\u0E1A",
-    sessions: "\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19\u0E17\u0E35\u0E48\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48"
+    sessions: "\u0E40\u0E0B\u0E2A\u0E0A\u0E31\u0E19\u0E17\u0E35\u0E48\u0E43\u0E0A\u0E49\u0E07\u0E32\u0E19\u0E2D\u0E22\u0E39\u0E48",
+    emailCode: "\u0E14\u0E33\u0E40\u0E19\u0E34\u0E19\u0E01\u0E32\u0E23\u0E15\u0E48\u0E2D\u0E14\u0E49\u0E27\u0E22\u0E23\u0E2B\u0E31\u0E2A\u0E17\u0E32\u0E07\u0E2D\u0E35\u0E40\u0E21\u0E25",
+    enterEmail: "\u0E01\u0E23\u0E2D\u0E01\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13",
+    sendMagicLink: "\u0E2A\u0E48\u0E07 Magic Link",
+    sendCode: "\u0E2A\u0E48\u0E07\u0E23\u0E2B\u0E31\u0E2A",
+    sendingMagicLink: "\u0E01\u0E33\u0E25\u0E31\u0E07\u0E2A\u0E48\u0E07 Magic Link...",
+    sendingCode: "\u0E01\u0E33\u0E25\u0E31\u0E07\u0E2A\u0E48\u0E07\u0E23\u0E2B\u0E31\u0E2A...",
+    magicLinkSent: "\u0E2A\u0E48\u0E07 Magic Link \u0E41\u0E25\u0E49\u0E27!",
+    checkInbox: "\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E08\u0E14\u0E2B\u0E21\u0E32\u0E22\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13",
+    enterCode: "\u0E01\u0E23\u0E2D\u0E01\u0E23\u0E2B\u0E31\u0E2A\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19",
+    codeSentTo: "\u0E2A\u0E48\u0E07\u0E23\u0E2B\u0E31\u0E2A 6 \u0E2B\u0E25\u0E31\u0E01\u0E44\u0E1B\u0E17\u0E35\u0E48 {email} \u0E41\u0E25\u0E49\u0E27",
+    cancel: "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01"
   },
   ru: {
     welcomeBack: "\u0421 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435\u043C",
@@ -431,7 +585,18 @@ var translations = {
     displayName: "\u041E\u0442\u043E\u0431\u0440\u0430\u0436\u0430\u0435\u043C\u043E\u0435 \u0438\u043C\u044F",
     save: "\u0421\u043E\u0445\u0440\u0430\u043D\u0438\u0442\u044C",
     signOut: "\u0412\u044B\u0439\u0442\u0438",
-    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0441\u0435\u0430\u043D\u0441\u044B"
+    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u044B\u0435 \u0441\u0435\u0430\u043D\u0441\u044B",
+    emailCode: "\u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0438\u0442\u044C \u0441 \u043A\u043E\u0434\u043E\u043C \u0438\u0437 \u043F\u0438\u0441\u044C\u043C\u0430",
+    enterEmail: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u0430\u0434\u0440\u0435\u0441 \u044D\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u043E\u0439 \u043F\u043E\u0447\u0442\u044B",
+    sendMagicLink: "\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C Magic Link",
+    sendCode: "\u041E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043A\u043E\u0434",
+    sendingMagicLink: "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 Magic Link...",
+    sendingCode: "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430 \u043A\u043E\u0434\u0430...",
+    magicLinkSent: "Magic Link \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D!",
+    checkInbox: "\u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0432\u0445\u043E\u0434\u044F\u0449\u0438\u0435 \u043F\u0438\u0441\u044C\u043C\u0430",
+    enterCode: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043A\u043E\u0434 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F",
+    codeSentTo: "6-\u0437\u043D\u0430\u0447\u043D\u044B\u0439 \u043A\u043E\u0434 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D \u043D\u0430 {email}",
+    cancel: "\u041E\u0442\u043C\u0435\u043D\u0430"
   },
   it: {
     welcomeBack: "Bentornato",
@@ -455,7 +620,18 @@ var translations = {
     displayName: "Nome visualizzato",
     save: "Salva",
     signOut: "Esci",
-    sessions: "Sessioni attive"
+    sessions: "Sessioni attive",
+    emailCode: "Continua con codice via email",
+    enterEmail: "Inserisci la tua email",
+    sendMagicLink: "Invia Magic Link",
+    sendCode: "Invia codice",
+    sendingMagicLink: "Invio del magic link...",
+    sendingCode: "Invio del codice...",
+    magicLinkSent: "Magic link inviato!",
+    checkInbox: "Controlla la tua casella email",
+    enterCode: "Inserisci il codice di verifica",
+    codeSentTo: "Codice a 6 cifre inviato a {email}",
+    cancel: "Annulla"
   },
   pl: {
     welcomeBack: "Witaj ponownie",
@@ -479,7 +655,18 @@ var translations = {
     displayName: "Nazwa wyswietlana",
     save: "Zapisz",
     signOut: "Wyloguj sie",
-    sessions: "Aktywne sesje"
+    sessions: "Aktywne sesje",
+    emailCode: "Kontynuuj z kodem e-mail",
+    enterEmail: "Wpisz swoj e-mail",
+    sendMagicLink: "Wyslij Magic Link",
+    sendCode: "Wyslij kod",
+    sendingMagicLink: "Wysylanie magic linku...",
+    sendingCode: "Wysylanie kodu...",
+    magicLinkSent: "Magic Link wyslany!",
+    checkInbox: "Sprawdz swoja skrzynke e-mail",
+    enterCode: "Wpisz kod weryfikacyjny",
+    codeSentTo: "6-cyfrowy kod wyslano na {email}",
+    cancel: "Anuluj"
   },
   nl: {
     welcomeBack: "Welkom terug",
@@ -503,7 +690,18 @@ var translations = {
     displayName: "Weergavenaam",
     save: "Opslaan",
     signOut: "Uitloggen",
-    sessions: "Actieve sessies"
+    sessions: "Actieve sessies",
+    emailCode: "Doorgaan met e-mailcode",
+    enterEmail: "Voer je e-mailadres in",
+    sendMagicLink: "Magic Link versturen",
+    sendCode: "Code versturen",
+    sendingMagicLink: "Magic Link wordt verstuurd...",
+    sendingCode: "Code wordt verstuurd...",
+    magicLinkSent: "Magic Link verstuurd!",
+    checkInbox: "Controleer je e-mailinbox",
+    enterCode: "Voer de verificatiecode in",
+    codeSentTo: "Code van 6 cijfers verstuurd naar {email}",
+    cancel: "Annuleren"
   },
   ar: {
     welcomeBack: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0639\u0648\u062F\u062A\u0643",
@@ -527,7 +725,18 @@ var translations = {
     displayName: "\u0627\u0644\u0627\u0633\u0645 \u0627\u0644\u0645\u0639\u0631\u0648\u0636",
     save: "\u062D\u0641\u0638",
     signOut: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062E\u0631\u0648\u062C",
-    sessions: "\u0627\u0644\u062C\u0644\u0633\u0627\u062A \u0627\u0644\u0646\u0634\u0637\u0629"
+    sessions: "\u0627\u0644\u062C\u0644\u0633\u0627\u062A \u0627\u0644\u0646\u0634\u0637\u0629",
+    emailCode: "\u0627\u0644\u0645\u062A\u0627\u0628\u0639\u0629 \u0628\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0631\u0645\u0632 \u0627\u0644\u0628\u0631\u064A\u062F \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
+    enterEmail: "\u0623\u062F\u062E\u0644 \u0628\u0631\u064A\u062F\u0643 \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
+    sendMagicLink: "\u0625\u0631\u0633\u0627\u0644 Magic Link",
+    sendCode: "\u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0645\u0632",
+    sendingMagicLink: "\u062C\u0627\u0631\u064D \u0625\u0631\u0633\u0627\u0644 Magic Link...",
+    sendingCode: "\u062C\u0627\u0631\u064D \u0625\u0631\u0633\u0627\u0644 \u0627\u0644\u0631\u0645\u0632...",
+    magicLinkSent: "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 Magic Link!",
+    checkInbox: "\u062A\u062D\u0642\u0642 \u0645\u0646 \u0635\u0646\u062F\u0648\u0642 \u0628\u0631\u064A\u062F\u0643 \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
+    enterCode: "\u0623\u062F\u062E\u0644 \u0631\u0645\u0632 \u0627\u0644\u062A\u062D\u0642\u0642",
+    codeSentTo: "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0645\u0632 \u0645\u0646 6 \u0623\u0631\u0642\u0627\u0645 \u0625\u0644\u0649 {email}",
+    cancel: "\u0625\u0644\u063A\u0627\u0621"
   },
   sv: {
     welcomeBack: "Valkommen tillbaka",
@@ -551,7 +760,18 @@ var translations = {
     displayName: "Visningsnamn",
     save: "Spara",
     signOut: "Logga ut",
-    sessions: "Aktiva sessioner"
+    sessions: "Aktiva sessioner",
+    emailCode: "Fortsatt med e-postkod",
+    enterEmail: "Ange din e-post",
+    sendMagicLink: "Skicka Magic Link",
+    sendCode: "Skicka kod",
+    sendingMagicLink: "Skickar magic link...",
+    sendingCode: "Skickar kod...",
+    magicLinkSent: "Magic link skickad!",
+    checkInbox: "Kontrollera din inkorg",
+    enterCode: "Ange verifieringskod",
+    codeSentTo: "6-siffrig kod skickad till {email}",
+    cancel: "Avbryt"
   },
   uk: {
     welcomeBack: "\u0417 \u043F\u043E\u0432\u0435\u0440\u043D\u0435\u043D\u043D\u044F\u043C",
@@ -575,14 +795,26 @@ var translations = {
     displayName: "\u0412\u0456\u0434\u043E\u0431\u0440\u0430\u0436\u0443\u0432\u0430\u043D\u0435 \u0456\u043C'\u044F",
     save: "\u0417\u0431\u0435\u0440\u0435\u0433\u0442\u0438",
     signOut: "\u0412\u0438\u0439\u0442\u0438",
-    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u0456 \u0441\u0435\u0430\u043D\u0441\u0438"
+    sessions: "\u0410\u043A\u0442\u0438\u0432\u043D\u0456 \u0441\u0435\u0430\u043D\u0441\u0438",
+    emailCode: "\u041F\u0440\u043E\u0434\u043E\u0432\u0436\u0438\u0442\u0438 \u0437 \u043A\u043E\u0434\u043E\u043C \u0437 \u043B\u0438\u0441\u0442\u0430",
+    enterEmail: "\u0412\u0432\u0435\u0434\u0456\u0442\u044C \u0435\u043B\u0435\u043A\u0442\u0440\u043E\u043D\u043D\u0443 \u043F\u043E\u0448\u0442\u0443",
+    sendMagicLink: "\u041D\u0430\u0434\u0456\u0441\u043B\u0430\u0442\u0438 Magic Link",
+    sendCode: "\u041D\u0430\u0434\u0456\u0441\u043B\u0430\u0442\u0438 \u043A\u043E\u0434",
+    sendingMagicLink: "\u041D\u0430\u0434\u0441\u0438\u043B\u0430\u043D\u043D\u044F Magic Link...",
+    sendingCode: "\u041D\u0430\u0434\u0441\u0438\u043B\u0430\u043D\u043D\u044F \u043A\u043E\u0434\u0443...",
+    magicLinkSent: "Magic Link \u043D\u0430\u0434\u0456\u0441\u043B\u0430\u043D\u043E!",
+    checkInbox: "\u041F\u0435\u0440\u0435\u0432\u0456\u0440\u0442\u0435 \u0432\u0445\u0456\u0434\u043D\u0456 \u043B\u0438\u0441\u0442\u0438",
+    enterCode: "\u0412\u0432\u0435\u0434\u0456\u0442\u044C \u043A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F",
+    codeSentTo: "6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u043D\u0430\u0434\u0456\u0441\u043B\u0430\u043D\u043E \u043D\u0430 {email}",
+    cancel: "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438"
   }
 };
 function getStrings(locale) {
-  if (locale in translations) return translations[locale];
+  const en = translations.en;
+  if (locale in translations) return { ...en, ...translations[locale] };
   const lang = locale.split("-")[0].split("_")[0];
-  if (lang in translations) return translations[lang];
-  return translations.en;
+  if (lang in translations) return { ...en, ...translations[lang] };
+  return en;
 }
 
 // src/modal.ts
@@ -925,6 +1157,11 @@ var ModalRenderer = class {
     this.currentOverlay = "web3-success";
     this.renderOverlayWithData({ truncatedAddress: truncated, walletId });
   }
+  /** Passwordless sign-in sends a 6-digit code instead of a link ('both' is the legacy code value). */
+  usesEmailCode() {
+    const method = this.branding?.passwordlessMethod;
+    return method === "email_otp" || method === "both";
+  }
   showPasswordlessSent() {
     this.overlayError = "";
     this.currentOverlay = "passwordless-sent";
@@ -1045,7 +1282,7 @@ var ModalRenderer = class {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
-        <span>${this.t.magicLink}</span>
+        <span>${this.usesEmailCode() ? this.t.emailCode : this.t.magicLink}</span>
       </button>`);
     }
     if (b.showPasskey) {
@@ -1546,13 +1783,13 @@ var ModalRenderer = class {
       }
       case "passwordless-input": {
         return `
-          <div class="overlay-title">Enter your email</div>
+          <div class="overlay-title">${this.t.enterEmail}</div>
           <div class="pwless-form">
             <input type="email" placeholder="you@example.com" class="input" id="pwless-email" autocomplete="email" />
-            <button class="pwless-submit" id="pwless-submit-btn">Send Magic Link</button>
+            <button class="pwless-submit" id="pwless-submit-btn">${this.usesEmailCode() ? this.t.sendCode : this.t.sendMagicLink}</button>
           </div>
           ${errorHtml}
-          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+          <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
         `;
       }
       case "passwordless-sending": {
@@ -1561,7 +1798,7 @@ var ModalRenderer = class {
             <circle cx="8" cy="8" r="6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" opacity="0.25"/>
             <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <span class="overlay-subtitle">Sending magic link...</span>
+          <span class="overlay-subtitle">${this.usesEmailCode() ? this.t.sendingCode : this.t.sendingMagicLink}</span>
         `;
       }
       case "passwordless-sent": {
@@ -1571,8 +1808,8 @@ var ModalRenderer = class {
               <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="overlay-title">Magic link sent!</div>
-          <span class="overlay-subtitle">Check your email inbox</span>
+          <div class="overlay-title">${this.t.magicLinkSent}</div>
+          <span class="overlay-subtitle">${this.t.checkInbox}</span>
         `;
       }
       case "otp-input": {
@@ -1582,11 +1819,11 @@ var ModalRenderer = class {
         ).join("");
         return `
           <div class="otp-container">
-            <div class="overlay-title">Enter verification code</div>
-            <span class="overlay-subtitle">6-digit code sent to ${this.escapeHtml(this.overlayEmail)}</span>
+            <div class="overlay-title">${this.t.enterCode}</div>
+            <span class="overlay-subtitle">${this.t.codeSentTo.replace("{email}", () => this.escapeHtml(this.overlayEmail))}</span>
             <div class="otp-inputs">${digitInputs}</div>
             ${errorHtml}
-            <button class="cancel-link" id="overlay-cancel">Cancel</button>
+            <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
           </div>
         `;
       }
@@ -3496,6 +3733,8 @@ var WalletClient = class {
 // src/authon.ts
 var DEFAULT_API_URL2 = "https://api.authon.dev";
 var DEFAULT_WALLET_ORIGIN = "https://wallet.authon.dev";
+var MAGIC_LINK_PARAM = "authon_magic_link";
+var magicLinkResponses = /* @__PURE__ */ new Map();
 var Authon = class {
   publishableKey;
   config;
@@ -3514,6 +3753,7 @@ var Authon = class {
   turnstileSiteKey = "";
   authorizationContext = null;
   verificationToken = null;
+  magicLinkResult = null;
   constructor(publishableKey, config) {
     this.publishableKey = publishableKey;
     this.config = {
@@ -3523,7 +3763,8 @@ var Authon = class {
       locale: config?.locale || "en",
       containerId: config?.containerId,
       appearance: config?.appearance,
-      sessionMode: config?.sessionMode || "browser"
+      sessionMode: config?.sessionMode || "browser",
+      autoHandleMagicLink: config?.autoHandleMagicLink !== false
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
     const walletOrigin = config?.wallet?.origin || (this.config.apiUrl.replace(/\/+$/, "") === DEFAULT_API_URL2 ? DEFAULT_WALLET_ORIGIN : null);
@@ -3547,7 +3788,10 @@ var Authon = class {
         this.emit("signedOut");
       }
     });
-    if (this.config.sessionMode === "browser") this.consumeRedirectResultFromUrl();
+    if (this.config.sessionMode === "browser") {
+      this.consumeRedirectResultFromUrl();
+      if (this.config.autoHandleMagicLink) this.magicLinkResult = this.consumeMagicLinkFromUrl();
+    }
   }
   // ── Public API ──
   async getProviders() {
@@ -3802,13 +4046,37 @@ var Authon = class {
     return res.backupCodes;
   }
   // ── Passwordless ──
-  async sendMagicLink(email) {
-    await this.apiPost("/v1/auth/passwordless/magic-link", { email, ...this.authorizationRequestBody() });
+  async sendMagicLink(email, options) {
+    const redirectUrl = options?.redirectUrl ?? this.magicLinkReturnUrl();
+    await this.apiPost("/v1/auth/passwordless/magic-link", {
+      email,
+      ...redirectUrl ? { redirectUrl } : {},
+      ...this.authorizationRequestBody()
+    });
+  }
+  /**
+   * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
+   * returns the verification already started on page load. Resolves to null when the URL has no link
+   * or the link could not be used (the reason is emitted as an `error` event).
+   */
+  handleMagicLink() {
+    if (!this.magicLinkResult) this.magicLinkResult = this.consumeMagicLinkFromUrl();
+    return this.magicLinkResult;
   }
   async sendEmailOtp(email) {
     await this.apiPost("/v1/auth/passwordless/email-otp", { email, ...this.authorizationRequestBody() });
   }
   async verifyPasswordless(options) {
+    if (options.token && !options.email && !options.code) {
+      const key = `${this.config.apiUrl}|${this.publishableKey}|${options.token}`;
+      let pending = magicLinkResponses.get(key);
+      if (!pending) {
+        pending = this.apiPost("/v1/auth/passwordless/verify", { token: options.token });
+        magicLinkResponses.set(key, pending);
+        pending.catch(() => void 0);
+      }
+      return this.handleAuthCompletion(await pending);
+    }
     const res = await this.apiPost("/v1/auth/passwordless/verify", options);
     return this.handleAuthCompletion(res);
   }
@@ -3818,23 +4086,27 @@ var Authon = class {
     if (!token) throw new Error("Must be signed in to register a passkey");
     const options = await this.apiPostAuth(
       "/v1/auth/passkeys/register/options",
-      name ? { name } : void 0,
+      void 0,
       token
     );
     const credential = await navigator.credentials.create({
-      publicKey: this.deserializeCreationOptions(options.options)
+      publicKey: this.deserializeCreationOptions(this.unwrapWebAuthnOptions(options))
     });
+    if (!credential) throw new Error("Passkey registration was cancelled");
     const attestation = credential.response;
+    const transports = typeof attestation.getTransports === "function" ? attestation.getTransports() : void 0;
     const result = await this.apiPostAuth(
       "/v1/auth/passkeys/register/verify",
       {
-        id: credential.id,
-        rawId: this.bufferToBase64url(credential.rawId),
-        type: credential.type,
         response: {
-          attestationObject: this.bufferToBase64url(attestation.attestationObject),
-          clientDataJSON: this.bufferToBase64url(attestation.clientDataJSON)
-        }
+          ...this.credentialBase(credential),
+          response: {
+            attestationObject: this.bufferToBase64url(attestation.attestationObject),
+            clientDataJSON: this.bufferToBase64url(attestation.clientDataJSON),
+            ...transports && transports.length > 0 ? { transports } : {}
+          }
+        },
+        ...name ? { name } : {}
       },
       token
     );
@@ -3847,18 +4119,19 @@ var Authon = class {
       { ...email ? { email } : {}, ...this.authorizationRequestBody() }
     );
     const credential = await navigator.credentials.get({
-      publicKey: this.deserializeRequestOptions(options.options)
+      publicKey: this.deserializeRequestOptions(this.unwrapWebAuthnOptions(options))
     });
+    if (!credential) throw new Error("Passkey sign-in was cancelled");
     const assertion = credential.response;
     const res = await this.apiPost("/v1/auth/passkeys/authenticate/verify", {
-      id: credential.id,
-      rawId: this.bufferToBase64url(credential.rawId),
-      type: credential.type,
       response: {
-        authenticatorData: this.bufferToBase64url(assertion.authenticatorData),
-        clientDataJSON: this.bufferToBase64url(assertion.clientDataJSON),
-        signature: this.bufferToBase64url(assertion.signature),
-        userHandle: assertion.userHandle ? this.bufferToBase64url(assertion.userHandle) : void 0
+        ...this.credentialBase(credential),
+        response: {
+          authenticatorData: this.bufferToBase64url(assertion.authenticatorData),
+          clientDataJSON: this.bufferToBase64url(assertion.clientDataJSON),
+          signature: this.bufferToBase64url(assertion.signature),
+          ...assertion.userHandle ? { userHandle: this.bufferToBase64url(assertion.userHandle) } : {}
+        }
       }
     });
     return this.handleAuthCompletion(res);
@@ -4523,7 +4796,77 @@ var Authon = class {
     const accounts = await provider.request({ method: "eth_requestAccounts" });
     return provider.request({ method: "personal_sign", params: [message, accounts[0]] });
   }
+  // ── Magic link helpers ──
+  /** Current page (without hash or magic link params) as the link target, when this instance handles links. */
+  magicLinkReturnUrl() {
+    if (typeof window === "undefined") return void 0;
+    if (this.config.sessionMode !== "browser" || !this.config.autoHandleMagicLink || this.authorizationContext) {
+      return void 0;
+    }
+    try {
+      const url = new URL(window.location.href);
+      if (url.protocol !== "https:" && url.protocol !== "http:") return void 0;
+      url.hash = "";
+      url.searchParams.delete("token");
+      url.searchParams.delete(MAGIC_LINK_PARAM);
+      const full = url.toString();
+      return full.length <= 2048 ? full : `${url.origin}${url.pathname}`.slice(0, 2048);
+    } catch {
+      return void 0;
+    }
+  }
+  consumeMagicLinkFromUrl() {
+    if (typeof window === "undefined") return Promise.resolve(null);
+    let url;
+    try {
+      url = new URL(window.location.href);
+    } catch {
+      return Promise.resolve(null);
+    }
+    if (url.searchParams.get(MAGIC_LINK_PARAM) !== "1") return Promise.resolve(null);
+    const token = url.searchParams.get("token");
+    const cleanUrl = () => {
+      try {
+        const current = new URL(window.location.href);
+        current.searchParams.delete("token");
+        current.searchParams.delete(MAGIC_LINK_PARAM);
+        window.history.replaceState(window.history.state, "", current.toString());
+      } catch {
+      }
+    };
+    if (!token) {
+      cleanUrl();
+      return Promise.resolve(null);
+    }
+    return this.verifyPasswordless({ token }).then((user) => user, (err) => {
+      this.emit("error", err instanceof Error ? err : new Error(String(err)));
+      return null;
+    }).finally(cleanUrl);
+  }
   // ── WebAuthn helpers ──
+  /** Authon returns WebAuthn options at the top level; very old servers wrapped them in `options`. */
+  unwrapWebAuthnOptions(raw) {
+    if (raw && typeof raw.challenge !== "string" && raw.options && typeof raw.options === "object") {
+      return raw.options;
+    }
+    return raw;
+  }
+  credentialBase(credential) {
+    let clientExtensionResults = {};
+    try {
+      clientExtensionResults = credential.getClientExtensionResults?.() ?? {};
+    } catch {
+      clientExtensionResults = {};
+    }
+    const attachment = credential.authenticatorAttachment;
+    return {
+      id: credential.id,
+      rawId: this.bufferToBase64url(credential.rawId),
+      type: credential.type,
+      clientExtensionResults,
+      ...attachment ? { authenticatorAttachment: attachment } : {}
+    };
+  }
   bufferToBase64url(buffer) {
     const bytes = new Uint8Array(buffer);
     let binary = "";
@@ -4591,6 +4934,7 @@ export {
   Authon,
   AuthonMfaRequiredError,
   AuthonWalletError,
+  MAGIC_LINK_PARAM,
   ProfileRenderer,
   WalletClient,
   generateQrSvg,

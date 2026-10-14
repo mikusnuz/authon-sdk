@@ -402,6 +402,12 @@ export class ModalRenderer {
     this.renderOverlayWithData({ truncatedAddress: truncated, walletId });
   }
 
+  /** Passwordless sign-in sends a 6-digit code instead of a link ('both' is the legacy code value). */
+  private usesEmailCode(): boolean {
+    const method = (this.branding as { passwordlessMethod?: string } | undefined)?.passwordlessMethod;
+    return method === 'email_otp' || method === 'both';
+  }
+
   showPasswordlessSent(): void {
     this.overlayError = '';
     this.currentOverlay = 'passwordless-sent';
@@ -568,7 +574,7 @@ export class ModalRenderer {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
         </svg>
-        <span>${this.t.magicLink}</span>
+        <span>${this.usesEmailCode() ? this.t.emailCode : this.t.magicLink}</span>
       </button>`);
     }
     if (b.showPasskey) {
@@ -1096,13 +1102,13 @@ export class ModalRenderer {
 
       case 'passwordless-input': {
         return `
-          <div class="overlay-title">Enter your email</div>
+          <div class="overlay-title">${this.t.enterEmail}</div>
           <div class="pwless-form">
             <input type="email" placeholder="you@example.com" class="input" id="pwless-email" autocomplete="email" />
-            <button class="pwless-submit" id="pwless-submit-btn">Send Magic Link</button>
+            <button class="pwless-submit" id="pwless-submit-btn">${this.usesEmailCode() ? this.t.sendCode : this.t.sendMagicLink}</button>
           </div>
           ${errorHtml}
-          <button class="cancel-link" id="overlay-cancel">Cancel</button>
+          <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
         `;
       }
 
@@ -1112,7 +1118,7 @@ export class ModalRenderer {
             <circle cx="8" cy="8" r="6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" opacity="0.25"/>
             <path d="M8 2a6 6 0 0 1 6 6" fill="none" stroke="var(--authon-primary-start, #7c3aed)" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <span class="overlay-subtitle">Sending magic link...</span>
+          <span class="overlay-subtitle">${this.usesEmailCode() ? this.t.sendingCode : this.t.sendingMagicLink}</span>
         `;
       }
 
@@ -1123,8 +1129,8 @@ export class ModalRenderer {
               <path d="M5 10l3.5 3.5L15 7" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </div>
-          <div class="overlay-title">Magic link sent!</div>
-          <span class="overlay-subtitle">Check your email inbox</span>
+          <div class="overlay-title">${this.t.magicLinkSent}</div>
+          <span class="overlay-subtitle">${this.t.checkInbox}</span>
         `;
       }
 
@@ -1134,11 +1140,11 @@ export class ModalRenderer {
         ).join('');
         return `
           <div class="otp-container">
-            <div class="overlay-title">Enter verification code</div>
-            <span class="overlay-subtitle">6-digit code sent to ${this.escapeHtml(this.overlayEmail)}</span>
+            <div class="overlay-title">${this.t.enterCode}</div>
+            <span class="overlay-subtitle">${this.t.codeSentTo.replace('{email}', () => this.escapeHtml(this.overlayEmail))}</span>
             <div class="otp-inputs">${digitInputs}</div>
             ${errorHtml}
-            <button class="cancel-link" id="overlay-cancel">Cancel</button>
+            <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
           </div>
         `;
       }

@@ -13,6 +13,21 @@ export interface AuthonConfig {
   appearance?: Partial<BrandingConfig>;
   sessionMode?: 'browser' | 'bff';
   wallet?: AuthonWalletConfig;
+  /**
+   * When the page URL carries a magic link (`?token=...&authon_magic_link=1`), verify it on load,
+   * store the session and remove both parameters from the URL. Default true (browser session mode only).
+   * Set false to handle the link yourself with `handleMagicLink()` or `verifyPasswordless({ token })`.
+   */
+  autoHandleMagicLink?: boolean;
+}
+
+export interface SendMagicLinkOptions {
+  /**
+   * Page the link should open. Defaults to the current page when `autoHandleMagicLink` is on.
+   * Authon only uses it when its origin is in the project's allowed origins and the project has
+   * no callback URL or domain set.
+   */
+  redirectUrl?: string;
 }
 
 export interface AuthonWalletConfig {

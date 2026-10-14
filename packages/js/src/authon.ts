@@ -28,6 +28,7 @@ import type {
   OAuthFlowMode,
   OAuthSignInOptions,
   OpenSignInOptions,
+  SendMagicLinkOptions,
 } from './types';
 import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
@@ -39,6 +40,15 @@ import { AuthonWalletError, WalletClient } from './wallet';
 
 const DEFAULT_API_URL = 'https://api.authon.dev';
 const DEFAULT_WALLET_ORIGIN = 'https://wallet.authon.dev';
+/** Query flag Authon adds to magic links; `token` alone is too generic to claim. */
+export const MAGIC_LINK_PARAM = 'authon_magic_link';
+
+type PasswordlessVerifyResponse = AuthTokens | AuthorizationCodeResult;
+/**
+ * In-flight magic link verifications, shared by every Authon instance on the page (React strict
+ * mode and app code calling verifyPasswordless({ token }) must not consume the same link twice).
+ */
+const magicLinkResponses = new Map<string, Promise<PasswordlessVerifyResponse>>();
 
 interface ProvidersResponse {
   providers: OAuthProviderType[];
@@ -66,6 +76,7 @@ export class Authon {
   private turnstileSiteKey = '';
   private authorizationContext: { options: AuthorizationCodeOptions; requestId: string } | null = null;
   private verificationToken: string | null = null;
+  private magicLinkResult: Promise<AuthonUser | null> | null = null;
 
   constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
@@ -77,6 +88,7 @@ export class Authon {
       containerId: config?.containerId,
       appearance: config?.appearance,
       sessionMode: config?.sessionMode || 'browser',
+      autoHandleMagicLink: config?.autoHandleMagicLink !== false,
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
     const walletOrigin = config?.wallet?.origin
@@ -107,7 +119,10 @@ export class Authon {
         this.emit('signedOut');
       }
     });
-    if (this.config.sessionMode === 'browser') this.consumeRedirectResultFromUrl();
+    if (this.config.sessionMode === 'browser') {
+      this.consumeRedirectResultFromUrl();
+      if (this.config.autoHandleMagicLink) this.magicLinkResult = this.consumeMagicLinkFromUrl();
+    }
   }
 
   // ── Public API ──
@@ -403,8 +418,23 @@ export class Authon {
 
   // ── Passwordless ──
 
-  async sendMagicLink(email: string): Promise<void> {
-    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', { email, ...this.authorizationRequestBody() });
+  async sendMagicLink(email: string, options?: SendMagicLinkOptions): Promise<void> {
+    const redirectUrl = options?.redirectUrl ?? this.magicLinkReturnUrl();
+    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', {
+      email,
+      ...(redirectUrl ? { redirectUrl } : {}),
+      ...this.authorizationRequestBody(),
+    });
+  }
+
+  /**
+   * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
+   * returns the verification already started on page load. Resolves to null when the URL has no link
+   * or the link could not be used (the reason is emitted as an `error` event).
+   */
+  handleMagicLink(): Promise<AuthonUser | null> {
+    if (!this.magicLinkResult) this.magicLinkResult = this.consumeMagicLinkFromUrl();
+    return this.magicLinkResult;
   }
 
   async sendEmailOtp(email: string): Promise<void> {
@@ -416,7 +446,17 @@ export class Authon {
     email?: string;
     code?: string;
   }): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/passwordless/verify', options);
+    if (options.token && !options.email && !options.code) {
+      const key = `${this.config.apiUrl}|${this.publishableKey}|${options.token}`;
+      let pending = magicLinkResponses.get(key);
+      if (!pending) {
+        pending = this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', { token: options.token });
+        magicLinkResponses.set(key, pending);
+        pending.catch(() => undefined);
+      }
+      return this.handleAuthCompletion(await pending);
+    }
+    const res = await this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', options);
     return this.handleAuthCompletion(res);
   }
 
@@ -426,27 +466,31 @@ export class Authon {
     const token = this.session.getToken();
     if (!token) throw new Error('Must be signed in to register a passkey');
 
-    const options = await this.apiPostAuth<{ options: Record<string, unknown> }>(
+    const options = await this.apiPostAuth<Record<string, unknown>>(
       '/v1/auth/passkeys/register/options',
-      name ? { name } : undefined,
+      undefined,
       token,
     );
 
     const credential = await navigator.credentials.create({
-      publicKey: this.deserializeCreationOptions(options.options),
-    }) as PublicKeyCredential;
+      publicKey: this.deserializeCreationOptions(this.unwrapWebAuthnOptions(options)),
+    }) as PublicKeyCredential | null;
+    if (!credential) throw new Error('Passkey registration was cancelled');
 
     const attestation = credential.response as AuthenticatorAttestationResponse;
+    const transports = typeof attestation.getTransports === 'function' ? attestation.getTransports() : undefined;
     const result = await this.apiPostAuth<PasskeyCredential>(
       '/v1/auth/passkeys/register/verify',
       {
-        id: credential.id,
-        rawId: this.bufferToBase64url(credential.rawId),
-        type: credential.type,
         response: {
-          attestationObject: this.bufferToBase64url(attestation.attestationObject),
-          clientDataJSON: this.bufferToBase64url(attestation.clientDataJSON),
+          ...this.credentialBase(credential),
+          response: {
+            attestationObject: this.bufferToBase64url(attestation.attestationObject),
+            clientDataJSON: this.bufferToBase64url(attestation.clientDataJSON),
+            ...(transports && transports.length > 0 ? { transports } : {}),
+          },
         },
+        ...(name ? { name } : {}),
       },
       token,
     );
@@ -456,25 +500,26 @@ export class Authon {
   }
 
   async authenticateWithPasskey(email?: string): Promise<AuthonUser> {
-    const options = await this.apiPost<{ options: Record<string, unknown> }>(
+    const options = await this.apiPost<Record<string, unknown>>(
       '/v1/auth/passkeys/authenticate/options',
       { ...(email ? { email } : {}), ...this.authorizationRequestBody() },
     );
 
     const credential = await navigator.credentials.get({
-      publicKey: this.deserializeRequestOptions(options.options),
-    }) as PublicKeyCredential;
+      publicKey: this.deserializeRequestOptions(this.unwrapWebAuthnOptions(options)),
+    }) as PublicKeyCredential | null;
+    if (!credential) throw new Error('Passkey sign-in was cancelled');
 
     const assertion = credential.response as AuthenticatorAssertionResponse;
     const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/passkeys/authenticate/verify', {
-      id: credential.id,
-      rawId: this.bufferToBase64url(credential.rawId),
-      type: credential.type,
       response: {
-        authenticatorData: this.bufferToBase64url(assertion.authenticatorData),
-        clientDataJSON: this.bufferToBase64url(assertion.clientDataJSON),
-        signature: this.bufferToBase64url(assertion.signature),
-        userHandle: assertion.userHandle ? this.bufferToBase64url(assertion.userHandle) : undefined,
+        ...this.credentialBase(credential),
+        response: {
+          authenticatorData: this.bufferToBase64url(assertion.authenticatorData),
+          clientDataJSON: this.bufferToBase64url(assertion.clientDataJSON),
+          signature: this.bufferToBase64url(assertion.signature),
+          ...(assertion.userHandle ? { userHandle: this.bufferToBase64url(assertion.userHandle) } : {}),
+        },
       },
     });
 
@@ -1260,7 +1305,85 @@ export class Authon {
     return provider.request({ method: 'personal_sign', params: [message, accounts[0]] });
   }
 
+  // ── Magic link helpers ──
+
+  /** Current page (without hash or magic link params) as the link target, when this instance handles links. */
+  private magicLinkReturnUrl(): string | undefined {
+    if (typeof window === 'undefined') return undefined;
+    if (this.config.sessionMode !== 'browser' || !this.config.autoHandleMagicLink || this.authorizationContext) {
+      return undefined;
+    }
+    try {
+      const url = new URL(window.location.href);
+      if (url.protocol !== 'https:' && url.protocol !== 'http:') return undefined;
+      url.hash = '';
+      url.searchParams.delete('token');
+      url.searchParams.delete(MAGIC_LINK_PARAM);
+      const full = url.toString();
+      return full.length <= 2048 ? full : `${url.origin}${url.pathname}`.slice(0, 2048);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private consumeMagicLinkFromUrl(): Promise<AuthonUser | null> {
+    if (typeof window === 'undefined') return Promise.resolve(null);
+    let url: URL;
+    try {
+      url = new URL(window.location.href);
+    } catch {
+      return Promise.resolve(null);
+    }
+    if (url.searchParams.get(MAGIC_LINK_PARAM) !== '1') return Promise.resolve(null);
+    const token = url.searchParams.get('token');
+    const cleanUrl = () => {
+      try {
+        const current = new URL(window.location.href);
+        current.searchParams.delete('token');
+        current.searchParams.delete(MAGIC_LINK_PARAM);
+        window.history.replaceState(window.history.state, '', current.toString());
+      } catch {
+        // ignore
+      }
+    };
+    if (!token) {
+      cleanUrl();
+      return Promise.resolve(null);
+    }
+    return this.verifyPasswordless({ token })
+      .then((user) => user, (err) => {
+        this.emit('error', err instanceof Error ? err : new Error(String(err)));
+        return null;
+      })
+      .finally(cleanUrl);
+  }
+
   // ── WebAuthn helpers ──
+
+  /** Authon returns WebAuthn options at the top level; very old servers wrapped them in `options`. */
+  private unwrapWebAuthnOptions(raw: Record<string, unknown>): Record<string, unknown> {
+    if (raw && typeof raw.challenge !== 'string' && raw.options && typeof raw.options === 'object') {
+      return raw.options as Record<string, unknown>;
+    }
+    return raw;
+  }
+
+  private credentialBase(credential: PublicKeyCredential): Record<string, unknown> {
+    let clientExtensionResults: Record<string, unknown> = {};
+    try {
+      clientExtensionResults = (credential.getClientExtensionResults?.() ?? {}) as Record<string, unknown>;
+    } catch {
+      clientExtensionResults = {};
+    }
+    const attachment = (credential as PublicKeyCredential & { authenticatorAttachment?: string | null }).authenticatorAttachment;
+    return {
+      id: credential.id,
+      rawId: this.bufferToBase64url(credential.rawId),
+      type: credential.type,
+      clientExtensionResults,
+      ...(attachment ? { authenticatorAttachment: attachment } : {}),
+    };
+  }
 
   private bufferToBase64url(buffer: ArrayBuffer): string {
     const bytes = new Uint8Array(buffer);
