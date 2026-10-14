@@ -3173,6 +3173,8 @@ var AuthonWalletError = class extends Error {
 var DEFAULT_TIMEOUT_MS = 3e4;
 var DEFAULT_POPUP_TIMEOUT_MS = 18e4;
 var POPUP_FEATURES = "popup=yes,width=420,height=620";
+var FRAME_HIDDEN_STYLE = "position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+var FRAME_VISIBLE_STYLE = "position:fixed;inset:0;width:100vw;height:100vh;border:0;opacity:1;pointer-events:auto;z-index:2147483647;background:transparent;color-scheme:normal;";
 var toError = (error) => new AuthonWalletError(error?.code || "UNKNOWN", error?.message || error?.code || "Wallet request failed");
 var toBigIntHex = (value) => typeof value === "bigint" ? `0x${value.toString(16)}` : value;
 var WalletClient = class {
@@ -3229,8 +3231,8 @@ var WalletClient = class {
    * handler: the browser only allows the passkey prompt (or the popup fallback)
    * during a user gesture.
    */
-  async protect() {
-    await this.call("wallet.protect");
+  async protect(options = {}) {
+    await this.call("wallet.protect", { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
     await this.refresh();
   }
   /**
@@ -3238,8 +3240,8 @@ var WalletClient = class {
    * user click handler: the browser only allows the passkey prompt (or the popup
    * fallback) during a user gesture.
    */
-  async restore() {
-    await this.call("wallet.restore");
+  async restore(options = {}) {
+    await this.call("wallet.restore", { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
     await this.refresh();
   }
   async revokeDevice(deviceId) {
@@ -3350,7 +3352,7 @@ var WalletClient = class {
     iframe.setAttribute("aria-hidden", "true");
     iframe.tabIndex = -1;
     iframe.title = "Authon wallet";
-    iframe.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+    iframe.style.cssText = FRAME_HIDDEN_STYLE;
     this.iframe = iframe;
     this.listen();
     this.frameReady = new Promise((resolve, reject) => {
@@ -3373,6 +3375,19 @@ var WalletClient = class {
     document.body.appendChild(iframe);
     return this.frameReady;
   }
+  setFrameVisible(visible) {
+    const iframe = this.iframe;
+    if (!iframe) return;
+    iframe.style.cssText = visible ? FRAME_VISIBLE_STYLE : FRAME_HIDDEN_STYLE;
+    if (visible) {
+      iframe.removeAttribute("aria-hidden");
+      iframe.tabIndex = 0;
+      iframe.focus();
+    } else {
+      iframe.setAttribute("aria-hidden", "true");
+      iframe.tabIndex = -1;
+    }
+  }
   listen() {
     if (this.listening) return;
     window.addEventListener("message", this.onMessage);
@@ -3380,6 +3395,11 @@ var WalletClient = class {
   }
   onMessage = (event) => {
     if (event.origin !== this.options.walletOrigin) return;
+    const ui = event.data;
+    if (ui && ui.v === 1 && ui.type === "wallet.ui") {
+      if (this.iframe && event.source === this.iframe.contentWindow) this.setFrameVisible(ui.state === "show");
+      return;
+    }
     const data = event.data;
     if (!data || data.v !== 1 || typeof data.id !== "string") return;
     const entry = this.pending.get(data.id);
@@ -3407,13 +3427,17 @@ var WalletClient = class {
       post.postMessage({ v: 1, id, type, payload }, this.requireOrigin());
     });
   }
-  async call(type, extra = {}) {
+  /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+  interactiveTimeout() {
+    return this.options.popupTimeoutMs ?? DEFAULT_POPUP_TIMEOUT_MS;
+  }
+  async call(type, extra = {}, timeoutMs) {
     const token = await this.options.getToken();
     if (!token) throw new AuthonWalletError("NOT_SIGNED_IN", "Sign in before using the wallet");
     const payload = { ...extra, token };
     const frame = await this.ensureFrame();
     try {
-      return await this.send(() => frame, frame, type, payload, this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+      return await this.send(() => frame, frame, type, payload, timeoutMs ?? this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     } catch (error) {
       if (error instanceof AuthonWalletError && error.code === "NEEDS_POPUP") {
         return this.callViaPopup(type, payload);
@@ -3502,7 +3526,8 @@ var Authon = class {
     this.wallet = new WalletClient({
       publishableKey,
       walletOrigin: walletOrigin ? new URL(walletOrigin).origin : null,
-      getToken: async () => await this.ensureValidToken() ? this.session.getToken() : null
+      getToken: async () => await this.ensureValidToken() ? this.session.getToken() : null,
+      ui: config?.wallet?.ui
     });
     this.wallet.onChange((wallet) => this.emit("walletChanged", wallet));
     this.session.subscribe((change) => {

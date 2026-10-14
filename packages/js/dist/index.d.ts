@@ -69,6 +69,8 @@ interface WalletClientOptions {
     getToken: () => Promise<string | null>;
     timeoutMs?: number;
     popupTimeoutMs?: number;
+    /** Default appearance of the protect/restore confirmation card. */
+    ui?: WalletConfirmUi;
 }
 declare class WalletClient {
     private readonly options;
@@ -91,13 +93,17 @@ declare class WalletClient {
      * handler: the browser only allows the passkey prompt (or the popup fallback)
      * during a user gesture.
      */
-    protect(): Promise<void>;
+    protect(options?: {
+        ui?: WalletConfirmUi;
+    }): Promise<void>;
     /**
      * Recovers the wallet on a new browser with the passkey. Must be called from a
      * user click handler: the browser only allows the passkey prompt (or the popup
      * fallback) during a user gesture.
      */
-    restore(): Promise<void>;
+    restore(options?: {
+        ui?: WalletConfirmUi;
+    }): Promise<void>;
     revokeDevice(deviceId: string): Promise<void>;
     onChange(listener: WalletChangeListener): () => void;
     provider(chainId: number): EIP1193Provider;
@@ -109,9 +115,12 @@ declare class WalletClient {
     private requireOrigin;
     private frameUrl;
     private ensureFrame;
+    private setFrameVisible;
     private listen;
     private onMessage;
     private send;
+    /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+    private interactiveTimeout;
     private call;
     private callViaPopup;
     private waitForPopupReady;
@@ -136,6 +145,22 @@ interface AuthonWalletConfig {
     origin?: string;
     /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
     autoCreate?: boolean;
+    /** Text and colors of the one-tap confirmation shown before the passkey prompt (protect/restore). */
+    ui?: WalletConfirmUi;
+}
+/**
+ * Appearance of the small confirmation card the wallet frame shows right before
+ * the system passkey prompt. Browsers only allow the prompt after a click inside
+ * the wallet frame, so this single tap cannot be skipped.
+ */
+interface WalletConfirmUi {
+    title?: string;
+    message?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    /** Hex color such as #2563eb */
+    accentColor?: string;
+    theme?: 'light' | 'dark';
 }
 interface OAuthSignInOptions {
     flowMode?: OAuthFlowMode;
@@ -916,4 +941,4 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletConfirmUi, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, translations };

@@ -23,6 +23,23 @@ export interface AuthonWalletConfig {
   origin?: string;
   /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
   autoCreate?: boolean;
+  /** Text and colors of the one-tap confirmation shown before the passkey prompt (protect/restore). */
+  ui?: WalletConfirmUi;
+}
+
+/**
+ * Appearance of the small confirmation card the wallet frame shows right before
+ * the system passkey prompt. Browsers only allow the prompt after a click inside
+ * the wallet frame, so this single tap cannot be skipped.
+ */
+export interface WalletConfirmUi {
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  /** Hex color such as #2563eb */
+  accentColor?: string;
+  theme?: 'light' | 'dark';
 }
 
 export interface OAuthSignInOptions {

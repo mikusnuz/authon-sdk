@@ -4,6 +4,7 @@ export type {
   AuthonEvents,
   AuthonEventType,
   AuthonWalletConfig,
+  WalletConfirmUi,
   OAuthFlowMode,
   OAuthSignInOptions,
   OpenSignInOptions,

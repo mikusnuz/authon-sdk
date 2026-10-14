@@ -1,3 +1,5 @@
+import type { WalletConfirmUi } from './types';
+
 export type WalletErrorCode =
   | 'NOT_FOUND'
   | 'NEEDS_RESTORE'
@@ -84,6 +86,8 @@ export interface WalletClientOptions {
   getToken: () => Promise<string | null>;
   timeoutMs?: number;
   popupTimeoutMs?: number;
+  /** Default appearance of the protect/restore confirmation card. */
+  ui?: WalletConfirmUi;
 }
 
 interface FrameResponse {
@@ -104,6 +108,10 @@ interface Pending {
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_POPUP_TIMEOUT_MS = 180_000;
 const POPUP_FEATURES = 'popup=yes,width=420,height=620';
+const FRAME_HIDDEN_STYLE = 'position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;';
+/** Full-viewport overlay while the frame shows its confirmation card. */
+const FRAME_VISIBLE_STYLE =
+  'position:fixed;inset:0;width:100vw;height:100vh;border:0;opacity:1;pointer-events:auto;z-index:2147483647;background:transparent;color-scheme:normal;';
 
 const toError = (error: FrameResponse['error']): AuthonWalletError =>
   new AuthonWalletError(error?.code || 'UNKNOWN', error?.message || error?.code || 'Wallet request failed');
@@ -170,8 +178,8 @@ export class WalletClient {
    * handler: the browser only allows the passkey prompt (or the popup fallback)
    * during a user gesture.
    */
-  async protect(): Promise<void> {
-    await this.call('wallet.protect');
+  async protect(options: { ui?: WalletConfirmUi } = {}): Promise<void> {
+    await this.call('wallet.protect', { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
     await this.refresh();
   }
 
@@ -180,8 +188,8 @@ export class WalletClient {
    * user click handler: the browser only allows the passkey prompt (or the popup
    * fallback) during a user gesture.
    */
-  async restore(): Promise<void> {
-    await this.call('wallet.restore');
+  async restore(options: { ui?: WalletConfirmUi } = {}): Promise<void> {
+    await this.call('wallet.restore', { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
     await this.refresh();
   }
 
@@ -302,7 +310,7 @@ export class WalletClient {
     iframe.setAttribute('aria-hidden', 'true');
     iframe.tabIndex = -1;
     iframe.title = 'Authon wallet';
-    iframe.style.cssText = 'position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;';
+    iframe.style.cssText = FRAME_HIDDEN_STYLE;
     this.iframe = iframe;
     this.listen();
     this.frameReady = new Promise<Window>((resolve, reject) => {
@@ -326,6 +334,20 @@ export class WalletClient {
     return this.frameReady;
   }
 
+  private setFrameVisible(visible: boolean): void {
+    const iframe = this.iframe;
+    if (!iframe) return;
+    iframe.style.cssText = visible ? FRAME_VISIBLE_STYLE : FRAME_HIDDEN_STYLE;
+    if (visible) {
+      iframe.removeAttribute('aria-hidden');
+      iframe.tabIndex = 0;
+      iframe.focus();
+    } else {
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.tabIndex = -1;
+    }
+  }
+
   private listen(): void {
     if (this.listening) return;
     window.addEventListener('message', this.onMessage);
@@ -334,6 +356,11 @@ export class WalletClient {
 
   private onMessage = (event: MessageEvent): void => {
     if (event.origin !== this.options.walletOrigin) return;
+    const ui = event.data as { v?: unknown; type?: unknown; state?: unknown } | null;
+    if (ui && ui.v === 1 && ui.type === 'wallet.ui') {
+      if (this.iframe && event.source === this.iframe.contentWindow) this.setFrameVisible(ui.state === 'show');
+      return;
+    }
     const data = event.data as Partial<FrameResponse> | null;
     if (!data || data.v !== 1 || typeof data.id !== 'string') return;
     const entry = this.pending.get(data.id);
@@ -363,13 +390,18 @@ export class WalletClient {
     });
   }
 
-  private async call<T = unknown>(type: string, extra: Record<string, unknown> = {}): Promise<T> {
+  /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+  private interactiveTimeout(): number {
+    return this.options.popupTimeoutMs ?? DEFAULT_POPUP_TIMEOUT_MS;
+  }
+
+  private async call<T = unknown>(type: string, extra: Record<string, unknown> = {}, timeoutMs?: number): Promise<T> {
     const token = await this.options.getToken();
     if (!token) throw new AuthonWalletError('NOT_SIGNED_IN', 'Sign in before using the wallet');
     const payload = { ...extra, token };
     const frame = await this.ensureFrame();
     try {
-      return await this.send<T>(() => frame, frame, type, payload, this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+      return await this.send<T>(() => frame, frame, type, payload, timeoutMs ?? this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
     } catch (error) {
       if (error instanceof AuthonWalletError && error.code === 'NEEDS_POPUP') {
         return this.callViaPopup<T>(type, payload);
