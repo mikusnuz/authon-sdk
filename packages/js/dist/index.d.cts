@@ -8,6 +8,115 @@ interface SessionChange {
 }
 type SessionChangeListener = (change: SessionChange) => void;
 
+type WalletErrorCode = 'NOT_FOUND' | 'NEEDS_RESTORE' | 'NOT_PROTECTED' | 'PRF_UNSUPPORTED' | 'ORIGIN_NOT_ALLOWED' | 'USER_CANCELLED' | 'TIMEOUT' | 'NEEDS_POPUP' | 'POPUP_BLOCKED' | 'NOT_SIGNED_IN' | 'NOT_CONFIGURED' | 'UNSUPPORTED_METHOD' | 'INVALID_PARAMS' | 'DISPOSED' | (string & {});
+declare class AuthonWalletError extends Error {
+    readonly code: WalletErrorCode;
+    constructor(code: WalletErrorCode, message?: string);
+}
+type Hex = `0x${string}`;
+interface EmbeddedWalletDevice {
+    id: string;
+    label: string;
+    createdAt: string;
+    lastUsedAt: string | null;
+    current: boolean;
+}
+interface EmbeddedWallet {
+    address: string;
+    protected: boolean;
+    /** True when the server has a wallet but this browser holds no device share. */
+    needsRestore: boolean;
+    devices: EmbeddedWalletDevice[];
+}
+type WalletChangeListener = (wallet: EmbeddedWallet | null) => void;
+interface TypedDataPayload {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{
+        name: string;
+        type: string;
+    }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+}
+interface WalletTransactionRequest {
+    to?: string;
+    from?: string;
+    value?: string | number | bigint;
+    data?: string;
+    nonce?: string | number;
+    gas?: string | number | bigint;
+    gasLimit?: string | number | bigint;
+    gasPrice?: string | number | bigint;
+    maxFeePerGas?: string | number | bigint;
+    maxPriorityFeePerGas?: string | number | bigint;
+    chainId?: string | number;
+    type?: string | number;
+}
+type WalletMessage = string | {
+    raw: string;
+};
+interface EIP1193RequestArguments {
+    method: string;
+    params?: unknown[] | Record<string, unknown>;
+}
+interface EIP1193Provider {
+    request(args: EIP1193RequestArguments): Promise<unknown>;
+}
+interface WalletClientOptions {
+    publishableKey: string;
+    walletOrigin: string | null;
+    /** Resolves a valid session token, refreshing it when needed. */
+    getToken: () => Promise<string | null>;
+    timeoutMs?: number;
+    popupTimeoutMs?: number;
+}
+declare class WalletClient {
+    private readonly options;
+    private readonly listeners;
+    private readonly pending;
+    private iframe;
+    private frameReady;
+    private abortFrame;
+    private listening;
+    private ensuring;
+    private counter;
+    constructor(options: WalletClientOptions);
+    get(): Promise<EmbeddedWallet | null>;
+    ensure(): Promise<EmbeddedWallet>;
+    signMessage(message: WalletMessage): Promise<Hex>;
+    signTypedData(typedData: TypedDataPayload): Promise<Hex>;
+    signTransaction(tx: WalletTransactionRequest): Promise<Hex>;
+    /**
+     * Creates a passkey and backs up the wallet. Must be called from a user click
+     * handler: the browser only allows the passkey prompt (or the popup fallback)
+     * during a user gesture.
+     */
+    protect(): Promise<void>;
+    /**
+     * Recovers the wallet on a new browser with the passkey. Must be called from a
+     * user click handler: the browser only allows the passkey prompt (or the popup
+     * fallback) during a user gesture.
+     */
+    restore(): Promise<void>;
+    revokeDevice(deviceId: string): Promise<void>;
+    onChange(listener: WalletChangeListener): () => void;
+    provider(chainId: number): EIP1193Provider;
+    /** Removes the frame and rejects in-flight requests. Called on sign-out. */
+    dispose(): void;
+    private refresh;
+    private notify;
+    private normalize;
+    private requireOrigin;
+    private frameUrl;
+    private ensureFrame;
+    private listen;
+    private onMessage;
+    private send;
+    private call;
+    private callViaPopup;
+    private waitForPopupReady;
+}
+
 type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 interface AuthonConfig {
     apiUrl?: string;
@@ -17,6 +126,16 @@ interface AuthonConfig {
     locale?: string;
     appearance?: Partial<BrandingConfig>;
     sessionMode?: 'browser' | 'bff';
+    wallet?: AuthonWalletConfig;
+}
+interface AuthonWalletConfig {
+    /**
+     * Origin of the wallet frame. Defaults to https://wallet.authon.dev when apiUrl is the
+     * default Authon API; required when a custom apiUrl is used.
+     */
+    origin?: string;
+    /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
+    autoCreate?: boolean;
 }
 interface OAuthSignInOptions {
     flowMode?: OAuthFlowMode;
@@ -31,6 +150,8 @@ interface AuthonEvents {
     passkeyRegistered: (credential: PasskeyCredential) => void;
     web3Connected: (wallet: Web3Wallet) => void;
     error: (error: Error) => void;
+    walletChanged: (wallet: EmbeddedWallet | null) => void;
+    walletError: (error: AuthonWalletError) => void;
     authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
 type OpenSignInOptions = AuthorizationCodeOptions | {
@@ -46,6 +167,9 @@ declare class Authon {
     private publishableKey;
     private config;
     private session;
+    readonly wallet: WalletClient;
+    private walletAutoCreate;
+    private walletEnabled;
     private modal;
     private profile;
     private listeners;
@@ -162,6 +286,7 @@ declare class Authon {
     private loadTurnstileScript;
     private emit;
     private ensureInitialized;
+    private autoCreateWallet;
     private getModal;
     private startOAuthFlow;
     private normalizeFlowMode;
@@ -791,4 +916,4 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, translations };

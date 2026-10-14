@@ -1,5 +1,6 @@
 import type { AuthorizationCodeOptions, AuthorizationCodeResult, AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet } from '@authon/shared';
 import type { SessionChange } from './session';
+import type { AuthonWalletError, EmbeddedWallet } from './wallet';
 
 export type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 
@@ -11,6 +12,17 @@ export interface AuthonConfig {
   locale?: string;
   appearance?: Partial<BrandingConfig>;
   sessionMode?: 'browser' | 'bff';
+  wallet?: AuthonWalletConfig;
+}
+
+export interface AuthonWalletConfig {
+  /**
+   * Origin of the wallet frame. Defaults to https://wallet.authon.dev when apiUrl is the
+   * default Authon API; required when a custom apiUrl is used.
+   */
+  origin?: string;
+  /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
+  autoCreate?: boolean;
 }
 
 export interface OAuthSignInOptions {
@@ -27,6 +39,8 @@ export interface AuthonEvents {
   passkeyRegistered: (credential: PasskeyCredential) => void;
   web3Connected: (wallet: Web3Wallet) => void;
   error: (error: Error) => void;
+  walletChanged: (wallet: EmbeddedWallet | null) => void;
+  walletError: (error: AuthonWalletError) => void;
   authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
 

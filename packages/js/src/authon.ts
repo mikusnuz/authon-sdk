@@ -35,6 +35,10 @@ import { ProfileRenderer } from './profile';
 import { SessionManager } from './session';
 import type { SessionChangeListener } from './session';
 import { generateQrSvg } from './qrcode';
+import { AuthonWalletError, WalletClient } from './wallet';
+
+const DEFAULT_API_URL = 'https://api.authon.dev';
+const DEFAULT_WALLET_ORIGIN = 'https://wallet.authon.dev';
 
 interface ProvidersResponse {
   providers: OAuthProviderType[];
@@ -43,11 +47,14 @@ interface ProvidersResponse {
 
 export class Authon {
   private publishableKey: string;
-  private config: Required<Omit<AuthonConfig, 'containerId' | 'appearance'>> & {
+  private config: Required<Omit<AuthonConfig, 'containerId' | 'appearance' | 'wallet'>> & {
     containerId?: string;
     appearance?: Partial<BrandingConfig>;
   };
   private session: SessionManager;
+  readonly wallet: WalletClient;
+  private walletAutoCreate: boolean;
+  private walletEnabled = true;
   private modal: ModalRenderer | null = null;
   private profile: ProfileRenderer | null = null;
   private listeners: Map<string, Set<(...args: unknown[]) => void>> = new Map();
@@ -63,7 +70,7 @@ export class Authon {
   constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
     this.config = {
-      apiUrl: config?.apiUrl || 'https://api.authon.dev',
+      apiUrl: config?.apiUrl || DEFAULT_API_URL,
       mode: config?.mode || 'popup',
       theme: config?.theme || 'auto',
       locale: config?.locale || 'en',
@@ -72,10 +79,20 @@ export class Authon {
       sessionMode: config?.sessionMode || 'browser',
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
+    const walletOrigin = config?.wallet?.origin
+      || (this.config.apiUrl.replace(/\/+$/, '') === DEFAULT_API_URL ? DEFAULT_WALLET_ORIGIN : null);
+    this.walletAutoCreate = !!config?.wallet?.autoCreate;
+    this.wallet = new WalletClient({
+      publishableKey,
+      walletOrigin: walletOrigin ? new URL(walletOrigin).origin : null,
+      getToken: async () => ((await this.ensureValidToken()) ? this.session.getToken() : null),
+    });
+    this.wallet.onChange((wallet) => this.emit('walletChanged', wallet));
     this.session.subscribe((change) => {
       this.emit('sessionChanged', change);
       if (change.reason === 'setSession' && change.user) {
         this.emit('signedIn', change.user);
+        if (this.walletAutoCreate) void this.autoCreateWallet();
       } else if (change.reason === 'tokenRefresh' && change.accessToken) {
         this.emit('tokenRefreshed', change.accessToken);
       } else if (
@@ -83,6 +100,7 @@ export class Authon {
         || change.reason === 'signOut'
         || change.reason === 'refreshFailed'
       ) {
+        this.wallet.dispose();
         this.emit('signedOut');
       }
     });
@@ -667,6 +685,7 @@ export class Authon {
     this.profile?.close();
     this.profile = null;
     this.session.destroy();
+    this.wallet.dispose();
     this.listeners.clear();
   }
 
@@ -701,6 +720,7 @@ export class Authon {
       this.branding = { ...branding, ...this.config.appearance };
       this.captchaEnabled = !!(branding as any).captchaEnabled;
       this.turnstileSiteKey = (branding as any).turnstileSiteKey || '';
+      this.walletEnabled = (branding as any).walletEnabled !== false;
       if (this.captchaEnabled && this.turnstileSiteKey) {
         this.loadTurnstileScript();
       }
@@ -715,6 +735,16 @@ export class Authon {
     } catch (err) {
       this.emit('error', err instanceof Error ? err : new Error(String(err)));
       throw err;
+    }
+  }
+
+  private async autoCreateWallet(): Promise<void> {
+    try {
+      await this.ensureInitialized();
+      if (!this.walletEnabled) return;
+      await this.wallet.ensure();
+    } catch (err) {
+      this.emit('walletError', err instanceof AuthonWalletError ? err : new AuthonWalletError('UNKNOWN', err instanceof Error ? err.message : String(err)));
     }
   }
 

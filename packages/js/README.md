@@ -174,6 +174,30 @@ authon.on('mfaRequired', (mfaToken) => { /* show MFA dialog */ });
 authon.on('tokenRefreshed', (token) => { /* update API client */ });
 ```
 
+### Embedded Wallet
+
+A non-custodial EVM wallet created for the signed-in user without any UI. Enable wallets for the project in the Authon console first.
+
+```ts
+const authon = new Authon('pk_live_...', { wallet: { autoCreate: true } });
+
+authon.wallet.onChange((wallet) => render(wallet));
+authon.on('walletError', (err) => console.warn(err.code));
+
+const wallet = await authon.wallet.ensure();          // { address, protected, needsRestore, devices }
+const signature = await authon.wallet.signMessage('hello');
+
+// protect() and restore() open a system passkey prompt: call them from a click handler.
+button.onclick = () => authon.wallet.protect();
+restoreButton.onclick = () => authon.wallet.restore(); // when wallet.needsRestore is true
+
+const provider = authon.wallet.provider(1);           // EIP-1193: eth_accounts, eth_requestAccounts,
+                                                      // eth_chainId, personal_sign,
+                                                      // eth_signTypedData_v4, eth_signTransaction
+```
+
+`wallet.origin` defaults to `https://wallet.authon.dev` with the default `apiUrl`; set it explicitly when using a custom `apiUrl`. Other provider methods throw an error with code `4200`. Wallet failures are thrown as `AuthonWalletError` with a `code` (`NOT_FOUND`, `NEEDS_RESTORE`, `NOT_PROTECTED`, `PRF_UNSUPPORTED`, `ORIGIN_NOT_ALLOWED`, `USER_CANCELLED`, `TIMEOUT`, `NEEDS_POPUP`, `POPUP_BLOCKED`, `NOT_SIGNED_IN`, `NOT_CONFIGURED`).
+
 ## Environment Variables
 
 | Variable | Required | Description |

@@ -70,6 +70,7 @@ npm install @authon/react-native react-native-svg
 - **MFA**: TOTP-based (Google Authenticator / Authy compatible) with backup codes.
 - **Passkeys**: WebAuthn-based passwordless authentication. Register and authenticate with platform authenticators.
 - **Web3**: EVM (MetaMask, WalletConnect, Coinbase, Pexus, Trust) and Solana (Phantom) wallet authentication via sign-in-with-wallet.
+- **Embedded Wallet**: `authon.wallet` (`@authon/js`) creates a non-custodial EVM wallet per user (2-of-3 key shares, passkey PRF backup). API: get, ensure, signMessage, signTypedData, signTransaction, protect, restore, revokeDevice, provider(chainId) (EIP-1193), onChange. Config: `wallet: { origin?, autoCreate? }`. protect/restore must run inside a click handler.
 
 ## Environment Variables
 

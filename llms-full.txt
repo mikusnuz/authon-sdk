@@ -366,6 +366,13 @@ authon.destroy();
 | `revokeSession(sessionId)` | `Promise<void>` | Revoke session |
 | `getProviders()` | `Promise<OAuthProviderType[]>` | List enabled providers |
 | `on(event, listener)` | `() => void` | Subscribe to event |
+| `wallet.get()` | `Promise<EmbeddedWallet \| null>` | Embedded wallet `{ address, protected, needsRestore, devices }` |
+| `wallet.ensure()` | `Promise<EmbeddedWallet>` | Create the embedded wallet if missing (config `wallet: { autoCreate: true }` does this after sign-in) |
+| `wallet.signMessage(message)` / `signTypedData(data)` / `signTransaction(tx)` | `Promise<Hex>` | Sign with the embedded wallet |
+| `wallet.protect()` / `wallet.restore()` | `Promise<void>` | Passkey backup / recovery on a new device. Call inside a click handler |
+| `wallet.revokeDevice(id)` | `Promise<void>` | Revoke a device share |
+| `wallet.provider(chainId)` | `EIP1193Provider` | eth_accounts, eth_requestAccounts, eth_chainId, personal_sign, eth_signTypedData_v4, eth_signTransaction; others throw code 4200 |
+| `wallet.onChange(listener)` | `() => void` | Receive the latest wallet after create/protect/restore/revoke (null on sign-out) |
 | `destroy()` | `void` | Cleanup |
 
 ---

@@ -77,6 +77,24 @@ await authon.openSignUp();
 await authon.signOut();
 ```
 
+### 내장 지갑
+
+로그인한 사용자에게 화면 없이 비수탁 EVM 지갑을 만들어 줍니다. 먼저 Authon 콘솔에서 프로젝트의 지갑을 켜야 합니다.
+
+```ts
+const authon = new Authon('pk_live_...', { wallet: { autoCreate: true } });
+
+const wallet = await authon.wallet.ensure();   // { address, protected, needsRestore, devices }
+const signature = await authon.wallet.signMessage('hello');
+
+// protect()와 restore()는 시스템 패스키 창을 띄우므로 반드시 클릭 핸들러 안에서 호출합니다.
+button.onclick = () => authon.wallet.protect();
+
+const provider = authon.wallet.provider(1);    // EIP-1193 provider
+```
+
+기본 `apiUrl`을 쓰면 `wallet.origin`은 `https://wallet.authon.dev`가 기본값이며, 사용자 지정 `apiUrl`에서는 직접 지정해야 합니다. 오류는 `code`가 있는 `AuthonWalletError`로 던져집니다.
+
 ## 환경 변수
 
 | 변수 | 필수 | 설명 |

@@ -22,7 +22,9 @@ var index_exports = {};
 __export(index_exports, {
   Authon: () => Authon,
   AuthonMfaRequiredError: () => AuthonMfaRequiredError,
+  AuthonWalletError: () => AuthonWalletError,
   ProfileRenderer: () => ProfileRenderer,
+  WalletClient: () => WalletClient,
   generateQrSvg: () => generateQrSvg,
   getProviderButtonConfig: () => getProviderButtonConfig,
   getStrings: () => getStrings,
@@ -3193,11 +3195,319 @@ function generateQrSvg(text, moduleSize = 4) {
   return svg;
 }
 
+// src/wallet.ts
+var AuthonWalletError = class extends Error {
+  code;
+  constructor(code, message) {
+    super(message ?? code);
+    this.name = "AuthonWalletError";
+    this.code = code;
+  }
+};
+var DEFAULT_TIMEOUT_MS = 3e4;
+var DEFAULT_POPUP_TIMEOUT_MS = 18e4;
+var POPUP_FEATURES = "popup=yes,width=420,height=620";
+var toError = (error) => new AuthonWalletError(error?.code || "UNKNOWN", error?.message || error?.code || "Wallet request failed");
+var toBigIntHex = (value) => typeof value === "bigint" ? `0x${value.toString(16)}` : value;
+var WalletClient = class {
+  options;
+  listeners = /* @__PURE__ */ new Set();
+  pending = /* @__PURE__ */ new Map();
+  iframe = null;
+  frameReady = null;
+  abortFrame = null;
+  listening = false;
+  ensuring = null;
+  counter = 0;
+  constructor(options) {
+    this.options = options;
+  }
+  async get() {
+    try {
+      return this.normalize(await this.call("wallet.status"));
+    } catch (error) {
+      if (error instanceof AuthonWalletError && error.code === "NOT_FOUND") return null;
+      throw error;
+    }
+  }
+  ensure() {
+    if (this.ensuring) return this.ensuring;
+    const run = (async () => {
+      const existing = await this.get();
+      if (existing) return existing;
+      const created = this.normalize(await this.call("wallet.create"));
+      if (!created) throw new AuthonWalletError("NOT_FOUND", "Wallet creation returned no wallet");
+      this.notify(created);
+      return created;
+    })();
+    this.ensuring = run;
+    const clear = () => {
+      if (this.ensuring === run) this.ensuring = null;
+    };
+    run.then(clear, clear);
+    return run;
+  }
+  async signMessage(message) {
+    return this.call("wallet.signMessage", { message });
+  }
+  async signTypedData(typedData) {
+    return this.call("wallet.signTypedData", { typedData });
+  }
+  async signTransaction(tx) {
+    const normalized = {};
+    for (const [key, value] of Object.entries(tx)) normalized[key] = toBigIntHex(value);
+    return this.call("wallet.signTransaction", { tx: normalized });
+  }
+  /**
+   * Creates a passkey and backs up the wallet. Must be called from a user click
+   * handler: the browser only allows the passkey prompt (or the popup fallback)
+   * during a user gesture.
+   */
+  async protect() {
+    await this.call("wallet.protect");
+    await this.refresh();
+  }
+  /**
+   * Recovers the wallet on a new browser with the passkey. Must be called from a
+   * user click handler: the browser only allows the passkey prompt (or the popup
+   * fallback) during a user gesture.
+   */
+  async restore() {
+    await this.call("wallet.restore");
+    await this.refresh();
+  }
+  async revokeDevice(deviceId) {
+    await this.call("wallet.revokeDevice", { deviceId });
+    await this.refresh();
+  }
+  onChange(listener) {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+  provider(chainId) {
+    const hexChainId = `0x${chainId.toString(16)}`;
+    const unsupported = (method) => Object.assign(new AuthonWalletError("UNSUPPORTED_METHOD", `Method ${method} is not supported`), { code: 4200 });
+    return {
+      request: async ({ method, params }) => {
+        const list = Array.isArray(params) ? params : [];
+        switch (method) {
+          case "eth_chainId":
+            return hexChainId;
+          case "eth_accounts": {
+            const wallet = await this.get();
+            return wallet ? [wallet.address] : [];
+          }
+          case "eth_requestAccounts":
+            return [(await this.ensure()).address];
+          case "personal_sign": {
+            const data = list[0];
+            if (typeof data !== "string") throw new AuthonWalletError("INVALID_PARAMS", "personal_sign requires a message");
+            return this.signMessage({ raw: data });
+          }
+          case "eth_signTypedData_v4": {
+            const raw = list[1];
+            const typed = typeof raw === "string" ? JSON.parse(raw) : raw;
+            if (!typed || typeof typed !== "object") throw new AuthonWalletError("INVALID_PARAMS", "eth_signTypedData_v4 requires typed data");
+            return this.signTypedData(typed);
+          }
+          case "eth_signTransaction": {
+            const tx = list[0];
+            if (!tx || typeof tx !== "object") throw new AuthonWalletError("INVALID_PARAMS", "eth_signTransaction requires a transaction");
+            return this.signTransaction({ chainId: hexChainId, ...tx });
+          }
+          default:
+            throw unsupported(method);
+        }
+      }
+    };
+  }
+  /** Removes the frame and rejects in-flight requests. Called on sign-out. */
+  dispose() {
+    for (const [id, entry] of this.pending) {
+      clearTimeout(entry.timer);
+      entry.reject(new AuthonWalletError("DISPOSED", "Wallet was disposed"));
+      this.pending.delete(id);
+    }
+    if (this.listening && typeof window !== "undefined") window.removeEventListener("message", this.onMessage);
+    this.listening = false;
+    this.abortFrame?.(new AuthonWalletError("DISPOSED", "Wallet was disposed"));
+    this.abortFrame = null;
+    this.iframe?.remove();
+    this.iframe = null;
+    this.frameReady = null;
+    this.ensuring = null;
+    this.notify(null);
+  }
+  async refresh() {
+    const wallet = await this.get();
+    this.notify(wallet);
+  }
+  notify(wallet) {
+    for (const listener of [...this.listeners]) {
+      try {
+        listener(wallet);
+      } catch {
+      }
+    }
+  }
+  normalize(result) {
+    if (!result || typeof result !== "object") return null;
+    const raw = result;
+    if (raw.exists === false || typeof raw.address !== "string") return null;
+    return {
+      address: raw.address,
+      protected: !!raw.protected,
+      needsRestore: !!raw.needsRestore,
+      devices: Array.isArray(raw.devices) ? raw.devices : []
+    };
+  }
+  requireOrigin() {
+    if (!this.options.walletOrigin) {
+      throw new AuthonWalletError("NOT_CONFIGURED", "Set wallet.origin in AuthonConfig when using a custom apiUrl");
+    }
+    return this.options.walletOrigin;
+  }
+  frameUrl(path) {
+    const origin = this.requireOrigin();
+    const url = new URL(`/${path}`, origin);
+    url.searchParams.set("pk", this.options.publishableKey);
+    url.searchParams.set("origin", window.location.origin);
+    return url.toString();
+  }
+  ensureFrame() {
+    if (this.frameReady) return this.frameReady;
+    const src = this.frameUrl("frame");
+    const iframe = document.createElement("iframe");
+    iframe.setAttribute("allow", "publickey-credentials-create; publickey-credentials-get");
+    iframe.setAttribute("aria-hidden", "true");
+    iframe.tabIndex = -1;
+    iframe.title = "Authon wallet";
+    iframe.style.cssText = "position:fixed;width:0;height:0;border:0;opacity:0;pointer-events:none;";
+    this.iframe = iframe;
+    this.listen();
+    this.frameReady = new Promise((resolve, reject) => {
+      this.abortFrame = reject;
+      const timer = setTimeout(() => reject(new AuthonWalletError("TIMEOUT", "Wallet frame did not load")), this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+      iframe.addEventListener("load", () => {
+        clearTimeout(timer);
+        if (iframe.contentWindow) resolve(iframe.contentWindow);
+        else reject(new AuthonWalletError("NOT_CONFIGURED", "Wallet frame has no window"));
+      }, { once: true });
+    });
+    this.frameReady.catch(() => {
+      if (this.iframe === iframe) {
+        iframe.remove();
+        this.iframe = null;
+        this.frameReady = null;
+      }
+    });
+    iframe.src = src;
+    document.body.appendChild(iframe);
+    return this.frameReady;
+  }
+  listen() {
+    if (this.listening) return;
+    window.addEventListener("message", this.onMessage);
+    this.listening = true;
+  }
+  onMessage = (event) => {
+    if (event.origin !== this.options.walletOrigin) return;
+    const data = event.data;
+    if (!data || data.v !== 1 || typeof data.id !== "string") return;
+    const entry = this.pending.get(data.id);
+    if (!entry) return;
+    const expected = entry.source();
+    if (expected && event.source !== expected) return;
+    this.pending.delete(data.id);
+    clearTimeout(entry.timer);
+    if (data.ok) entry.resolve(data.result);
+    else entry.reject(toError(data.error));
+  };
+  send(target, post, type, payload, timeoutMs) {
+    const id = `w${Date.now().toString(36)}${(this.counter++).toString(36)}`;
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.pending.delete(id);
+        reject(new AuthonWalletError("TIMEOUT", `Wallet request ${type} timed out`));
+      }, timeoutMs);
+      this.pending.set(id, {
+        resolve,
+        reject,
+        source: target,
+        timer
+      });
+      post.postMessage({ v: 1, id, type, payload }, this.requireOrigin());
+    });
+  }
+  async call(type, extra = {}) {
+    const token = await this.options.getToken();
+    if (!token) throw new AuthonWalletError("NOT_SIGNED_IN", "Sign in before using the wallet");
+    const payload = { ...extra, token };
+    const frame = await this.ensureFrame();
+    try {
+      return await this.send(() => frame, frame, type, payload, this.options.timeoutMs ?? DEFAULT_TIMEOUT_MS);
+    } catch (error) {
+      if (error instanceof AuthonWalletError && error.code === "NEEDS_POPUP") {
+        return this.callViaPopup(type, payload);
+      }
+      throw error;
+    }
+  }
+  async callViaPopup(type, payload) {
+    const popup = window.open(this.frameUrl("passkey"), "authon-wallet", POPUP_FEATURES);
+    if (!popup) throw new AuthonWalletError("POPUP_BLOCKED", "Call this from a user click so the passkey window can open");
+    const popupTimeout = this.options.popupTimeoutMs ?? DEFAULT_POPUP_TIMEOUT_MS;
+    try {
+      await this.waitForPopupReady(popup, popupTimeout);
+      const request = this.send(() => popup, popup, type, payload, popupTimeout);
+      const closed = new Promise((_, reject) => {
+        const poll = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(poll);
+            reject(new AuthonWalletError("USER_CANCELLED", "Passkey window was closed"));
+          }
+        }, 500);
+        request.then(() => clearInterval(poll), () => clearInterval(poll));
+      });
+      return await Promise.race([request, closed]);
+    } finally {
+      if (!popup.closed) popup.close();
+    }
+  }
+  waitForPopupReady(popup, timeoutMs) {
+    return new Promise((resolve, reject) => {
+      const done = (fn) => {
+        clearTimeout(timer);
+        clearInterval(poll);
+        window.removeEventListener("message", handler);
+        fn();
+      };
+      const handler = (event) => {
+        if (event.origin !== this.options.walletOrigin || event.source !== popup) return;
+        const data = event.data;
+        if (data?.v === 1 && data.type === "wallet.ready") done(resolve);
+      };
+      const timer = setTimeout(() => done(() => reject(new AuthonWalletError("TIMEOUT", "Passkey window did not respond"))), timeoutMs);
+      const poll = setInterval(() => {
+        if (popup.closed) done(() => reject(new AuthonWalletError("USER_CANCELLED", "Passkey window was closed")));
+      }, 500);
+      window.addEventListener("message", handler);
+    });
+  }
+};
+
 // src/authon.ts
+var DEFAULT_API_URL2 = "https://api.authon.dev";
+var DEFAULT_WALLET_ORIGIN = "https://wallet.authon.dev";
 var Authon = class {
   publishableKey;
   config;
   session;
+  wallet;
+  walletAutoCreate;
+  walletEnabled = true;
   modal = null;
   profile = null;
   listeners = /* @__PURE__ */ new Map();
@@ -3212,7 +3522,7 @@ var Authon = class {
   constructor(publishableKey, config) {
     this.publishableKey = publishableKey;
     this.config = {
-      apiUrl: config?.apiUrl || "https://api.authon.dev",
+      apiUrl: config?.apiUrl || DEFAULT_API_URL2,
       mode: config?.mode || "popup",
       theme: config?.theme || "auto",
       locale: config?.locale || "en",
@@ -3221,13 +3531,23 @@ var Authon = class {
       sessionMode: config?.sessionMode || "browser"
     };
     this.session = new SessionManager(publishableKey, this.config.apiUrl, this.config.sessionMode);
+    const walletOrigin = config?.wallet?.origin || (this.config.apiUrl.replace(/\/+$/, "") === DEFAULT_API_URL2 ? DEFAULT_WALLET_ORIGIN : null);
+    this.walletAutoCreate = !!config?.wallet?.autoCreate;
+    this.wallet = new WalletClient({
+      publishableKey,
+      walletOrigin: walletOrigin ? new URL(walletOrigin).origin : null,
+      getToken: async () => await this.ensureValidToken() ? this.session.getToken() : null
+    });
+    this.wallet.onChange((wallet) => this.emit("walletChanged", wallet));
     this.session.subscribe((change) => {
       this.emit("sessionChanged", change);
       if (change.reason === "setSession" && change.user) {
         this.emit("signedIn", change.user);
+        if (this.walletAutoCreate) void this.autoCreateWallet();
       } else if (change.reason === "tokenRefresh" && change.accessToken) {
         this.emit("tokenRefreshed", change.accessToken);
       } else if (change.reason === "clearSession" || change.reason === "signOut" || change.reason === "refreshFailed") {
+        this.wallet.dispose();
         this.emit("signedOut");
       }
     });
@@ -3702,6 +4022,7 @@ var Authon = class {
     this.profile?.close();
     this.profile = null;
     this.session.destroy();
+    this.wallet.dispose();
     this.listeners.clear();
   }
   // ── Internal ──
@@ -3731,6 +4052,7 @@ var Authon = class {
       this.branding = { ...branding, ...this.config.appearance };
       this.captchaEnabled = !!branding.captchaEnabled;
       this.turnstileSiteKey = branding.turnstileSiteKey || "";
+      this.walletEnabled = branding.walletEnabled !== false;
       if (this.captchaEnabled && this.turnstileSiteKey) {
         this.loadTurnstileScript();
       }
@@ -3745,6 +4067,15 @@ var Authon = class {
     } catch (err) {
       this.emit("error", err instanceof Error ? err : new Error(String(err)));
       throw err;
+    }
+  }
+  async autoCreateWallet() {
+    try {
+      await this.ensureInitialized();
+      if (!this.walletEnabled) return;
+      await this.wallet.ensure();
+    } catch (err) {
+      this.emit("walletError", err instanceof AuthonWalletError ? err : new AuthonWalletError("UNKNOWN", err instanceof Error ? err.message : String(err)));
     }
   }
   getModal() {
@@ -4264,7 +4595,9 @@ var Authon = class {
 0 && (module.exports = {
   Authon,
   AuthonMfaRequiredError,
+  AuthonWalletError,
   ProfileRenderer,
+  WalletClient,
   generateQrSvg,
   getProviderButtonConfig,
   getStrings,
