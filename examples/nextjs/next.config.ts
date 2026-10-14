@@ -3,6 +3,7 @@ import path from 'node:path'
 
 const nextConfig: NextConfig = {
   basePath: '/nextjs',
+  output: 'standalone',
   outputFileTracingRoot: path.join(process.cwd(), '../..'),
   transpilePackages: ['@authon/nextjs', '@authon/react', '@authon/js', '@authon/shared'],
 }

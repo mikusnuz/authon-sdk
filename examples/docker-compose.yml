@@ -3,8 +3,6 @@ services:
     build:
       context: ..
       dockerfile: examples/portal/Dockerfile
-    ports:
-      - "15585:80"
     restart: unless-stopped
 
   react:
@@ -14,8 +12,6 @@ services:
       args:
         VITE_AUTHON_PUBLISHABLE_KEY: ${VITE_AUTHON_PUBLISHABLE_KEY}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
-    ports:
-      - "15586:80"
     restart: unless-stopped
 
   nextjs:
@@ -25,8 +21,6 @@ services:
       args:
         NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY: ${NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY}
         NEXT_PUBLIC_AUTHON_API_URL: ${NEXT_PUBLIC_AUTHON_API_URL}
-    ports:
-      - "15587:3000"
     env_file: .env
     restart: unless-stopped
 
@@ -37,16 +31,12 @@ services:
       args:
         VITE_AUTHON_PUBLISHABLE_KEY: ${VITE_AUTHON_PUBLISHABLE_KEY}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
-    ports:
-      - "15588:80"
     restart: unless-stopped
 
   nuxt:
     build:
       context: ..
       dockerfile: examples/nuxt/Dockerfile
-    ports:
-      - "15589:3000"
     env_file: .env
     restart: unless-stopped
 
@@ -57,16 +47,12 @@ services:
       args:
         AUTHON_PUBLISHABLE_KEY: ${AUTHON_PUBLISHABLE_KEY}
         AUTHON_API_URL: ${AUTHON_API_URL}
-    ports:
-      - "15595:80"
     restart: unless-stopped
 
   svelte:
     build:
       context: ..
       dockerfile: examples/svelte/Dockerfile
-    ports:
-      - "15596:3000"
     env_file: .env
     environment:
       - ORIGIN=${SVELTE_ORIGIN:-http://192.168.0.200:15596}
@@ -81,6 +67,21 @@ services:
       args:
         VITE_AUTHON_PUBLISHABLE_KEY: ${VITE_AUTHON_PUBLISHABLE_KEY}
         VITE_AUTHON_API_URL: ${VITE_AUTHON_API_URL}
+    restart: unless-stopped
+
+  gateway:
+    image: nginx:alpine
     ports:
-      - "15597:80"
+      - "15585:80"
+    volumes:
+      - ./gateway/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - portal
+      - react
+      - nextjs
+      - vue
+      - nuxt
+      - angular
+      - svelte
+      - vanilla-js
     restart: unless-stopped

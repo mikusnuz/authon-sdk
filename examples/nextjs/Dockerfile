@@ -1,6 +1,6 @@
 FROM node:20-alpine AS sdk-build
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.24.0 --activate
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json ./
 COPY packages/ ./packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
@@ -20,9 +20,9 @@ RUN npm run build
 
 FROM node:20-alpine
 WORKDIR /app
-COPY --from=build /app/examples/nextjs/.next ./.next
-COPY --from=build /app/examples/nextjs/node_modules ./node_modules
-COPY --from=build /app/examples/nextjs/package.json ./package.json
-COPY --from=build /app/examples/nextjs/next.config.ts ./next.config.ts
+ENV NODE_ENV=production PORT=3000 HOSTNAME=0.0.0.0
+COPY --from=build /app/examples/nextjs/.next/standalone ./
+COPY --from=build /app/examples/nextjs/.next/static ./examples/nextjs/.next/static
+WORKDIR /app/examples/nextjs
 EXPOSE 3000
-CMD ["npx", "next", "start", "-p", "3000"]
+CMD ["node", "server.js"]
