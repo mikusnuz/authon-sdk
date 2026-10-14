@@ -187,14 +187,19 @@ authon.on('walletError', (err) => console.warn(err.code));
 const wallet = await authon.wallet.ensure();          // { address, protected, needsRestore, devices }
 const signature = await authon.wallet.signMessage('hello');
 
-// protect() and restore() open a system passkey prompt: call them from a click handler.
-button.onclick = () => authon.wallet.protect();
+// protect() and restore() show one small confirmation card from the wallet frame, then the
+// system passkey prompt (browsers require a tap inside the wallet frame). Set its text/colors:
+button.onclick = () => authon.wallet.protect({
+  ui: { title: 'Secure your account', confirmLabel: 'Continue with Face ID', accentColor: '#16a34a' },
+});
 restoreButton.onclick = () => authon.wallet.restore(); // when wallet.needsRestore is true
 
 const provider = authon.wallet.provider(1);           // EIP-1193: eth_accounts, eth_requestAccounts,
                                                       // eth_chainId, personal_sign,
                                                       // eth_signTypedData_v4, eth_signTransaction
 ```
+
+Default card text and colors can be set once with `new Authon(pk, { wallet: { ui: { ... } } })`. In BFF mode (`sessionMode: 'bff'`) pass `wallet.getToken`, a function that returns a short-lived wallet token minted on your server with `createAuthonWalletToken` from `@authon/nextjs/server`.
 
 `wallet.origin` defaults to `https://wallet.authon.dev` with the default `apiUrl`; set it explicitly when using a custom `apiUrl`. Other provider methods throw an error with code `4200`. Wallet failures are thrown as `AuthonWalletError` with a `code` (`NOT_FOUND`, `NEEDS_RESTORE`, `NOT_PROTECTED`, `PRF_UNSUPPORTED`, `ORIGIN_NOT_ALLOWED`, `USER_CANCELLED`, `TIMEOUT`, `NEEDS_POPUP`, `POPUP_BLOCKED`, `NOT_SIGNED_IN`, `NOT_CONFIGURED`).
 

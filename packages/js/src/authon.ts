@@ -85,7 +85,9 @@ export class Authon {
     this.wallet = new WalletClient({
       publishableKey,
       walletOrigin: walletOrigin ? new URL(walletOrigin).origin : null,
-      getToken: async () => ((await this.ensureValidToken()) ? this.session.getToken() : null),
+      getToken: config?.wallet?.getToken
+        ? async () => (await config.wallet!.getToken!()) ?? null
+        : async () => ((await this.ensureValidToken()) ? this.session.getToken() : null),
       ui: config?.wallet?.ui,
     });
     this.wallet.onChange((wallet) => this.emit('walletChanged', wallet));

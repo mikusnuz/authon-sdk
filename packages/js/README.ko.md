@@ -84,16 +84,27 @@ await authon.signOut();
 ```ts
 const authon = new Authon('pk_live_...', { wallet: { autoCreate: true } });
 
-const wallet = await authon.wallet.ensure();   // { address, protected, needsRestore, devices }
+authon.wallet.onChange((wallet) => render(wallet));
+authon.on('walletError', (err) => console.warn(err.code));
+
+const wallet = await authon.wallet.ensure();          // { address, protected, needsRestore, devices }
 const signature = await authon.wallet.signMessage('hello');
 
-// protect()와 restore()는 시스템 패스키 창을 띄우므로 반드시 클릭 핸들러 안에서 호출합니다.
-button.onclick = () => authon.wallet.protect();
+// protect()와 restore()는 지갑 프레임에서 작은 확인 카드를 한 번 보여준 뒤
+// 시스템 패스키 창을 띄웁니다(브라우저는 지갑 프레임 안에서의 탭을 요구합니다). 카드의 문구/색상을 지정할 수 있습니다.
+button.onclick = () => authon.wallet.protect({
+  ui: { title: 'Secure your account', confirmLabel: 'Continue with Face ID', accentColor: '#16a34a' },
+});
+restoreButton.onclick = () => authon.wallet.restore(); // wallet.needsRestore가 true일 때
 
-const provider = authon.wallet.provider(1);    // EIP-1193 provider
+const provider = authon.wallet.provider(1);           // EIP-1193: eth_accounts, eth_requestAccounts,
+                                                      // eth_chainId, personal_sign,
+                                                      // eth_signTypedData_v4, eth_signTransaction
 ```
 
-기본 `apiUrl`을 쓰면 `wallet.origin`은 `https://wallet.authon.dev`가 기본값이며, 사용자 지정 `apiUrl`에서는 직접 지정해야 합니다. 오류는 `code`가 있는 `AuthonWalletError`로 던져집니다.
+기본 카드 문구와 색상은 `new Authon(pk, { wallet: { ui: { ... } } })`로 한 번에 지정할 수 있습니다. BFF 모드(`sessionMode: 'bff'`)에서는 `wallet.getToken`을 전달합니다. 이 함수는 서버에서 `@authon/nextjs/server`의 `createAuthonWalletToken`으로 발급한 단기 지갑 토큰을 반환해야 합니다.
+
+기본 `apiUrl`을 쓰면 `wallet.origin`은 `https://wallet.authon.dev`가 기본값이며, 사용자 지정 `apiUrl`을 쓸 때는 직접 지정해야 합니다. 그 외의 provider 메서드는 코드 `4200` 오류를 던집니다. 지갑 오류는 `code`가 있는 `AuthonWalletError`로 던져집니다(`NOT_FOUND`, `NEEDS_RESTORE`, `NOT_PROTECTED`, `PRF_UNSUPPORTED`, `ORIGIN_NOT_ALLOWED`, `USER_CANCELLED`, `TIMEOUT`, `NEEDS_POPUP`, `POPUP_BLOCKED`, `NOT_SIGNED_IN`, `NOT_CONFIGURED`).
 
 ## 환경 변수
 

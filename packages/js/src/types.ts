@@ -25,6 +25,12 @@ export interface AuthonWalletConfig {
   autoCreate?: boolean;
   /** Text and colors of the one-tap confirmation shown before the passkey prompt (protect/restore). */
   ui?: WalletConfirmUi;
+  /**
+   * Supplies the token the wallet sends to Authon. Required with sessionMode 'bff',
+   * where the browser holds no Authon session: fetch a short-lived wallet token
+   * from your server (see createAuthonWalletToken in @authon/nextjs/server).
+   */
+  getToken?: () => Promise<string | null | undefined>;
 }
 
 /**
