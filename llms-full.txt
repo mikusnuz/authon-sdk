@@ -171,6 +171,8 @@ await authon.signInWithOAuth('google', { flowMode: 'auto' }); // default — pop
 ```ts
 // Magic link
 await authon.sendMagicLink('user@example.com');
+// Magic links are verified automatically when the page opens (autoHandleMagicLink: true by default).
+// With autoHandleMagicLink: false, call authon.handleMagicLink() or:
 const user = await authon.verifyPasswordless({ token: 'token-from-url' });
 
 // Email OTP
@@ -343,6 +345,7 @@ authon.destroy();
 | `sendMagicLink(email)` | `Promise<void>` | Send magic link |
 | `sendEmailOtp(email)` | `Promise<void>` | Send OTP code |
 | `verifyPasswordless(opts)` | `Promise<AuthonUser>` | Verify magic link or OTP |
+| `handleMagicLink()` | `Promise<AuthonUser \| null>` | Verify `?token=...&authon_magic_link=1` on the current page (automatic unless `autoHandleMagicLink: false`) |
 | `registerPasskey(name?)` | `Promise<PasskeyCredential>` | Register passkey |
 | `authenticateWithPasskey(email?)` | `Promise<AuthonUser>` | Sign in with passkey |
 | `listPasskeys()` | `Promise<PasskeyCredential[]>` | List passkeys |
@@ -369,10 +372,12 @@ authon.destroy();
 | `wallet.get()` | `Promise<EmbeddedWallet \| null>` | Embedded wallet `{ address, protected, needsRestore, devices }` |
 | `wallet.ensure()` | `Promise<EmbeddedWallet>` | Create the embedded wallet if missing (config `wallet: { autoCreate: true }` does this after sign-in) |
 | `wallet.signMessage(message)` / `signTypedData(data)` / `signTransaction(tx)` | `Promise<Hex>` | Sign with the embedded wallet |
-| `wallet.protect()` / `wallet.restore()` | `Promise<void>` | Passkey backup / recovery on a new device. Call inside a click handler |
+| `wallet.protect()` / `wallet.restore({ resetOtherDevices? })` | `Promise<void>` | Passkey backup / recovery on a new device (adds this device; `resetOtherDevices: true` re-splits and signs out other devices). Call inside a click handler |
 | `wallet.revokeDevice(id)` | `Promise<void>` | Revoke a device share |
 | `wallet.provider(chainId)` | `EIP1193Provider` | eth_accounts, eth_requestAccounts, eth_chainId, personal_sign, eth_signTypedData_v4, eth_signTransaction; others throw code 4200 |
 | `wallet.onChange(listener)` | `() => void` | Receive the latest wallet after create/protect/restore/revoke (null on sign-out) |
+
+Embedded wallets are HD wallets: a BIP39 seed split into 2-of-3 shares (device, Authon, passkey backup); the EVM account is `m/44'/60'/0'/0/0`. Sign-in methods turned off in the console are rejected by the API with `AUTH_METHOD_DISABLED`.
 | `destroy()` | `void` | Cleanup |
 
 ---

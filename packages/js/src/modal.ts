@@ -525,7 +525,7 @@ export class ModalRenderer {
       ? this.enabledProviders
           .filter((p) => !b.hiddenProviders?.includes(p))
           .map((p) => {
-            const config = getProviderButtonConfig(p);
+            const config = getProviderButtonConfig(p, this.t);
             const isWhiteBg = config.bgColor === '#ffffff';
             const btnBg = dark && isWhiteBg ? '#f8fafc' : config.bgColor;
             const btnBorder = isWhiteBg ? (dark ? '#475569' : '#e5e7eb') : config.bgColor;

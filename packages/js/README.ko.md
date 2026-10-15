@@ -79,7 +79,9 @@ await authon.signOut();
 
 ### 내장 지갑
 
-로그인한 사용자에게 화면 없이 비수탁 EVM 지갑을 만들어 줍니다. 먼저 Authon 콘솔에서 프로젝트의 지갑을 켜야 합니다.
+로그인한 사용자에게 화면 없이 비수탁 EVM 지갑을 만들어 줍니다. 먼저 Authon 콘솔에서 프로젝트의 지갑을 켜야 합니다(고급 > 내장 지갑).
+
+각 지갑은 HD 지갑입니다. BIP39 시드를 세 조각(이 기기, Authon, 패스키 백업)으로 나누며, 두 조각만 있으면 서명할 수 있고 Authon 단독으로는 서명할 수 없습니다. EVM 계정은 `m/44'/60'/0'/0/0` 경로로 파생됩니다. 시드는 `wallet.authon.dev`의 지갑 프레임 밖으로 나가지 않습니다.
 
 ```ts
 const authon = new Authon('pk_live_...', { wallet: { autoCreate: true } });

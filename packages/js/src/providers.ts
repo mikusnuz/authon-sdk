@@ -1,4 +1,5 @@
 import { PROVIDER_COLORS, PROVIDER_DISPLAY_NAMES, type OAuthProviderType } from '@authon/shared';
+import { formatContinueWith, type TranslationStrings } from './i18n';
 
 export interface ProviderButtonConfig {
   provider: OAuthProviderType;
@@ -21,11 +22,14 @@ const PROVIDER_ICONS: Record<OAuthProviderType, string> = {
   microsoft: `<svg viewBox="0 0 24 24" width="20" height="20"><rect fill="#F25022" x="1" y="1" width="10" height="10"/><rect fill="#7FBA00" x="13" y="1" width="10" height="10"/><rect fill="#00A4EF" x="1" y="13" width="10" height="10"/><rect fill="#FFB900" x="13" y="13" width="10" height="10"/></svg>`,
 };
 
-export function getProviderButtonConfig(provider: OAuthProviderType): ProviderButtonConfig {
+export function getProviderButtonConfig(
+  provider: OAuthProviderType,
+  t?: Pick<TranslationStrings, 'continueWith'>,
+): ProviderButtonConfig {
   const colors = PROVIDER_COLORS[provider];
   return {
     provider,
-    label: `Continue with ${PROVIDER_DISPLAY_NAMES[provider]}`,
+    label: t ? formatContinueWith(t, PROVIDER_DISPLAY_NAMES[provider]) : `Continue with ${PROVIDER_DISPLAY_NAMES[provider]}`,
     bgColor: colors.bg,
     textColor: colors.text,
     iconSvg: PROVIDER_ICONS[provider],

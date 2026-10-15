@@ -1,5 +1,12 @@
 # @authon/nextjs
 
+## 0.9.0
+
+### Minor Changes
+
+- Add `createAuthonWalletToken` in `@authon/nextjs/server` for embedded wallets in BFF mode.
+- Depend on @authon/js 0.9.0.
+
 ## 0.8.1
 
 - Document safe BFF refresh rotation and targeted provider-session revocation.

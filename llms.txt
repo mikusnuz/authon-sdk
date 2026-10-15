@@ -70,7 +70,8 @@ npm install @authon/react-native react-native-svg
 - **MFA**: TOTP-based (Google Authenticator / Authy compatible) with backup codes.
 - **Passkeys**: WebAuthn-based passwordless authentication. Register and authenticate with platform authenticators.
 - **Web3**: EVM (MetaMask, WalletConnect, Coinbase, Pexus, Trust) and Solana (Phantom) wallet authentication via sign-in-with-wallet.
-- **Embedded Wallet**: `authon.wallet` (`@authon/js`) creates a non-custodial EVM wallet per user (2-of-3 key shares, passkey PRF backup). API: get, ensure, signMessage, signTypedData, signTransaction, protect, restore, revokeDevice, provider(chainId) (EIP-1193), onChange. Config: `wallet: { origin?, autoCreate? }`. protect/restore must run inside a click handler.
+- **Embedded Wallet**: `authon.wallet` (`@authon/js`) creates a non-custodial HD wallet per user (BIP39 seed in 2-of-3 shares: device, Authon, passkey PRF backup; EVM account at m/44'/60'/0'/0/0). API: get, ensure, signMessage, signTypedData, signTransaction, protect, restore({ resetOtherDevices? }), revokeDevice, provider(chainId) (EIP-1193), onChange. Config: `wallet: { origin?, autoCreate?, ui?, getToken? }` (getToken for BFF mode, minted with `createAuthonWalletToken` from `@authon/nextjs/server`). protect/restore must run inside a click handler. Enable per project in the console (Advanced > Embedded wallets).
+- **Sign-in method enforcement**: methods turned off in the console are rejected by the API with `AUTH_METHOD_DISABLED`. Magic links are verified automatically on page load (`autoHandleMagicLink`, default true).
 
 ## Environment Variables
 

@@ -775,6 +775,20 @@ export interface TranslationStrings {
   cancel: string;
 }
 
+// Languages where the provider name comes before the phrase ("Kakao(으)로 계속하기", "Kakaoで続行").
+const PROVIDER_FIRST: Record<string, string> = {
+  '(으)로 계속하기': '',
+  'で続行': '',
+  'से जारी रखें': ' ',
+  'ile devam et': ' ',
+};
+
+/** "Continue with Google" in the modal's language. */
+export function formatContinueWith(t: Pick<TranslationStrings, 'continueWith'>, providerName: string): string {
+  const joiner = PROVIDER_FIRST[t.continueWith];
+  return joiner === undefined ? `${t.continueWith} ${providerName}` : `${providerName}${joiner}${t.continueWith}`;
+}
+
 /** Strings missing in a locale fall back to English. */
 export function getStrings(locale: string): TranslationStrings {
   const en: TranslationStrings = translations.en;

@@ -370,21 +370,6 @@ declare class Authon {
     private parseApiError;
 }
 
-interface ProviderButtonConfig {
-    provider: OAuthProviderType;
-    label: string;
-    bgColor: string;
-    textColor: string;
-    iconSvg: string;
-}
-declare function getProviderButtonConfig(provider: OAuthProviderType): ProviderButtonConfig;
-
-/**
- * Minimal QR Code SVG generator — byte mode, EC Level L, versions 1–13.
- * Zero dependencies. Produces a standalone SVG string.
- */
-declare function generateQrSvg(text: string, moduleSize?: number): string;
-
 type AuthonLocale = keyof typeof translations;
 declare const translations: {
     readonly en: {
@@ -1161,6 +1146,21 @@ interface TranslationStrings {
 }
 /** Strings missing in a locale fall back to English. */
 declare function getStrings(locale: string): TranslationStrings;
+
+interface ProviderButtonConfig {
+    provider: OAuthProviderType;
+    label: string;
+    bgColor: string;
+    textColor: string;
+    iconSvg: string;
+}
+declare function getProviderButtonConfig(provider: OAuthProviderType, t?: Pick<TranslationStrings, 'continueWith'>): ProviderButtonConfig;
+
+/**
+ * Minimal QR Code SVG generator — byte mode, EC Level L, versions 1–13.
+ * Zero dependencies. Produces a standalone SVG string.
+ */
+declare function generateQrSvg(text: string, moduleSize?: number): string;
 
 declare class ProfileRenderer {
     private shadowRoot;

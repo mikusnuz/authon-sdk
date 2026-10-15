@@ -292,3 +292,16 @@ describe('modal passwordless wording', () => {
     expect(ja.openOverlay()).toBe('コードを送信');
   });
 });
+
+describe('provider button wording', () => {
+  it('follows the modal language, including languages that put the provider first', async () => {
+    const { getProviderButtonConfig } = await import('./providers');
+    const { getStrings } = await import('./i18n');
+    expect(getProviderButtonConfig('google').label).toBe('Continue with Google');
+    expect(getProviderButtonConfig('google', getStrings('en')).label).toBe('Continue with Google');
+    expect(getProviderButtonConfig('kakao', getStrings('ko')).label).toBe('Kakao(으)로 계속하기');
+    expect(getProviderButtonConfig('google', getStrings('ja')).label).toBe('Googleで続行');
+    expect(getProviderButtonConfig('github', getStrings('de')).label).toBe('Weiter mit GitHub');
+    expect(getProviderButtonConfig('google', getStrings('tr')).label).toBe('Google ile devam et');
+  });
+});

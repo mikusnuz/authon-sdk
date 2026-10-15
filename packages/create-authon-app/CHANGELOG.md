@@ -1,5 +1,9 @@
 # @authon/create-app
 
+## 0.1.6
+
+- Scaffold the 0.9.0 SDK release line (embedded wallets, passkey and magic link fixes).
+
 ## 0.1.5
 
 - Scaffold the 0.8.1 SDK release line with refresh-session rotation support.

@@ -1,5 +1,11 @@
 # @authon/react
 
+## 0.9.0
+
+### Minor Changes
+
+- Release with @authon/js 0.9.0 (embedded wallets, passkey and magic link fixes).
+
 ## 0.8.1
 
 - Adopt the updated shared refresh-session rotation contract.

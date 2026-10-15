@@ -73,6 +73,23 @@ Provider는 미들웨어 호환성을 위해 기본 이름이 `authon-token`인 
 처리됩니다. `@authon/nextjs/server`의 `currentUser()`와 `auth()`는 직접 응답과
 `{ data: ... }` 래핑 응답을 모두 처리한 뒤 검증된 사용자만 반환합니다.
 
+## 내장 지갑 토큰 (BFF 모드)
+
+서버가 Authon 세션을 보유하는 경우(`sessionMode: 'bff'`) 브라우저에는 내장 지갑용 Authon 토큰이 없습니다. 서버에서 유효 시간 5분의 지갑 전용 토큰을 발급해 `@authon/js`의 `wallet.getToken`으로 반환하세요.
+
+```ts
+// app/api/wallet-token/route.ts
+import { createAuthonWalletToken } from '@authon/nextjs/server';
+
+export async function GET() {
+  const userId = await getSignedInUserId(); // 자체 세션에서 가져옵니다
+  const { token, expiresAt } = await createAuthonWalletToken({ userId, secretKey: process.env.AUTHON_SECRET_KEY! });
+  return Response.json({ token, expiresAt });
+}
+```
+
+이 토큰은 지갑 API에서만 허용됩니다.
+
 ## 라이선스
 
 MIT

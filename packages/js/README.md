@@ -176,7 +176,9 @@ authon.on('tokenRefreshed', (token) => { /* update API client */ });
 
 ### Embedded Wallet
 
-A non-custodial EVM wallet created for the signed-in user without any UI. Enable wallets for the project in the Authon console first.
+A non-custodial EVM wallet created for the signed-in user without any UI. Enable wallets for the project in the Authon console first (Advanced > Embedded wallets).
+
+Each wallet is an HD wallet: a BIP39 seed split into three shares (this device, Authon, passkey backup); any two can sign and Authon alone cannot. The EVM account is derived at `m/44'/60'/0'/0/0`. The seed never leaves the wallet frame on `wallet.authon.dev`.
 
 ```ts
 const authon = new Authon('pk_live_...', { wallet: { autoCreate: true } });
@@ -245,9 +247,14 @@ new Authon(publishableKey: string, config?: AuthonConfig)
 
 | Method | Returns |
 |--------|---------|
-| `sendMagicLink(email)` | `Promise<void>` |
+| `sendMagicLink(email, { redirectUrl? })` | `Promise<void>` |
 | `sendEmailOtp(email)` | `Promise<void>` |
 | `verifyPasswordless({ token?, email?, code? })` | `Promise<AuthonUser>` |
+| `handleMagicLink()` | `Promise<AuthonUser \| null>` |
+
+Magic links open the page that requested them (or the project's callback URL). With `autoHandleMagicLink` (default `true`) the SDK verifies `?token=...&authon_magic_link=1` on page load, stores the session and removes both parameters. Set it to `false` and call `handleMagicLink()` yourself if you need control. Choose "magic link" or "6-digit code" per project in the console (Sign-in methods > Passwordless).
+
+Sign-in methods that are turned off in the console are rejected by the API with `AUTH_METHOD_DISABLED` (passwordless, passkeys and Web3), not only hidden in the modal.
 
 ### Passkeys (WebAuthn)
 

@@ -236,6 +236,23 @@ authonMiddleware({
 | `currentUser()` | `Promise<AuthonUser \| null>` |
 | `auth()` | `Promise<{ userId, user, getToken }>` |
 
+### Embedded wallet token (BFF mode)
+
+When your server holds the Authon session (`sessionMode: 'bff'`), the browser has no Authon token for the embedded wallet. Mint a five-minute wallet-only token on the server and return it to `wallet.getToken` in `@authon/js`:
+
+```ts
+// app/api/wallet-token/route.ts
+import { createAuthonWalletToken } from '@authon/nextjs/server';
+
+export async function GET() {
+  const userId = await getSignedInUserId(); // from your own session
+  const { token, expiresAt } = await createAuthonWalletToken({ userId, secretKey: process.env.AUTHON_SECRET_KEY! });
+  return Response.json({ token, expiresAt });
+}
+```
+
+The token is accepted only by the wallet API.
+
 ### Client Components (re-exported from @authon/react)
 
 `AuthonProvider`, `useAuthon`, `useUser`, `SignIn`, `SignUp`, `UserButton`, `UserProfile`, `SignedIn`, `SignedOut`, `Protect`, `SocialButtons`, `useAuthonMfa`, `useAuthonPasskeys`, `useAuthonPasswordless`, `useAuthonWeb3`, `useAuthonSessions`
