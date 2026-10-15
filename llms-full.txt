@@ -166,13 +166,31 @@ await authon.signInWithOAuth('google', { flowMode: 'redirect' });
 await authon.signInWithOAuth('google', { flowMode: 'auto' }); // default — popup with redirect fallback
 ```
 
+OAuth result delivery (@authon/js 0.9.1+). Each sign-in uses PKCE:
+- The SDK keeps a random verifier and sends Authon only its S256 hash.
+- Authon gives the browser a one-time code (60 s, single use), never raw tokens.
+  - Popup: posted only to the exact origin that started sign-in.
+  - Popup that lost its opener: it returns to that page and hands the code over through same-origin storage.
+  - Redirect: returned as `?authon_code=&authon_oauth_state=`.
+- The SDK exchanges code + verifier at `POST /v1/auth/oauth/token`.
+- `GET /v1/auth/oauth/poll` returns status only.
+- The page origin must be in the project's allowed origins (or its domain). URL requests from other origins are rejected.
+
 ### Passwordless
 
 ```ts
 // Magic link
 await authon.sendMagicLink('user@example.com');
-// Magic links are verified automatically when the page opens (autoHandleMagicLink: true by default).
-// With autoHandleMagicLink: false, call authon.handleMagicLink() or:
+// Magic links are verified automatically when the page opens (autoHandleMagicLink: true by default),
+// silently only in the browser that requested the link and only when nobody is signed in.
+// Otherwise nothing is signed in and the app must ask first:
+authon.on('magicLinkConfirmationRequired', ({ email, reason }) => {
+  // reason: 'unrecognized_browser' | 'signed_in'
+  if (confirm(`Sign in as ${email}?`)) authon.confirmMagicLink();
+  else authon.dismissMagicLink();
+});
+// With autoHandleMagicLink: false, call authon.handleMagicLink() (same checks) or, as an explicit
+// decision of your app, verify the token directly:
 const user = await authon.verifyPasswordless({ token: 'token-from-url' });
 
 // Email OTP
@@ -345,7 +363,10 @@ authon.destroy();
 | `sendMagicLink(email)` | `Promise<void>` | Send magic link |
 | `sendEmailOtp(email)` | `Promise<void>` | Send OTP code |
 | `verifyPasswordless(opts)` | `Promise<AuthonUser>` | Verify magic link or OTP |
-| `handleMagicLink()` | `Promise<AuthonUser \| null>` | Verify `?token=...&authon_magic_link=1` on the current page (automatic unless `autoHandleMagicLink: false`) |
+| `handleMagicLink()` | `Promise<AuthonUser \| null>` | Finish the magic link on the current page (`#authon_magic_link=1&token=...` or `?token=...&authon_magic_link=1`; automatic unless `autoHandleMagicLink: false`). Null when it needs confirmation |
+| `getPendingMagicLink()` | `{ email, reason } \| null` | Magic link waiting for the person's OK |
+| `confirmMagicLink()` | `Promise<AuthonUser>` | Sign in with the pending magic link |
+| `dismissMagicLink()` | `void` | Drop the pending magic link |
 | `registerPasskey(name?)` | `Promise<PasskeyCredential>` | Register passkey |
 | `authenticateWithPasskey(email?)` | `Promise<AuthonUser>` | Sign in with passkey |
 | `listPasskeys()` | `Promise<PasskeyCredential[]>` | List passkeys |
@@ -371,14 +392,38 @@ authon.destroy();
 | `on(event, listener)` | `() => void` | Subscribe to event |
 | `wallet.get()` | `Promise<EmbeddedWallet \| null>` | Embedded wallet `{ address, protected, needsRestore, devices }` |
 | `wallet.ensure()` | `Promise<EmbeddedWallet>` | Create the embedded wallet if missing (config `wallet: { autoCreate: true }` does this after sign-in) |
-| `wallet.signMessage(message)` / `signTypedData(data)` / `signTransaction(tx)` | `Promise<Hex>` | Sign with the embedded wallet |
+| `wallet.signMessage(message)` / `signTypedData(data)` / `signTransaction(tx)` | `Promise<Hex>` | Sign with the embedded wallet. Low-risk requests: in-frame card with the full text (scroll to the end; over 16,384 characters is `MESSAGE_TOO_LARGE`). High-risk (value/call data, approvals, permits): approved in the top-level Authon window (`CONFIRM_WINDOW_BLOCKED` / `CONFIRM_WINDOW_CLOSED` never sign) |
 | `wallet.protect()` / `wallet.restore({ resetOtherDevices? })` | `Promise<void>` | Passkey backup / recovery on a new device (adds this device; `resetOtherDevices: true` re-splits and signs out other devices). Call inside a click handler |
 | `wallet.revokeDevice(id)` | `Promise<void>` | Revoke a device share |
+| `wallet.upgradeBackup()` | `Promise<void>` | Replace a legacy passkey backup (`backupUpgradeRecommended`) with a server-verifiable one. Call inside a click handler on a browser that holds the wallet |
 | `wallet.provider(chainId)` | `EIP1193Provider` | eth_accounts, eth_requestAccounts, eth_chainId, personal_sign, eth_signTypedData_v4, eth_signTransaction; others throw code 4200 |
 | `wallet.onChange(listener)` | `() => void` | Receive the latest wallet after create/protect/restore/revoke (null on sign-out) |
 
 Embedded wallets are HD wallets: a BIP39 seed split into 2-of-3 shares (device, Authon, passkey backup); the EVM account is `m/44'/60'/0'/0/0`. Sign-in methods turned off in the console are rejected by the API with `AUTH_METHOD_DISABLED`.
 | `destroy()` | `void` | Cleanup |
+
+### Security {#sdk-javascript-security}
+
+**Token storage.** In the default browser mode (`sessionMode: 'browser'`), `@authon/js` stores the access token and refresh token in `localStorage` so sessions survive reloads. Any script running on your origin can read them, so an XSS bug or a compromised third-party script can steal the session. Refresh tokens are single-use: each refresh rotates the token and the old one is rejected.
+
+For projects with embedded wallets (or other high-value actions), use BFF mode:
+
+```ts
+const authon = new Authon('pk_live_...', {
+  sessionMode: 'bff',              // SDK never reads or writes browser token storage
+  wallet: {
+    // Your server route mints the token with createAuthonWalletToken from @authon/nextjs/server
+    getToken: async () => {
+      const res = await fetch('/api/authon/wallet-token', { method: 'POST' });
+      return res.ok ? (await res.json()).token : null;
+    },
+  },
+});
+```
+
+The server keeps Authon tokens in an HttpOnly session, and the wallet only receives short-lived, wallet-only tokens. See `docs/bff-authorization-code-pkce.md`. If you stay in browser mode, deploy a strict Content Security Policy and minimize third-party scripts.
+
+**Branding and profile rendering.** The modal and profile UI escape all branding and user values. Terms and privacy URLs must be absolute http(s) URLs. The logo must be a base64 `data:image/(png|jpeg|gif|webp|svg+xml)` URL, rendered only via `<img>`. Colors must be hex, `rgb[a]()` or `hsl[a]()`. `customCss` is limited to 20,000 characters, is injected as text into its own `<style>` element, and must not contain `</style`. The API rejects invalid branding values on save (400) and drops already-stored invalid values when serving branding to the SDK.
 
 ---
 
@@ -862,27 +907,24 @@ await signIn({ strategy: 'email_password', email, password });
 ```tsx
 import * as WebBrowser from 'expo-web-browser';
 
-const { completeOAuth, getToken } = useAuthon();
+// Add "myapp://" to the project's allowed origins first.
+const { startOAuth, completeOAuth, getToken } = useAuthon();
 
 async function handleGoogleSignIn() {
-  // Request OAuth URL from API
-  const params = new URLSearchParams({
-    redirectUri: `${API_URL}/v1/auth/oauth/redirect`,
-    flow: 'redirect',
-    returnTo: 'https://auth.example.com/authon/mobile-callback',
-  });
-  const response = await fetch(`${API_URL}/v1/auth/oauth/google/url?${params}`, {
-    headers: { 'x-api-key': PUBLISHABLE_KEY },
-  });
-  const { url, state } = await response.json();
-
-  const pollPromise = completeOAuth(state);
-  await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
-  await pollPromise;
+  // The SDK creates a PKCE verifier and sends only its hash.
+  const { url } = await startOAuth('google', { returnTo: 'myapp://oauth-callback' });
+  const result = await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
+  if (result.type !== 'success') return;
+  // The callback carries a one-time code; completeOAuth exchanges it with the verifier.
+  await completeOAuth(result.url);
 
   const token = getToken();
 }
 ```
+
+`completeOAuth(state)` can no longer fetch tokens by polling. The state is not a secret.
+`completeOAuth(state)` now waits until `handleOAuthCallback(url)` receives the deep link.
+An https bridge page on an allowed origin may forward `authon_code` and `authon_oauth_state` to the deep link in place of a direct custom-scheme `returnTo`.
 
 ### Social Buttons
 
@@ -913,7 +955,8 @@ Authenticated endpoints also require `Authorization: Bearer <accessToken>`.
 | GET | `/v1/auth/branding` | Get project branding config |
 | GET | `/v1/auth/providers` | List enabled OAuth providers |
 | GET | `/v1/auth/oauth/{provider}/url` | Get OAuth authorization URL |
-| GET | `/v1/auth/oauth/poll?state=...` | Poll OAuth completion status |
+| GET | `/v1/auth/oauth/poll?state=...` | OAuth status only (`pending` / `completed` / `error`), never tokens |
+| POST | `/v1/auth/oauth/token` | Exchange the one-time OAuth code + PKCE verifier (`{ code, codeVerifier }`) for a session |
 | GET | `/v1/auth/oauth/redirect` | OAuth redirect handler |
 | POST | `/v1/auth/passwordless/magic-link` | Send magic link |
 | POST | `/v1/auth/passwordless/email-otp` | Send email OTP |

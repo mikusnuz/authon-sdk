@@ -246,12 +246,17 @@ import { createAuthonWalletToken } from '@authon/nextjs/server';
 
 export async function GET() {
   const userId = await getSignedInUserId(); // from your own session
-  const { token, expiresAt } = await createAuthonWalletToken({ userId, secretKey: process.env.AUTHON_SECRET_KEY! });
+  const accessToken = await getAuthonAccessToken(); // the Authon access token your server holds
+  const { token, expiresAt } = await createAuthonWalletToken({
+    userId,
+    accessToken, // binds the wallet token to this session
+    secretKey: process.env.AUTHON_SECRET_KEY!,
+  });
   return Response.json({ token, expiresAt });
 }
 ```
 
-The token is accepted only by the wallet API.
+The token is accepted only by the wallet API. Pass `accessToken` so the wallet token is bound to the user's session: it stops working when the session is revoked, and creating, restoring or revoking wallet devices accept only session-bound tokens. Without it the token can only read status, sign and protect, and only while the user still has an active session.
 
 ### Client Components (re-exported from @authon/react)
 

@@ -1,5 +1,9 @@
 # @authon/shared
 
+## 0.9.1
+
+- Version aligned with the 0.9.1 security release.
+
 ## 0.9.0
 
 ### Minor Changes

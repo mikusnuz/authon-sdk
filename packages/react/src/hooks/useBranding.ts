@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
+import { safeHttpUrl, safeImageDataUrl } from '@authon/js';
 import { useAuthon } from '../useAuthon';
 
 export interface BrandingState {
@@ -41,6 +42,10 @@ export function useBranding(): BrandingState {
       if (res.ok) {
         const data = await res.json();
         branding = { ...DEFAULT_BRANDING, ...data };
+        // Links and logo end up in href/src, so drop anything that is not http(s) or a whitelisted image data URL.
+        branding.termsUrl = safeHttpUrl(branding.termsUrl) ?? undefined;
+        branding.privacyUrl = safeHttpUrl(branding.privacyUrl) ?? undefined;
+        branding.logoDataUrl = safeImageDataUrl(branding.logoDataUrl) ?? undefined;
       }
       const next: BrandingState = { branding, providers, isLoaded: true };
       cache.set(key, next);

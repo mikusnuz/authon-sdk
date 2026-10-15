@@ -6,7 +6,7 @@ import { Authon } from './authon';
 import { AuthonWalletError, WalletClient } from './wallet';
 
 const ORIGIN = 'https://wallet.test';
-const WALLET = { address: '0xabc', protected: false, needsRestore: false, devices: [] };
+const WALLET = { address: '0xabc', protected: false, needsRestore: false, backupUpgradeRecommended: false, devices: [] };
 
 type Handler = (message: { id: string; type: string; payload: Record<string, unknown> }, win: Window) => unknown;
 
@@ -88,10 +88,44 @@ describe('WalletClient frame protocol', () => {
 
   it('rejects with TIMEOUT when the frame never answers', async () => {
     const client = makeClient({ timeoutMs: 50 });
-    const pending = client.signMessage('hi');
+    const pending = client.get();
     const assertion = expect(pending).rejects.toMatchObject({ code: 'TIMEOUT' });
     await attachFrame(() => undefined);
     await assertion;
+  });
+
+  it('signing waits for the in-frame confirmation and shows the frame while the card is open', async () => {
+    const client = makeClient({ timeoutMs: 50, popupTimeoutMs: 2000 });
+    let shown = '';
+    const pending = client.signMessage('hi');
+    const iframe = await attachFrame((message, win) => {
+      window.dispatchEvent(new MessageEvent('message', { data: { v: 1, type: 'wallet.ui', state: 'show' }, origin: ORIGIN, source: win }));
+      shown = document.querySelector('iframe')!.style.pointerEvents;
+      setTimeout(() => {
+        window.dispatchEvent(new MessageEvent('message', { data: { v: 1, type: 'wallet.ui', state: 'hide' }, origin: ORIGIN, source: win }));
+        reply(win, message.id, { ok: true, result: '0xsigned' });
+      }, 200);
+      return undefined;
+    });
+    await expect(pending).resolves.toBe('0xsigned');
+    expect(shown).toBe('auto');
+    expect(iframe.style.pointerEvents).toBe('none');
+  });
+
+  it('a wallet.ui message from another window does not reveal the frame', async () => {
+    const client = makeClient();
+    const pending = client.get();
+    const iframe = await attachFrame(() => WALLET);
+    await pending;
+    window.dispatchEvent(new MessageEvent('message', { data: { v: 1, type: 'wallet.ui', state: 'show' }, origin: ORIGIN, source: window }));
+    expect(iframe.style.pointerEvents).toBe('none');
+  });
+
+  it('isProtected reflects the wallet state', async () => {
+    const client = makeClient();
+    const pending = client.isProtected();
+    await attachFrame(() => ({ ...WALLET, protected: true }));
+    await expect(pending).resolves.toBe(true);
   });
 
   it('maps frame errors to AuthonWalletError and get() returns null on NOT_FOUND', async () => {
@@ -153,6 +187,46 @@ describe('WalletClient frame protocol', () => {
     await attachFrame((message) => (message.type === 'wallet.status' ? { ...WALLET, protected: true } : null));
     await pending;
     expect(changes).toEqual([{ ...WALLET, protected: true }]);
+  });
+
+  it('upgradeBackup asks the frame, waits interactively and reports the upgraded wallet', async () => {
+    const client = makeClient();
+    const changes: unknown[] = [];
+    client.onChange((wallet) => changes.push(wallet));
+    const seen: string[] = [];
+    const pending = client.upgradeBackup({ ui: { accentColor: '#123456' } });
+    await attachFrame((message) => {
+      seen.push(message.type);
+      if (message.type === 'wallet.upgradeBackup') {
+        expect(message.payload).toMatchObject({ token: 'token_1', ui: { accentColor: '#123456' } });
+        return { protected: true, shareVersion: 3 };
+      }
+      return { ...WALLET, protected: true };
+    });
+    await pending;
+    expect(seen).toEqual(['wallet.upgradeBackup', 'wallet.status']);
+    expect(changes).toEqual([{ ...WALLET, protected: true }]);
+  });
+
+  it('exposes backupUpgradeRecommended from the frame', async () => {
+    const client = makeClient();
+    const pending = client.get();
+    await attachFrame(() => ({ ...WALLET, protected: true, backupUpgradeRecommended: true }));
+    await expect(pending).resolves.toMatchObject({ protected: true, backupUpgradeRecommended: true });
+  });
+
+  it('surfaces approval-window and size errors without opening a window from the page', async () => {
+    const open = vi.spyOn(window, 'open');
+    for (const code of ['CONFIRM_WINDOW_BLOCKED', 'CONFIRM_WINDOW_CLOSED', 'MESSAGE_TOO_LARGE', 'FRAME_OUTDATED']) {
+      document.body.innerHTML = '';
+      const client = makeClient();
+      const pending = client.signTransaction({ chainId: 1, to: '0x0000000000000000000000000000000000000001', value: 1n });
+      await attachFrame(() => new AuthonWalletError(code));
+      await expect(pending).rejects.toMatchObject({ code });
+      client.dispose();
+    }
+    // The approval window is opened by the frame (from a click inside it), never by the SDK.
+    expect(open).not.toHaveBeenCalled();
   });
 
   it('dispose removes the iframe, rejects in-flight calls and notifies null', async () => {

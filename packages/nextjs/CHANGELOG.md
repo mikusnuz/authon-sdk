@@ -1,5 +1,10 @@
 # @authon/nextjs
 
+## 0.9.1
+
+- Add `readAuthonAuthorizationCallback` to tell a code callback from `mfa_required` and errors.
+- Bind wallet tokens to the user's session when an access token is passed to `createAuthonWalletToken`.
+
 ## 0.9.0
 
 ### Minor Changes

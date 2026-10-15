@@ -82,7 +82,10 @@ var translations = {
     checkInbox: "Check your email inbox",
     enterCode: "Enter verification code",
     codeSentTo: "6-digit code sent to {email}",
-    cancel: "Cancel"
+    cancel: "Cancel",
+    magicLinkConfirmTitle: "Sign in with this account?",
+    magicLinkConfirmBody: "You will be signed in as {email}. Cancel if you did not request this link.",
+    magicLinkConfirmButton: "Sign in"
   },
   ko: {
     welcomeBack: "\uB2E4\uC2DC \uC624\uC2E0 \uAC78 \uD658\uC601\uD569\uB2C8\uB2E4",
@@ -117,7 +120,10 @@ var translations = {
     checkInbox: "\uBA54\uC77C\uD568\uC5D0\uC11C \uB9C1\uD06C\uB97C \uB20C\uB7EC \uC8FC\uC138\uC694",
     enterCode: "\uBC1B\uC740 \uCF54\uB4DC\uB97C \uC785\uB825\uD558\uC138\uC694",
     codeSentTo: "{email}(\uC73C)\uB85C 6\uC790\uB9AC \uCF54\uB4DC\uB97C \uBCF4\uB0C8\uC2B5\uB2C8\uB2E4",
-    cancel: "\uCDE8\uC18C"
+    cancel: "\uCDE8\uC18C",
+    magicLinkConfirmTitle: "\uC774 \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD560\uAE4C\uC694?",
+    magicLinkConfirmBody: "{email} \uACC4\uC815\uC73C\uB85C \uB85C\uADF8\uC778\uD569\uB2C8\uB2E4. \uC9C1\uC811 \uC694\uCCAD\uD55C \uB9C1\uD06C\uAC00 \uC544\uB2C8\uBA74 \uCDE8\uC18C\uB97C \uB20C\uB7EC \uC8FC\uC138\uC694.",
+    magicLinkConfirmButton: "\uB85C\uADF8\uC778"
   },
   ja: {
     welcomeBack: "\u304A\u304B\u3048\u308A\u306A\u3055\u3044",
@@ -152,7 +158,10 @@ var translations = {
     checkInbox: "\u30E1\u30FC\u30EB\u306E\u53D7\u4FE1\u30C8\u30EC\u30A4\u3092\u78BA\u8A8D\u3057\u3066\u304F\u3060\u3055\u3044",
     enterCode: "\u8A8D\u8A3C\u30B3\u30FC\u30C9\u3092\u5165\u529B",
     codeSentTo: "{email} \u306B6\u6841\u306E\u30B3\u30FC\u30C9\u3092\u9001\u4FE1\u3057\u307E\u3057\u305F",
-    cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB"
+    cancel: "\u30AD\u30E3\u30F3\u30BB\u30EB",
+    magicLinkConfirmTitle: "\u3053\u306E\u30A2\u30AB\u30A6\u30F3\u30C8\u3067\u30ED\u30B0\u30A4\u30F3\u3057\u307E\u3059\u304B\uFF1F",
+    magicLinkConfirmBody: "{email} \u3068\u3057\u3066\u30ED\u30B0\u30A4\u30F3\u3057\u307E\u3059\u3002\u3053\u306E\u30DE\u30B8\u30C3\u30AF\u30EA\u30F3\u30AF\u3092\u30EA\u30AF\u30A8\u30B9\u30C8\u3057\u3066\u3044\u306A\u3044\u5834\u5408\u306F\u3001\u30AD\u30E3\u30F3\u30BB\u30EB\u3057\u3066\u304F\u3060\u3055\u3044\u3002",
+    magicLinkConfirmButton: "\u30ED\u30B0\u30A4\u30F3"
   },
   "zh-CN": {
     welcomeBack: "\u6B22\u8FCE\u56DE\u6765",
@@ -187,7 +196,10 @@ var translations = {
     checkInbox: "\u8BF7\u67E5\u770B\u90AE\u7BB1\u6536\u4EF6\u7BB1",
     enterCode: "\u8F93\u5165\u9A8C\u8BC1\u7801",
     codeSentTo: "6 \u4F4D\u9A8C\u8BC1\u7801\u5DF2\u53D1\u9001\u81F3 {email}",
-    cancel: "\u53D6\u6D88"
+    cancel: "\u53D6\u6D88",
+    magicLinkConfirmTitle: "\u8981\u4F7F\u7528\u6B64\u8D26\u53F7\u767B\u5F55\u5417\uFF1F",
+    magicLinkConfirmBody: "\u5C06\u4EE5 {email} \u7684\u8EAB\u4EFD\u767B\u5F55\u3002\u5982\u679C\u5E76\u975E\u672C\u4EBA\u8BF7\u6C42\u6B64\u9B54\u6CD5\u94FE\u63A5\uFF0C\u8BF7\u53D6\u6D88\u3002",
+    magicLinkConfirmButton: "\u767B\u5F55"
   },
   "zh-TW": {
     welcomeBack: "\u6B61\u8FCE\u56DE\u4F86",
@@ -222,7 +234,10 @@ var translations = {
     checkInbox: "\u8ACB\u67E5\u770B\u96FB\u5B50\u90F5\u4EF6\u6536\u4EF6\u5323",
     enterCode: "\u8F38\u5165\u9A57\u8B49\u78BC",
     codeSentTo: "6 \u4F4D\u6578\u9A57\u8B49\u78BC\u5DF2\u50B3\u9001\u81F3 {email}",
-    cancel: "\u53D6\u6D88"
+    cancel: "\u53D6\u6D88",
+    magicLinkConfirmTitle: "\u8981\u4F7F\u7528\u6B64\u5E33\u865F\u767B\u5165\u55CE\uFF1F",
+    magicLinkConfirmBody: "\u5C07\u4EE5 {email} \u7684\u8EAB\u5206\u767B\u5165\u3002\u82E5\u4E26\u975E\u672C\u4EBA\u8ACB\u6C42\u6B64\u9B54\u6CD5\u9023\u7D50\uFF0C\u8ACB\u53D6\u6D88\u3002",
+    magicLinkConfirmButton: "\u767B\u5165"
   },
   "pt-BR": {
     welcomeBack: "Bem-vindo de volta",
@@ -257,7 +272,10 @@ var translations = {
     checkInbox: "Verifique sua caixa de entrada",
     enterCode: "Digite o codigo de verificacao",
     codeSentTo: "Codigo de 6 digitos enviado para {email}",
-    cancel: "Cancelar"
+    cancel: "Cancelar",
+    magicLinkConfirmTitle: "Entrar com esta conta?",
+    magicLinkConfirmBody: "Voce entrara como {email}. Cancele se nao foi voce quem solicitou este Magic Link.",
+    magicLinkConfirmButton: "Entrar"
   },
   es: {
     welcomeBack: "Bienvenido de nuevo",
@@ -292,7 +310,10 @@ var translations = {
     checkInbox: "Revisa tu bandeja de entrada",
     enterCode: "Introduce el codigo de verificacion",
     codeSentTo: "Codigo de 6 digitos enviado a {email}",
-    cancel: "Cancelar"
+    cancel: "Cancelar",
+    magicLinkConfirmTitle: "Iniciar sesion con esta cuenta?",
+    magicLinkConfirmBody: "Iniciaras sesion como {email}. Cancela si no solicitaste este Magic Link.",
+    magicLinkConfirmButton: "Iniciar sesion"
   },
   de: {
     welcomeBack: "Willkommen zuruck",
@@ -327,7 +348,10 @@ var translations = {
     checkInbox: "Prufe dein E-Mail-Postfach",
     enterCode: "Bestatigungscode eingeben",
     codeSentTo: "6-stelliger Code an {email} gesendet",
-    cancel: "Abbrechen"
+    cancel: "Abbrechen",
+    magicLinkConfirmTitle: "Mit diesem Konto anmelden?",
+    magicLinkConfirmBody: "Sie werden als {email} angemeldet. Brechen Sie ab, wenn Sie diesen Magic Link nicht angefordert haben.",
+    magicLinkConfirmButton: "Anmelden"
   },
   fr: {
     welcomeBack: "Bon retour",
@@ -362,7 +386,10 @@ var translations = {
     checkInbox: "Verifiez votre boite de reception",
     enterCode: "Saisissez le code de verification",
     codeSentTo: "Code a 6 chiffres envoye a {email}",
-    cancel: "Annuler"
+    cancel: "Annuler",
+    magicLinkConfirmTitle: "Se connecter avec ce compte ?",
+    magicLinkConfirmBody: "Vous serez connecte en tant que {email}. Annulez si ce Magic Link ne vient pas de vous.",
+    magicLinkConfirmButton: "Se connecter"
   },
   hi: {
     welcomeBack: "\u0935\u093E\u092A\u0938\u0940 \u092A\u0930 \u0938\u094D\u0935\u093E\u0917\u0924 \u0939\u0948",
@@ -397,7 +424,10 @@ var translations = {
     checkInbox: "\u0905\u092A\u0928\u093E \u0908\u092E\u0947\u0932 \u0907\u0928\u092C\u0949\u0915\u094D\u0938 \u0926\u0947\u0916\u0947\u0902",
     enterCode: "\u0938\u0924\u094D\u092F\u093E\u092A\u0928 \u0915\u094B\u0921 \u0926\u0930\u094D\u091C \u0915\u0930\u0947\u0902",
     codeSentTo: "{email} \u092A\u0930 6 \u0905\u0902\u0915\u094B\u0902 \u0915\u093E \u0915\u094B\u0921 \u092D\u0947\u091C\u093E \u0917\u092F\u093E",
-    cancel: "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902"
+    cancel: "\u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902",
+    magicLinkConfirmTitle: "\u0915\u094D\u092F\u093E \u0907\u0938 \u0916\u093E\u0924\u0947 \u0938\u0947 \u0938\u093E\u0907\u0928 \u0907\u0928 \u0915\u0930\u0947\u0902?",
+    magicLinkConfirmBody: "\u0906\u092A {email} \u0915\u0947 \u0930\u0942\u092A \u092E\u0947\u0902 \u0938\u093E\u0907\u0928 \u0907\u0928 \u0939\u094B\u0902\u0917\u0947\u0964 \u0905\u0917\u0930 \u0906\u092A\u0928\u0947 \u092F\u0939 \u092E\u0948\u091C\u093F\u0915 \u0932\u093F\u0902\u0915 \u0928\u0939\u0940\u0902 \u092E\u0901\u0917\u093E\u092F\u093E \u0939\u0948, \u0924\u094B \u0930\u0926\u094D\u0926 \u0915\u0930\u0947\u0902\u0964",
+    magicLinkConfirmButton: "\u0938\u093E\u0907\u0928 \u0907\u0928"
   },
   tr: {
     welcomeBack: "Tekrar hos geldiniz",
@@ -432,7 +462,10 @@ var translations = {
     checkInbox: "E-posta kutunuzu kontrol edin",
     enterCode: "Dogrulama kodunu girin",
     codeSentTo: "{email} adresine 6 haneli kod gonderildi",
-    cancel: "Iptal"
+    cancel: "Iptal",
+    magicLinkConfirmTitle: "Bu hesapla giris yapilsin mi?",
+    magicLinkConfirmBody: "{email} olarak giris yapacaksiniz. Bu Magic Link istegini siz yapmadiysaniz iptal edin.",
+    magicLinkConfirmButton: "Giris yap"
   },
   id: {
     welcomeBack: "Selamat datang kembali",
@@ -467,7 +500,10 @@ var translations = {
     checkInbox: "Periksa kotak masuk email Anda",
     enterCode: "Masukkan kode verifikasi",
     codeSentTo: "Kode 6 digit dikirim ke {email}",
-    cancel: "Batal"
+    cancel: "Batal",
+    magicLinkConfirmTitle: "Masuk dengan akun ini?",
+    magicLinkConfirmBody: "Anda akan masuk sebagai {email}. Pilih Batal jika Anda tidak meminta Magic link ini.",
+    magicLinkConfirmButton: "Masuk"
   },
   vi: {
     welcomeBack: "Chao mung tro lai",
@@ -502,7 +538,10 @@ var translations = {
     checkInbox: "Kiem tra hop thu email cua ban",
     enterCode: "Nhap ma xac minh",
     codeSentTo: "Ma 6 chu so da gui den {email}",
-    cancel: "Huy"
+    cancel: "Huy",
+    magicLinkConfirmTitle: "Dang nhap bang tai khoan nay?",
+    magicLinkConfirmBody: "Ban se dang nhap voi tu cach {email}. Hay chon Huy neu ban khong yeu cau magic link nay.",
+    magicLinkConfirmButton: "Dang nhap"
   },
   th: {
     welcomeBack: "\u0E22\u0E34\u0E19\u0E14\u0E35\u0E15\u0E49\u0E2D\u0E19\u0E23\u0E31\u0E1A\u0E01\u0E25\u0E31\u0E1A",
@@ -537,7 +576,10 @@ var translations = {
     checkInbox: "\u0E15\u0E23\u0E27\u0E08\u0E2A\u0E2D\u0E1A\u0E01\u0E25\u0E48\u0E2D\u0E07\u0E08\u0E14\u0E2B\u0E21\u0E32\u0E22\u0E2D\u0E35\u0E40\u0E21\u0E25\u0E02\u0E2D\u0E07\u0E04\u0E38\u0E13",
     enterCode: "\u0E01\u0E23\u0E2D\u0E01\u0E23\u0E2B\u0E31\u0E2A\u0E22\u0E37\u0E19\u0E22\u0E31\u0E19",
     codeSentTo: "\u0E2A\u0E48\u0E07\u0E23\u0E2B\u0E31\u0E2A 6 \u0E2B\u0E25\u0E31\u0E01\u0E44\u0E1B\u0E17\u0E35\u0E48 {email} \u0E41\u0E25\u0E49\u0E27",
-    cancel: "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01"
+    cancel: "\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01",
+    magicLinkConfirmTitle: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E14\u0E49\u0E27\u0E22\u0E1A\u0E31\u0E0D\u0E0A\u0E35\u0E19\u0E35\u0E49\u0E2B\u0E23\u0E37\u0E2D\u0E44\u0E21\u0E48?",
+    magicLinkConfirmBody: "\u0E04\u0E38\u0E13\u0E08\u0E30\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A\u0E43\u0E19\u0E0A\u0E37\u0E48\u0E2D {email} \u0E2B\u0E32\u0E01\u0E04\u0E38\u0E13\u0E44\u0E21\u0E48\u0E44\u0E14\u0E49\u0E02\u0E2D Magic Link \u0E19\u0E35\u0E49 \u0E43\u0E2B\u0E49\u0E01\u0E14\u0E22\u0E01\u0E40\u0E25\u0E34\u0E01",
+    magicLinkConfirmButton: "\u0E40\u0E02\u0E49\u0E32\u0E2A\u0E39\u0E48\u0E23\u0E30\u0E1A\u0E1A"
   },
   ru: {
     welcomeBack: "\u0421 \u0432\u043E\u0437\u0432\u0440\u0430\u0449\u0435\u043D\u0438\u0435\u043C",
@@ -572,7 +614,10 @@ var translations = {
     checkInbox: "\u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u0432\u0445\u043E\u0434\u044F\u0449\u0438\u0435 \u043F\u0438\u0441\u044C\u043C\u0430",
     enterCode: "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043A\u043E\u0434 \u043F\u043E\u0434\u0442\u0432\u0435\u0440\u0436\u0434\u0435\u043D\u0438\u044F",
     codeSentTo: "6-\u0437\u043D\u0430\u0447\u043D\u044B\u0439 \u043A\u043E\u0434 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D \u043D\u0430 {email}",
-    cancel: "\u041E\u0442\u043C\u0435\u043D\u0430"
+    cancel: "\u041E\u0442\u043C\u0435\u043D\u0430",
+    magicLinkConfirmTitle: "\u0412\u043E\u0439\u0442\u0438 \u0441 \u044D\u0442\u043E\u0439 \u0443\u0447\u0435\u0442\u043D\u043E\u0439 \u0437\u0430\u043F\u0438\u0441\u044C\u044E?",
+    magicLinkConfirmBody: "\u0412\u044B \u0432\u043E\u0439\u0434\u0435\u0442\u0435 \u043A\u0430\u043A {email}. \u041D\u0430\u0436\u043C\u0438\u0442\u0435 \xAB\u041E\u0442\u043C\u0435\u043D\u0430\xBB, \u0435\u0441\u043B\u0438 \u0432\u044B \u043D\u0435 \u0437\u0430\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u043B\u0438 \u044D\u0442\u043E\u0442 Magic Link.",
+    magicLinkConfirmButton: "\u0412\u043E\u0439\u0442\u0438"
   },
   it: {
     welcomeBack: "Bentornato",
@@ -607,7 +652,10 @@ var translations = {
     checkInbox: "Controlla la tua casella email",
     enterCode: "Inserisci il codice di verifica",
     codeSentTo: "Codice a 6 cifre inviato a {email}",
-    cancel: "Annulla"
+    cancel: "Annulla",
+    magicLinkConfirmTitle: "Accedere con questo account?",
+    magicLinkConfirmBody: "Accederai come {email}. Annulla se non hai richiesto questo Magic link.",
+    magicLinkConfirmButton: "Accedi"
   },
   pl: {
     welcomeBack: "Witaj ponownie",
@@ -642,7 +690,10 @@ var translations = {
     checkInbox: "Sprawdz swoja skrzynke e-mail",
     enterCode: "Wpisz kod weryfikacyjny",
     codeSentTo: "6-cyfrowy kod wyslano na {email}",
-    cancel: "Anuluj"
+    cancel: "Anuluj",
+    magicLinkConfirmTitle: "Zalogowac sie na to konto?",
+    magicLinkConfirmBody: "Zostaniesz zalogowany jako {email}. Anuluj, jesli nie prosiles o ten Magic Link.",
+    magicLinkConfirmButton: "Zaloguj sie"
   },
   nl: {
     welcomeBack: "Welkom terug",
@@ -677,7 +728,10 @@ var translations = {
     checkInbox: "Controleer je e-mailinbox",
     enterCode: "Voer de verificatiecode in",
     codeSentTo: "Code van 6 cijfers verstuurd naar {email}",
-    cancel: "Annuleren"
+    cancel: "Annuleren",
+    magicLinkConfirmTitle: "Inloggen met dit account?",
+    magicLinkConfirmBody: "Je wordt ingelogd als {email}. Annuleer als je deze Magic Link niet hebt aangevraagd.",
+    magicLinkConfirmButton: "Inloggen"
   },
   ar: {
     welcomeBack: "\u0645\u0631\u062D\u0628\u064B\u0627 \u0628\u0639\u0648\u062F\u062A\u0643",
@@ -712,7 +766,10 @@ var translations = {
     checkInbox: "\u062A\u062D\u0642\u0642 \u0645\u0646 \u0635\u0646\u062F\u0648\u0642 \u0628\u0631\u064A\u062F\u0643 \u0627\u0644\u0625\u0644\u0643\u062A\u0631\u0648\u0646\u064A",
     enterCode: "\u0623\u062F\u062E\u0644 \u0631\u0645\u0632 \u0627\u0644\u062A\u062D\u0642\u0642",
     codeSentTo: "\u062A\u0645 \u0625\u0631\u0633\u0627\u0644 \u0631\u0645\u0632 \u0645\u0646 6 \u0623\u0631\u0642\u0627\u0645 \u0625\u0644\u0649 {email}",
-    cancel: "\u0625\u0644\u063A\u0627\u0621"
+    cancel: "\u0625\u0644\u063A\u0627\u0621",
+    magicLinkConfirmTitle: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644 \u0628\u0647\u0630\u0627 \u0627\u0644\u062D\u0633\u0627\u0628\u061F",
+    magicLinkConfirmBody: "\u0633\u064A\u062A\u0645 \u062A\u0633\u062C\u064A\u0644 \u062F\u062E\u0648\u0644\u0643 \u0628\u0627\u0633\u0645 {email}. \u0623\u0644\u063A\u0650 \u0627\u0644\u0639\u0645\u0644\u064A\u0629 \u0625\u0630\u0627 \u0644\u0645 \u062A\u0637\u0644\u0628 Magic Link \u0647\u0630\u0627.",
+    magicLinkConfirmButton: "\u062A\u0633\u062C\u064A\u0644 \u0627\u0644\u062F\u062E\u0648\u0644"
   },
   sv: {
     welcomeBack: "Valkommen tillbaka",
@@ -747,7 +804,10 @@ var translations = {
     checkInbox: "Kontrollera din inkorg",
     enterCode: "Ange verifieringskod",
     codeSentTo: "6-siffrig kod skickad till {email}",
-    cancel: "Avbryt"
+    cancel: "Avbryt",
+    magicLinkConfirmTitle: "Logga in med det har kontot?",
+    magicLinkConfirmBody: "Du loggas in som {email}. Avbryt om du inte har begart denna Magic link.",
+    magicLinkConfirmButton: "Logga in"
   },
   uk: {
     welcomeBack: "\u0417 \u043F\u043E\u0432\u0435\u0440\u043D\u0435\u043D\u043D\u044F\u043C",
@@ -782,7 +842,10 @@ var translations = {
     checkInbox: "\u041F\u0435\u0440\u0435\u0432\u0456\u0440\u0442\u0435 \u0432\u0445\u0456\u0434\u043D\u0456 \u043B\u0438\u0441\u0442\u0438",
     enterCode: "\u0412\u0432\u0435\u0434\u0456\u0442\u044C \u043A\u043E\u0434 \u043F\u0456\u0434\u0442\u0432\u0435\u0440\u0434\u0436\u0435\u043D\u043D\u044F",
     codeSentTo: "6-\u0437\u043D\u0430\u0447\u043D\u0438\u0439 \u043A\u043E\u0434 \u043D\u0430\u0434\u0456\u0441\u043B\u0430\u043D\u043E \u043D\u0430 {email}",
-    cancel: "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438"
+    cancel: "\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438",
+    magicLinkConfirmTitle: "\u0423\u0432\u0456\u0439\u0442\u0438 \u0437 \u0446\u0438\u043C \u043E\u0431\u043B\u0456\u043A\u043E\u0432\u0438\u043C \u0437\u0430\u043F\u0438\u0441\u043E\u043C?",
+    magicLinkConfirmBody: "\u0412\u0438 \u0443\u0432\u0456\u0439\u0434\u0435\u0442\u0435 \u044F\u043A {email}. \u041D\u0430\u0442\u0438\u0441\u043D\u0456\u0442\u044C \xAB\u0421\u043A\u0430\u0441\u0443\u0432\u0430\u0442\u0438\xBB, \u044F\u043A\u0449\u043E \u0432\u0438 \u043D\u0435 \u0437\u0430\u043F\u0438\u0442\u0443\u0432\u0430\u043B\u0438 \u0446\u0435\u0439 Magic Link.",
+    magicLinkConfirmButton: "\u0423\u0432\u0456\u0439\u0442\u0438"
   }
 };
 var PROVIDER_FIRST = {
@@ -827,14 +890,80 @@ function getProviderButtonConfig(provider, t) {
   };
 }
 
-// src/modal.ts
-function hexToRgba(hex, alpha) {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
+// src/sanitize.ts
+function escapeHtml(value) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
+function safeHttpUrl(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length > 2048) return null;
+  try {
+    const url = new URL(trimmed);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return null;
+    return url.href;
+  } catch {
+    return null;
+  }
+}
+var IMAGE_DATA_URL_RE = /^data:image\/(?:png|jpeg|gif|webp|svg\+xml)(?:;[a-z0-9-]+=[a-z0-9._-]+)*;base64,[a-z0-9+/]+={0,2}$/i;
+var MAX_IMAGE_DATA_URL_LENGTH = 2 * 1024 * 1024;
+function safeImageDataUrl(value) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (trimmed.length > MAX_IMAGE_DATA_URL_LENGTH) return null;
+  return IMAGE_DATA_URL_RE.test(trimmed) ? trimmed : null;
+}
+function safeAvatarUrl(value) {
+  return safeHttpUrl(value) ?? safeImageDataUrl(value);
+}
+var NUM = String.raw`[+-]?(?:\d{1,3}(?:\.\d+)?|\.\d+)`;
+var PCT_OR_NUM = String.raw`${NUM}%?`;
+var ALPHA = String.raw`(?:\s*(?:,|\/)\s*${PCT_OR_NUM})?`;
+var SEP = String.raw`(?:\s*,\s*|\s+)`;
+var COLOR_RES = [
+  /^#(?:[0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i,
+  new RegExp(String.raw`^rgba?\(\s*${PCT_OR_NUM}${SEP}${PCT_OR_NUM}${SEP}${PCT_OR_NUM}${ALPHA}\s*\)$`, "i"),
+  new RegExp(String.raw`^hsla?\(\s*${NUM}(?:deg)?${SEP}${NUM}%${SEP}${NUM}%${ALPHA}\s*\)$`, "i")
+];
+function isSafeColor(value) {
+  if (typeof value !== "string" || value.length > 64) return false;
+  const trimmed = value.trim();
+  return COLOR_RES.some((re) => re.test(trimmed));
+}
+function safeColor(value, fallback) {
+  return isSafeColor(value) ? value.trim() : fallback;
+}
+function colorWithAlpha(color, alpha) {
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color);
+  if (hex) {
+    let h = hex[1];
+    if (h.length === 3) h = h.split("").map((c) => c + c).join("");
+    const r = parseInt(h.substring(0, 2), 16);
+    const g = parseInt(h.substring(2, 4), 16);
+    const b = parseInt(h.substring(4, 6), 16);
+    return `rgba(${r},${g},${b},${alpha})`;
+  }
+  return `color-mix(in srgb, ${color} ${Math.round(alpha * 100)}%, transparent)`;
+}
+function safeRadius(value, fallback = 12) {
+  const n = typeof value === "number" ? value : typeof value === "string" && value.trim() !== "" ? Number(value) : NaN;
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(64, Math.max(0, n));
+}
+var MAX_CUSTOM_CSS_LENGTH = 2e4;
+function sanitizeCustomCss(value) {
+  if (typeof value !== "string" || !value) return "";
+  let css = value.slice(0, MAX_CUSTOM_CSS_LENGTH);
+  let prev;
+  do {
+    prev = css;
+    css = css.replace(/<\s*\/\s*style/gi, "").replace(/<!--|-->/g, "");
+  } while (css !== prev);
+  return css;
+}
+
+// src/modal.ts
 var WALLET_OPTIONS = [
   { id: "pexus", name: "Pexus", color: "#7c3aed" },
   { id: "metamask", name: "MetaMask", color: "#f6851b" },
@@ -849,7 +978,7 @@ function walletIconSvg(id) {
     case "phantom":
       return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#ab9ff2"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6v2c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2v-2z" stroke="#fff" stroke-width="1.5" fill="none"/></svg>`;
     default:
-      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#666"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12">${id[0]?.toUpperCase() ?? "W"}</text></svg>`;
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#666"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12">${escapeHtml(id[0]?.toUpperCase() ?? "W")}</text></svg>`;
   }
 }
 var ModalRenderer = class {
@@ -874,6 +1003,7 @@ var ModalRenderer = class {
   escHandler = null;
   // Overlay state
   currentOverlay = "none";
+  magicLinkConfirmHandlers = null;
   selectedWallet = "";
   overlayEmail = "";
   overlayError = "";
@@ -993,6 +1123,25 @@ var ModalRenderer = class {
     if (styleEl) {
       styleEl.textContent = this.buildCSS();
     }
+    this.applyCustomCss();
+  }
+  /** Project custom CSS lives in its own <style>, set via textContent so it cannot inject markup. */
+  applyCustomCss() {
+    if (!this.shadowRoot) return;
+    const css = sanitizeCustomCss(this.branding.customCss);
+    let el = this.shadowRoot.getElementById("authon-custom-style");
+    if (!css) {
+      el?.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement("style");
+      el.id = "authon-custom-style";
+      const themeStyle = this.shadowRoot.getElementById("authon-theme-style");
+      if (themeStyle) themeStyle.after(el);
+      else this.shadowRoot.prepend(el);
+    }
+    el.textContent = css;
   }
   startThemeObserver() {
     this.stopThemeObserver();
@@ -1039,7 +1188,7 @@ var ModalRenderer = class {
       btn.disabled = true;
       btn.style.opacity = "0.7";
     } else {
-      btn.innerHTML = btn.dataset.originalText || "Continue";
+      btn.textContent = btn.dataset.originalText || "Continue";
       btn.disabled = false;
       btn.style.opacity = "1";
     }
@@ -1183,6 +1332,14 @@ var ModalRenderer = class {
     this.currentOverlay = "otp-input";
     this.renderOverlay();
   }
+  /** Ask before using a magic link this browser did not request (login CSRF guard). */
+  showMagicLinkConfirm(email, onConfirm, onCancel) {
+    this.overlayEmail = email;
+    this.overlayError = "";
+    this.magicLinkConfirmHandlers = { onConfirm, onCancel };
+    this.currentOverlay = "magic-link-confirm";
+    this.renderOverlay();
+  }
   showPasskeySuccess() {
     this.overlayError = "";
     this.currentOverlay = "passkey-success";
@@ -1228,6 +1385,7 @@ var ModalRenderer = class {
     }
     this.shadowRoot = host.attachShadow({ mode: "open" });
     this.shadowRoot.innerHTML = this.buildShell(view);
+    this.applyCustomCss();
     this.attachInnerEvents(view);
     this.attachShellEvents();
     if (this.theme === "auto") {
@@ -1262,7 +1420,7 @@ var ModalRenderer = class {
       const isWhiteBg = config.bgColor === "#ffffff";
       const btnBg = dark && isWhiteBg ? "#f8fafc" : config.bgColor;
       const btnBorder = isWhiteBg ? dark ? "#475569" : "#e5e7eb" : config.bgColor;
-      return `<button class="provider-btn" data-provider="${p}" style="background:${btnBg};color:${config.textColor};border:1px solid ${btnBorder}">
+      return `<button class="provider-btn" data-provider="${escapeHtml(p)}" style="background:${btnBg};color:${config.textColor};border:1px solid ${btnBorder}">
               <span class="provider-icon">${config.iconSvg}</span>
               <span>${config.label}</span>
             </button>`;
@@ -1304,11 +1462,14 @@ var ModalRenderer = class {
       </button>`);
     }
     const authMethods = methodButtons.length > 0 ? `<div class="auth-methods">${methodButtons.join("")}</div>` : "";
-    const footer = b.termsUrl || b.privacyUrl ? `<div class="footer">
-          ${b.termsUrl && /^https?:\/\//i.test(b.termsUrl) ? `<a href="${b.termsUrl}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ""}
-          ${b.termsUrl && b.privacyUrl ? " \xB7 " : ""}
-          ${b.privacyUrl && /^https?:\/\//i.test(b.privacyUrl) ? `<a href="${b.privacyUrl}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ""}
+    const termsUrl = safeHttpUrl(b.termsUrl);
+    const privacyUrl = safeHttpUrl(b.privacyUrl);
+    const footer = termsUrl || privacyUrl ? `<div class="footer">
+          ${termsUrl ? `<a href="${escapeHtml(termsUrl)}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ""}
+          ${termsUrl && privacyUrl ? " \xB7 " : ""}
+          ${privacyUrl ? `<a href="${escapeHtml(privacyUrl)}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ""}
         </div>` : "";
+    const logoUrl = safeImageDataUrl(b.logoDataUrl);
     const titleHtml = isSignUp ? `<div class="title-row">
           <button class="back-btn" id="back-btn" type="button" aria-label="Back to sign in">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
@@ -1316,9 +1477,9 @@ var ModalRenderer = class {
           <h2 class="title">${title}</h2>
         </div>` : `<h2 class="title">${title}</h2>`;
     return `
-      ${b.logoDataUrl ? `<img src="${b.logoDataUrl}" alt="Logo" class="logo" />` : ""}
+      ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Logo" class="logo" />` : ""}
       ${titleHtml}
-      ${b.brandName ? `<p class="brand-name">${b.brandName}</p>` : ""}
+      ${b.brandName ? `<p class="brand-name">${escapeHtml(b.brandName)}</p>` : ""}
       ${showProviders ? `<div class="providers">${providerButtons}</div>` : ""}
       ${divider}
       ${emailForm}
@@ -1387,8 +1548,8 @@ var ModalRenderer = class {
   buildCSS() {
     const b = this.branding;
     const dark = this.isDark();
-    const bg = dark ? b.darkBg || "#0f172a" : b.lightBg || "#ffffff";
-    const text = dark ? b.darkText || "#f1f5f9" : b.lightText || "#111827";
+    const bg = dark ? safeColor(b.darkBg, "#0f172a") : safeColor(b.lightBg, "#ffffff");
+    const text = dark ? safeColor(b.darkText, "#f1f5f9") : safeColor(b.lightText, "#111827");
     const mutedText = dark ? "#94a3b8" : "#6b7280";
     const dimText = dark ? "#64748b" : "#9ca3af";
     const borderColor = dark ? "#334155" : "#d1d5db";
@@ -1396,8 +1557,8 @@ var ModalRenderer = class {
     const inputBg = dark ? "#1e293b" : "#ffffff";
     return `
       :host {
-        --authon-primary-start: ${b.primaryColorStart || "#7c3aed"};
-        --authon-primary-end: ${b.primaryColorEnd || "#4f46e5"};
+        --authon-primary-start: ${safeColor(b.primaryColorStart, "#7c3aed")};
+        --authon-primary-end: ${safeColor(b.primaryColorEnd, "#4f46e5")};
         --authon-bg: ${bg};
         --authon-text: ${text};
         --authon-muted: ${mutedText};
@@ -1405,11 +1566,11 @@ var ModalRenderer = class {
         --authon-border: ${borderColor};
         --authon-divider: ${dividerColor};
         --authon-input-bg: ${inputBg};
-        --authon-overlay-bg: ${hexToRgba(bg, 0.92)};
-        --authon-overlay-bg-solid: ${hexToRgba(bg, 0.97)};
+        --authon-overlay-bg: ${colorWithAlpha(bg, 0.92)};
+        --authon-overlay-bg-solid: ${colorWithAlpha(bg, 0.97)};
         --authon-backdrop-bg: rgba(0,0,0,${dark ? "0.7" : "0.5"});
         --authon-shadow-opacity: ${dark ? "0.5" : "0.25"};
-        --authon-radius: ${b.borderRadius ?? 12}px;
+        --authon-radius: ${safeRadius(b.borderRadius)}px;
         --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--authon-font);
         color: var(--authon-text);
@@ -1720,7 +1881,6 @@ var ModalRenderer = class {
       @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -48%); } to { opacity: 1; transform: translate(-50%, -50%); } }
       @keyframes check-draw { to { stroke-dashoffset: 0; } }
       @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-      ${b.customCss || ""}
     `;
   }
   // ── Flow Overlay Rendering ──
@@ -1748,7 +1908,7 @@ var ModalRenderer = class {
         const walletItems = WALLET_OPTIONS.map(
           (w) => `<button class="wallet-btn" data-wallet="${w.id}">
             <span class="wallet-icon">${walletIconSvg(w.id)}</span>
-            <span>${w.name}</span>
+            <span>${escapeHtml(w.name)}</span>
           </button>`
         ).join("");
         return `
@@ -1811,6 +1971,15 @@ var ModalRenderer = class {
           <span class="overlay-subtitle">${this.usesEmailCode() ? this.t.sendingCode : this.t.sendingMagicLink}</span>
         `;
       }
+      case "magic-link-confirm": {
+        return `
+          <div class="overlay-title">${this.t.magicLinkConfirmTitle}</div>
+          <span class="overlay-subtitle">${this.t.magicLinkConfirmBody.replace("{email}", () => this.escapeHtml(this.overlayEmail))}</span>
+          ${errorHtml}
+          <button class="pwless-submit" id="magic-link-confirm-btn">${this.t.magicLinkConfirmButton}</button>
+          <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
+        `;
+      }
       case "passwordless-sent": {
         return `
           <div class="success-check" style="background:linear-gradient(135deg, var(--authon-primary-start, #7c3aed), var(--authon-primary-end, #4f46e5))">
@@ -1869,7 +2038,20 @@ var ModalRenderer = class {
     if (!this.shadowRoot) return;
     const cancelBtn = overlay.querySelector("#overlay-cancel");
     if (cancelBtn) {
-      cancelBtn.addEventListener("click", () => this.hideOverlay());
+      cancelBtn.addEventListener("click", () => {
+        const confirmHandlers = this.currentOverlay === "magic-link-confirm" ? this.magicLinkConfirmHandlers : null;
+        this.magicLinkConfirmHandlers = null;
+        this.hideOverlay();
+        confirmHandlers?.onCancel();
+      });
+    }
+    const magicConfirmBtn = overlay.querySelector("#magic-link-confirm-btn");
+    if (magicConfirmBtn) {
+      magicConfirmBtn.addEventListener("click", () => {
+        const handlers = this.magicLinkConfirmHandlers;
+        this.magicLinkConfirmHandlers = null;
+        handlers?.onConfirm();
+      });
     }
     overlay.querySelectorAll(".wallet-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
@@ -1937,7 +2119,7 @@ var ModalRenderer = class {
     }
   }
   escapeHtml(str) {
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    return escapeHtml(str);
   }
   // ── Event binding ──
   /** Attach events to shell elements (backdrop, ESC) -- called once */
@@ -2030,13 +2212,6 @@ var ModalRenderer = class {
 };
 
 // src/profile.ts
-function hexToRgba2(hex, alpha) {
-  const h = hex.replace("#", "");
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 function formatRelativeTime(dateStr) {
   if (!dateStr) return "\u2014";
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -2269,8 +2444,8 @@ var ProfileRenderer = class {
   buildInnerContent() {
     const u = this.user;
     const initials = (u.displayName || u.email || "?").split(/\s+/).map((w) => w[0]?.toUpperCase() ?? "").slice(0, 2).join("");
-    const safeAvatarUrl = u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl) ? u.avatarUrl : null;
-    const avatarHtml = safeAvatarUrl ? `<img class="avatar-img" src="${safeAvatarUrl.replace(/"/g, "&quot;")}" alt="${(u.displayName || "").replace(/"/g, "&quot;")}" />` : `<div class="avatar-placeholder">${initials}</div>`;
+    const avatarUrl = safeAvatarUrl(u.avatarUrl);
+    const avatarHtml = avatarUrl ? `<img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(u.displayName || "")}" />` : `<div class="avatar-placeholder">${escapeHtml(initials)}</div>`;
     const closeBtn = this.mode === "popup" ? `<button class="close-btn" id="profile-close-btn" aria-label="Close">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
             <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
@@ -2286,12 +2461,12 @@ var ProfileRenderer = class {
           <div class="section-label">${this.t.sessions}</div>
           <div class="sessions-list">
             ${this.sessions.map((s) => `
-              <div class="session-item" data-session-id="${s.id}">
+              <div class="session-item" data-session-id="${escapeHtml(s.id)}">
                 <div class="session-info">
-                  <span class="session-device">${parseUserAgent(s.userAgent)}</span>
-                  <span class="session-meta">${s.ipAddress || ""} &middot; ${formatRelativeTime(s.lastActiveAt)}</span>
+                  <span class="session-device">${escapeHtml(parseUserAgent(s.userAgent))}</span>
+                  <span class="session-meta">${escapeHtml(s.ipAddress || "")} &middot; ${escapeHtml(formatRelativeTime(s.lastActiveAt))}</span>
                 </div>
-                <button class="session-revoke-btn" data-session-id="${s.id}" aria-label="Revoke session">
+                <button class="session-revoke-btn" data-session-id="${escapeHtml(s.id)}" aria-label="Revoke session">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                   </svg>
@@ -2304,8 +2479,8 @@ var ProfileRenderer = class {
       <div class="profile-header">
         <div class="avatar-wrap">${avatarHtml}</div>
         <div class="header-text">
-          <div class="display-name">${u.displayName || "\u2014"}</div>
-          <div class="email">${u.email || "\u2014"}</div>
+          <div class="display-name">${escapeHtml(u.displayName || "\u2014")}</div>
+          <div class="email">${escapeHtml(u.email || "\u2014")}</div>
         </div>
         ${closeBtn}
       </div>
@@ -2313,11 +2488,11 @@ var ProfileRenderer = class {
       <div class="section">
         <div class="field-row">
           <span class="field-label">${this.t.emailAddress}</span>
-          <span class="field-value readonly">${u.email || "\u2014"}</span>
+          <span class="field-value readonly">${escapeHtml(u.email || "\u2014")}</span>
         </div>
         <div class="field-row">
           <span class="field-label">${this.t.displayName}</span>
-          <span class="field-value">${u.displayName || "\u2014"}</span>
+          <span class="field-value">${escapeHtml(u.displayName || "\u2014")}</span>
         </div>
       </div>
 
@@ -2336,7 +2511,7 @@ var ProfileRenderer = class {
         <div class="avatar-wrap">${avatarHtml}</div>
         <div class="header-text">
           <div class="display-name">${this.t.editProfile}</div>
-          <div class="email">${u.email || "\u2014"}</div>
+          <div class="email">${escapeHtml(u.email || "\u2014")}</div>
         </div>
         ${closeBtn}
       </div>
@@ -2348,7 +2523,7 @@ var ProfileRenderer = class {
             id="profile-displayname-input"
             class="input"
             type="text"
-            value="${u.displayName || ""}"
+            value="${escapeHtml(u.displayName || "")}"
             placeholder="${this.t.displayName}"
             autocomplete="name"
           />
@@ -2359,14 +2534,14 @@ var ProfileRenderer = class {
             id="profile-avatar-input"
             class="input"
             type="url"
-            value="${u.avatarUrl || ""}"
+            value="${escapeHtml(u.avatarUrl || "")}"
             placeholder="https://..."
             autocomplete="off"
           />
         </div>
         <div class="field-group">
           <label class="field-label">${this.t.emailAddress}</label>
-          <input class="input readonly" type="email" value="${u.email || ""}" disabled />
+          <input class="input readonly" type="email" value="${escapeHtml(u.email || "")}" disabled />
         </div>
       </div>
 
@@ -2379,8 +2554,9 @@ var ProfileRenderer = class {
   buildCSS() {
     const b = this.branding;
     const dark = this.isDark();
-    const bg = dark ? b.darkBg || "#0f172a" : b.lightBg || "#ffffff";
-    const text = dark ? b.darkText || "#f1f5f9" : b.lightText || "#111827";
+    const bg = dark ? safeColor(b.darkBg, "#0f172a") : safeColor(b.lightBg, "#ffffff");
+    const text = dark ? safeColor(b.darkText, "#f1f5f9") : safeColor(b.lightText, "#111827");
+    const primaryStart = safeColor(b.primaryColorStart, "#7c3aed");
     const mutedText = dark ? "#94a3b8" : "#6b7280";
     const dimText = dark ? "#64748b" : "#9ca3af";
     const borderColor = dark ? "#334155" : "#d1d5db";
@@ -2390,8 +2566,8 @@ var ProfileRenderer = class {
     const sessionItemBg = dark ? "#263148" : "#f3f4f6";
     return `
       :host {
-        --authon-primary-start: ${b.primaryColorStart || "#7c3aed"};
-        --authon-primary-end: ${b.primaryColorEnd || "#4f46e5"};
+        --authon-primary-start: ${primaryStart};
+        --authon-primary-end: ${safeColor(b.primaryColorEnd, "#4f46e5")};
         --authon-bg: ${bg};
         --authon-text: ${text};
         --authon-muted: ${mutedText};
@@ -2402,7 +2578,7 @@ var ProfileRenderer = class {
         --authon-section-bg: ${sectionBg};
         --authon-session-bg: ${sessionItemBg};
         --authon-backdrop-bg: rgba(0,0,0,${dark ? "0.7" : "0.5"});
-        --authon-radius: ${b.borderRadius ?? 12}px;
+        --authon-radius: ${safeRadius(b.borderRadius)}px;
         --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--authon-font);
         color: var(--authon-text);
@@ -2525,7 +2701,7 @@ var ProfileRenderer = class {
         outline: none; transition: border-color 0.15s;
       }
       .input::placeholder { color: var(--authon-dim); }
-      .input:focus { border-color: var(--authon-primary-start); box-shadow: 0 0 0 3px ${hexToRgba2(b.primaryColorStart || "#7c3aed", 0.15)}; }
+      .input:focus { border-color: var(--authon-primary-start); box-shadow: 0 0 0 3px ${colorWithAlpha(primaryStart, 0.15)}; }
       .input.readonly, .input:disabled { color: var(--authon-dim); cursor: not-allowed; background: var(--authon-section-bg); }
 
       .sessions-list { display: flex; flex-direction: column; gap: 6px; }
@@ -3462,16 +3638,34 @@ var WalletClient = class {
     run.then(clear, clear);
     return run;
   }
+  /** True when the wallet exists and has a passkey backup. See `EmbeddedWallet.protected`. */
+  async isProtected() {
+    return (await this.get())?.protected === true;
+  }
+  /**
+   * Every signature needs the user's approval; a project can turn this off only in its
+   * server-side wallet settings, never from the page.
+   * - Low-risk requests (personal messages, typed data that grants nothing) show a card
+   *   inside the wallet frame with the requesting site and the full text. Sign is
+   *   enabled only after the text was scrolled to the end.
+   * - High-risk requests (transactions with value or call data, approvals, permits,
+   *   orders, meta-transactions) show a small card whose button opens an Authon window
+   *   (`<wallet origin>/confirm`); the user approves there, outside this page. The click
+   *   happens inside the frame, so this method does not need to run in a click handler.
+   * Rejecting gives USER_CANCELLED; a blocked or closed window gives
+   * CONFIRM_WINDOW_BLOCKED / CONFIRM_WINDOW_CLOSED; text over 16,384 characters gives
+   * MESSAGE_TOO_LARGE. None of these ever signs.
+   */
   async signMessage(message) {
-    return this.call("wallet.signMessage", { message });
+    return this.call("wallet.signMessage", { message }, this.interactiveTimeout());
   }
   async signTypedData(typedData) {
-    return this.call("wallet.signTypedData", { typedData });
+    return this.call("wallet.signTypedData", { typedData }, this.interactiveTimeout());
   }
   async signTransaction(tx) {
     const normalized = {};
     for (const [key, value] of Object.entries(tx)) normalized[key] = toBigIntHex(value);
-    return this.call("wallet.signTransaction", { tx: normalized });
+    return this.call("wallet.signTransaction", { tx: normalized }, this.interactiveTimeout());
   }
   /**
    * Creates a passkey and backs up the wallet. Must be called from a user click
@@ -3483,10 +3677,23 @@ var WalletClient = class {
     await this.refresh();
   }
   /**
+   * Replaces a legacy passkey backup (`backupUpgradeRecommended`) with a new passkey
+   * whose public key the server keeps, so later restores are verified by the server.
+   * Must be called from a user click handler, on a browser where the wallet works.
+   * The key shares are rotated: other devices and sites restore once with the new
+   * passkey. Not available in the popup fallback.
+   */
+  async upgradeBackup(options = {}) {
+    await this.call("wallet.upgradeBackup", { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
+    await this.refresh();
+  }
+  /**
    * Restores the wallet on this browser with the passkey (one confirmation tap and
    * the system prompt). By default this browser is added as another device and
    * other devices keep working. Pass `resetOtherDevices: true` when a device was
-   * lost: the key is re-split and every other device must restore again.
+   * lost: the key is re-split and every other device must restore again. The reset
+   * card always shows the wallet's own warning text (custom `ui` text is ignored),
+   * and reset is not available in the popup fallback.
    */
   async restore(options = {}) {
     await this.call(
@@ -3496,6 +3703,11 @@ var WalletClient = class {
     );
     await this.refresh();
   }
+  /**
+   * Revokes a device. Must run in a browser that holds a trusted device share (the
+   * frame signs the request with it). The last device of an unprotected wallet
+   * cannot be revoked (LAST_DEVICE).
+   */
   async revokeDevice(deviceId) {
     await this.call("wallet.revokeDevice", { deviceId });
     await this.refresh();
@@ -3580,6 +3792,7 @@ var WalletClient = class {
       address: raw.address,
       protected: !!raw.protected,
       needsRestore: !!raw.needsRestore,
+      backupUpgradeRecommended: !!raw.backupUpgradeRecommended,
       devices: Array.isArray(raw.devices) ? raw.devices : []
     };
   }
@@ -3679,7 +3892,7 @@ var WalletClient = class {
       post.postMessage({ v: 1, id, type, payload }, this.requireOrigin());
     });
   }
-  /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+  /** Signing, protect, restore and upgrade wait for a person (in the frame or the Authon window). */
   interactiveTimeout() {
     return this.options.popupTimeoutMs ?? DEFAULT_POPUP_TIMEOUT_MS;
   }
@@ -3740,11 +3953,125 @@ var WalletClient = class {
   }
 };
 
+// src/oauth-pkce.ts
+var OAUTH_CODE_PARAM = "authon_code";
+var OAUTH_STATE_PARAM = "authon_oauth_state";
+var OAUTH_ERROR_PARAM = "authon_oauth_error";
+var OAUTH_POPUP_PARAM = "authon_oauth_popup";
+var VERIFIER_KEY_PREFIX = "authon-oauth-verifier:";
+var HANDOFF_KEY_PREFIX = "authon-oauth-handoff:";
+var STORED_TTL_MS = 10 * 60 * 1e3;
+function base64Url(bytes) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function getCrypto() {
+  const c = globalThis.crypto;
+  if (!c?.getRandomValues || !c.subtle) {
+    throw new Error("Authon OAuth needs the Web Crypto API (a secure https:// or localhost page)");
+  }
+  return c;
+}
+function generateCodeVerifier() {
+  const bytes = new Uint8Array(32);
+  getCrypto().getRandomValues(bytes);
+  return base64Url(bytes);
+}
+async function computeCodeChallenge(verifier) {
+  const digest = await getCrypto().subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  return base64Url(new Uint8Array(digest));
+}
+async function createPkcePair() {
+  const verifier = generateCodeVerifier();
+  return { verifier, challenge: await computeCodeChallenge(verifier) };
+}
+function saveRedirectVerifier(state, verifier) {
+  try {
+    sessionStorage.setItem(VERIFIER_KEY_PREFIX + state, JSON.stringify({ v: verifier, at: Date.now() }));
+  } catch {
+  }
+}
+function takeRedirectVerifier(state) {
+  try {
+    const key = VERIFIER_KEY_PREFIX + state;
+    const raw = sessionStorage.getItem(key);
+    sessionStorage.removeItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.v !== "string" || typeof parsed.at !== "number") return null;
+    if (Date.now() - parsed.at > STORED_TTL_MS) return null;
+    return parsed.v;
+  } catch {
+    return null;
+  }
+}
+function handoffKey(state) {
+  return HANDOFF_KEY_PREFIX + state;
+}
+function writeHandoff(state, value) {
+  try {
+    localStorage.setItem(handoffKey(state), JSON.stringify({ ...value, at: Date.now() }));
+  } catch {
+  }
+}
+function readHandoff(raw) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed.at !== "number" || Date.now() - parsed.at > STORED_TTL_MS) return null;
+    return {
+      code: typeof parsed.code === "string" ? parsed.code : void 0,
+      error: typeof parsed.error === "string" ? parsed.error : void 0,
+      at: parsed.at
+    };
+  } catch {
+    return null;
+  }
+}
+function takeHandoff(state) {
+  try {
+    const key = handoffKey(state);
+    const value = readHandoff(localStorage.getItem(key));
+    if (value) localStorage.removeItem(key);
+    return value;
+  } catch {
+    return null;
+  }
+}
+function pruneHandoffs() {
+  try {
+    const stale = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith(HANDOFF_KEY_PREFIX) && !readHandoff(localStorage.getItem(key))) stale.push(key);
+    }
+    for (const key of stale) localStorage.removeItem(key);
+  } catch {
+  }
+}
+function currentReturnUrl() {
+  const url = new URL(window.location.href);
+  for (const param of [OAUTH_CODE_PARAM, OAUTH_STATE_PARAM, OAUTH_ERROR_PARAM, OAUTH_POPUP_PARAM]) {
+    url.searchParams.delete(param);
+  }
+  url.hash = "";
+  return url.toString();
+}
+
 // src/authon.ts
 var DEFAULT_API_URL2 = "https://api.authon.dev";
 var DEFAULT_WALLET_ORIGIN = "https://wallet.authon.dev";
 var MAGIC_LINK_PARAM = "authon_magic_link";
+function isMfaRequired(value) {
+  return !!value && typeof value === "object" && value.mfaRequired === true && typeof value.mfaToken === "string";
+}
+function isMagicLinkConfirmation(value) {
+  return !!value && typeof value === "object" && value.status === "confirmation_required" && typeof value.email === "string";
+}
 var magicLinkResponses = /* @__PURE__ */ new Map();
+var pageMagicLinkTokens = /* @__PURE__ */ new Map();
+var MAGIC_LINK_NONCE_KEY = "authon_magic_link_nonce:";
 var Authon = class {
   publishableKey;
   config;
@@ -3764,6 +4091,7 @@ var Authon = class {
   authorizationContext = null;
   verificationToken = null;
   magicLinkResult = null;
+  pendingMagicLink = null;
   constructor(publishableKey, config) {
     this.publishableKey = publishableKey;
     this.config = {
@@ -3838,7 +4166,17 @@ var Authon = class {
   authorizationRequestBody() {
     return this.authorizationContext ? { authorizationRequestId: this.authorizationContext.requestId } : {};
   }
+  /**
+   * Every sign-in path (password, magic link, email code, wallet, passkey, OAuth) ends here. An
+   * `mfaRequired` body is handled the same way for all of them: `mfaRequired` event +
+   * AuthonMfaRequiredError carrying the token for `verifyMfa()`. In authorization code mode the
+   * request stays open and `verifyMfa()` finishes it.
+   */
   handleAuthCompletion(response) {
+    if (isMfaRequired(response)) {
+      this.emit("mfaRequired", response.mfaToken);
+      throw new AuthonMfaRequiredError(response.mfaToken);
+    }
     if (this.authorizationContext) {
       const candidate = response;
       if (candidate.accessToken || candidate.refreshToken || !candidate.authorizationCode) {
@@ -4058,34 +4396,66 @@ var Authon = class {
   // ── Passwordless ──
   async sendMagicLink(email, options) {
     const redirectUrl = options?.redirectUrl ?? this.magicLinkReturnUrl();
-    await this.apiPost("/v1/auth/passwordless/magic-link", {
-      email,
-      ...redirectUrl ? { redirectUrl } : {},
-      ...this.authorizationRequestBody()
-    });
+    const previousNonce = this.readMagicLinkNonce();
+    const browserNonce = this.authorizationContext ? null : this.createMagicLinkNonce();
+    try {
+      await this.apiPost("/v1/auth/passwordless/magic-link", {
+        email,
+        ...redirectUrl ? { redirectUrl } : {},
+        ...browserNonce ? { browserNonce } : {},
+        ...this.authorizationRequestBody()
+      });
+    } catch (err) {
+      if (browserNonce) this.restoreMagicLinkNonce(previousNonce);
+      throw err;
+    }
   }
   /**
    * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
-   * returns the verification already started on page load. Resolves to null when the URL has no link
-   * or the link could not be used (the reason is emitted as an `error` event).
+   * returns the verification already started on page load. Resolves to null when the URL has no link,
+   * the link could not be used (the reason is emitted as an `error` event), or the link needs the
+   * person's confirmation first (see `getPendingMagicLink()` / `magicLinkConfirmationRequired`).
    */
   handleMagicLink() {
     if (!this.magicLinkResult) this.magicLinkResult = this.consumeMagicLinkFromUrl();
     return this.magicLinkResult;
+  }
+  /**
+   * The magic link from this page that was not used automatically because it was requested in
+   * another browser, or someone is already signed in here. Show "Sign in as {email}?" and call
+   * `confirmMagicLink()` or `dismissMagicLink()`.
+   */
+  getPendingMagicLink() {
+    if (!this.pendingMagicLink) return null;
+    return { email: this.pendingMagicLink.email, reason: this.pendingMagicLink.reason };
+  }
+  /** Sign in with the pending magic link after the person agreed. Replaces any current session. */
+  async confirmMagicLink() {
+    const pending = this.pendingMagicLink;
+    if (!pending) throw new Error("No magic link is waiting for confirmation");
+    const user = await this.verifyPasswordless({ token: pending.token });
+    if (this.pendingMagicLink?.token === pending.token) this.pendingMagicLink = null;
+    return user;
+  }
+  /** Forget the pending magic link without signing in. The link itself stays unused. */
+  dismissMagicLink() {
+    this.pendingMagicLink = null;
   }
   async sendEmailOtp(email) {
     await this.apiPost("/v1/auth/passwordless/email-otp", { email, ...this.authorizationRequestBody() });
   }
   async verifyPasswordless(options) {
     if (options.token && !options.email && !options.code) {
-      const key = `${this.config.apiUrl}|${this.publishableKey}|${options.token}`;
-      let pending = magicLinkResponses.get(key);
-      if (!pending) {
-        pending = this.apiPost("/v1/auth/passwordless/verify", { token: options.token });
-        magicLinkResponses.set(key, pending);
-        pending.catch(() => void 0);
+      const base = this.magicLinkRequestKey(options.token);
+      const onLoad = magicLinkResponses.get(`${base}|load`);
+      if (onLoad) {
+        const loaded = await onLoad.catch(() => null);
+        if (loaded && !isMagicLinkConfirmation(loaded)) return this.handleAuthCompletion(loaded);
       }
-      return this.handleAuthCompletion(await pending);
+      const res2 = await this.sharedMagicLinkRequest(`${base}|confirm`, { token: options.token });
+      if (isMagicLinkConfirmation(res2)) throw new Error("Magic link needs confirmation");
+      if (this.pendingMagicLink?.token === options.token) this.pendingMagicLink = null;
+      return this.handleAuthCompletion(res2);
     }
     const res = await this.apiPost("/v1/auth/passwordless/verify", options);
     return this.handleAuthCompletion(res);
@@ -4357,6 +4727,22 @@ var Authon = class {
       this.emit("walletError", err instanceof AuthonWalletError ? err : new AuthonWalletError("UNKNOWN", err instanceof Error ? err.message : String(err)));
     }
   }
+  showBuiltInMagicLinkConfirm(email) {
+    if (typeof document === "undefined") return;
+    void this.openSignIn().then(() => {
+      const modal = this.getModal();
+      modal.showMagicLinkConfirm(
+        email,
+        () => {
+          this.confirmMagicLink().then(() => modal.close()).catch((err) => modal.showOverlayError(err instanceof Error ? err.message : String(err)));
+        },
+        () => {
+          this.dismissMagicLink();
+          modal.close();
+        }
+      );
+    }).catch(() => void 0);
+  }
   getModal() {
     if (!this.modal) {
       this.modal = new ModalRenderer({
@@ -4485,7 +4871,14 @@ var Authon = class {
         await this.startRedirectOAuthFlow(provider);
         return;
       }
-      const { url, state } = await this.requestOAuthAuthorization(provider, "popup");
+      const codeMode = Boolean(this.authorizationContext);
+      const pkce = codeMode ? null : await createPkcePair();
+      const { url, state } = await this.requestOAuthAuthorization(
+        provider,
+        "popup",
+        pkce ? currentReturnUrl() : void 0,
+        pkce?.challenge
+      );
       this.modal?.showLoading();
       const width = 500;
       const height = 700;
@@ -4509,51 +4902,57 @@ var Authon = class {
       }
       let resolved = false;
       let cleaned = false;
-      const storageKey = `authon-oauth-${state}`;
-      const codeMode = Boolean(this.authorizationContext);
-      const resolve = (response) => {
-        if (resolved) return;
-        resolved = true;
-        cleanup();
+      const storageKey = handoffKey(state);
+      const closePopup = () => {
         try {
           if (popup && !popup.closed) popup.close();
         } catch {
         }
-        if (!codeMode) {
-          try {
-            localStorage.removeItem(storageKey);
-          } catch {
-          }
-        }
+      };
+      const resolve = (response) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        closePopup();
         this.handleAuthCompletion(response);
         this.modal?.close();
       };
       const handleError = (msg) => {
         if (resolved) return;
+        resolved = true;
         cleanup();
+        closePopup();
         this.session.clearSession();
         this.modal?.hideLoading();
         this.modal?.showError(msg);
         this.emit("error", new Error(msg));
       };
-      const pollApi = async () => {
+      const redeem = async (code) => {
+        if (resolved || !pkce) return;
+        resolved = true;
+        cleanup();
+        closePopup();
+        try {
+          await this.redeemOAuthCode(code, pkce.verifier);
+          this.modal?.close();
+        } catch (err) {
+          if (err instanceof AuthonMfaRequiredError) {
+            this.modal?.close();
+            return;
+          }
+          const msg = err instanceof Error ? err.message : String(err);
+          this.modal?.hideLoading();
+          this.modal?.showError(msg);
+          this.emit("error", err instanceof Error ? err : new Error(msg));
+        }
+      };
+      const pollStatus = async () => {
         if (resolved || cleaned) return;
         try {
           const result = await this.apiGet(
             `/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`
           );
-          if (codeMode && result.status === "completed" && result.authorizationCode) {
-            resolve({ authorizationCode: result.authorizationCode, state: result.state, expiresIn: result.expiresIn });
-          } else if (result.status === "completed" && result.accessToken) {
-            resolve({
-              accessToken: result.accessToken,
-              refreshToken: result.refreshToken,
-              expiresIn: result.expiresIn,
-              user: result.user
-            });
-          } else if (result.status === "error") {
-            handleError(result.message || "Authentication failed");
-          }
+          if (result.status === "error") handleError(result.message || "Authentication failed");
         } catch {
         }
       };
@@ -4581,38 +4980,35 @@ var Authon = class {
           resolve({ authorizationCode: e.data.authorizationCode, state: e.data.state, expiresIn: e.data.expiresIn });
           return;
         }
-        if (e.data?.type === "authon-oauth-callback" && e.data.tokens) {
-          resolve(e.data.tokens);
+        if (e.data?.state !== state) return;
+        if (e.data?.type === "authon-oauth-error") {
+          handleError(typeof e.data.error === "string" ? e.data.error : "Authentication failed");
+          return;
+        }
+        if (e.data?.type === "authon-oauth-pkce" && typeof e.data.code === "string") {
+          void redeem(e.data.code);
         }
       };
       window.addEventListener("message", messageHandler);
+      const consumeHandoff = (value) => {
+        if (!value) return;
+        if (value.code) void redeem(value.code);
+        else if (value.error) handleError(value.error);
+      };
       const storageHandler = (e) => {
         if (e.key !== storageKey || !e.newValue) return;
-        try {
-          const data = JSON.parse(e.newValue);
-          if (data.tokens) resolve(data.tokens);
-          else if (data.error) handleError(data.error);
-        } catch {
-        }
+        consumeHandoff(takeHandoff(state));
       };
-      if (!codeMode) window.addEventListener("storage", storageHandler);
       if (!codeMode) {
-        try {
-          const existing = localStorage.getItem(storageKey);
-          if (existing) {
-            const data = JSON.parse(existing);
-            if (data.tokens) {
-              resolve(data.tokens);
-              return;
-            }
-          }
-        } catch {
-        }
+        window.addEventListener("storage", storageHandler);
+        consumeHandoff(takeHandoff(state));
+        if (resolved) return;
       }
-      const apiPollTimer = setInterval(pollApi, 1500);
+      const apiPollTimer = setInterval(pollStatus, 1500);
       const visibilityHandler = () => {
         if (document.visibilityState === "visible" && !resolved && !cleaned) {
-          pollApi();
+          if (!codeMode) consumeHandoff(takeHandoff(state));
+          void pollStatus();
         }
       };
       document.addEventListener("visibilitychange", visibilityHandler);
@@ -4621,12 +5017,12 @@ var Authon = class {
         try {
           if (popup && popup.closed) {
             clearInterval(closePollTimer);
-            pollApi();
+            void pollStatus();
             setTimeout(() => {
               if (resolved || cleaned) return;
-              pollApi().then(() => {
+              void pollStatus().then(() => {
                 if (resolved || cleaned) return;
-                cleanup();
+                if (codeMode) cleanup();
                 this.modal?.hideLoading();
               });
             }, 3e3);
@@ -4644,13 +5040,30 @@ var Authon = class {
       this.emit("error", err instanceof Error ? err : new Error(String(err)));
     }
   }
+  /**
+   * Exchanges a one-time OAuth code from Authon for a session. Requires the verifier generated by
+   * the SDK instance that started the flow. A wrong verifier counts as a failed attempt; Authon
+   * burns the code after 3. Throws AuthonMfaRequiredError (and emits `mfaRequired`) when the user
+   * has MFA enabled; finish with verifyMfa(error.mfaToken, code).
+   */
+  async redeemOAuthCode(code, codeVerifier) {
+    const res = await this.apiPost(
+      "/v1/auth/oauth/token",
+      { code, codeVerifier }
+    );
+    if (res.mfaRequired && res.mfaToken) {
+      this.emit("mfaRequired", res.mfaToken);
+      throw new AuthonMfaRequiredError(res.mfaToken);
+    }
+    return this.handleAuthCompletion(res);
+  }
   normalizeFlowMode(mode) {
     if (mode === "popup" || mode === "redirect" || mode === "auto") {
       return mode;
     }
     return "auto";
   }
-  async requestOAuthAuthorization(provider, flowMode, returnTo) {
+  async requestOAuthAuthorization(provider, flowMode, returnTo, codeChallenge) {
     const redirectUri = `${this.config.apiUrl}/v1/auth/oauth/redirect`;
     const params = new URLSearchParams({
       redirectUri,
@@ -4661,19 +5074,27 @@ var Authon = class {
     }
     if (this.authorizationContext) {
       params.set("authorizationRequestId", this.authorizationContext.requestId);
+    } else if (codeChallenge) {
+      params.set("codeChallenge", codeChallenge);
+      params.set("codeChallengeMethod", "S256");
     }
     return this.apiGet(
       `/v1/auth/oauth/${provider}/url?${params.toString()}`
     );
   }
   async startRedirectOAuthFlow(provider) {
-    const { url } = await this.requestOAuthAuthorization(
+    const pkce = this.authorizationContext ? null : await createPkcePair();
+    const { url, state } = await this.requestOAuthAuthorization(
       provider,
       "redirect",
-      window.location.href
+      pkce ? currentReturnUrl() : window.location.href,
+      pkce?.challenge
     );
+    if (pkce) saveRedirectVerifier(state, pkce.verifier);
     window.location.assign(url);
   }
+  /** Pending redirect sign-in started from this tab, if the page was opened with its result. */
+  oauthRedirectResult = null;
   consumeRedirectResultFromUrl() {
     if (typeof window === "undefined") return;
     let currentUrl;
@@ -4682,34 +5103,42 @@ var Authon = class {
     } catch {
       return;
     }
-    const state = currentUrl.searchParams.get("authon_oauth_state");
-    const explicitError = currentUrl.searchParams.get("authon_oauth_error");
-    if (!state && !explicitError) return;
-    let consumed = false;
-    if (state) {
+    pruneHandoffs();
+    const code = currentUrl.searchParams.get(OAUTH_CODE_PARAM);
+    const state = currentUrl.searchParams.get(OAUTH_STATE_PARAM);
+    const explicitError = currentUrl.searchParams.get(OAUTH_ERROR_PARAM);
+    const fromPopup = currentUrl.searchParams.get(OAUTH_POPUP_PARAM) === "1";
+    if (!code && !state && !explicitError) return;
+    for (const param of [OAUTH_CODE_PARAM, OAUTH_STATE_PARAM, OAUTH_ERROR_PARAM, OAUTH_POPUP_PARAM]) {
+      currentUrl.searchParams.delete(param);
+    }
+    window.history.replaceState({}, "", currentUrl.toString());
+    if (fromPopup && state) {
+      writeHandoff(state, code ? { code } : { error: explicitError || "Authentication failed" });
       try {
-        const storageKey = `authon-oauth-${state}`;
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          const data = JSON.parse(stored);
-          if (data.tokens) {
-            this.session.setSession(data.tokens);
-            consumed = true;
-          } else if (data.error) {
-            this.emit("error", new Error(data.error));
-            consumed = true;
-          }
-          localStorage.removeItem(storageKey);
-        }
+        window.close();
       } catch {
       }
+      return;
     }
-    if (!consumed && explicitError) {
+    if (code && state) {
+      const verifier = takeRedirectVerifier(state);
+      if (verifier) {
+        this.oauthRedirectResult = this.redeemOAuthCode(code, verifier).catch((err) => {
+          if (!(err instanceof AuthonMfaRequiredError)) {
+            this.emit("error", err instanceof Error ? err : new Error(String(err)));
+          }
+          return null;
+        });
+        return;
+      }
+      void this.apiPost("/v1/auth/oauth/token", { code, codeVerifier: generateCodeVerifier() }).catch(() => void 0);
+      return;
+    }
+    if (explicitError) {
+      if (state) takeRedirectVerifier(state);
       this.emit("error", new Error(explicitError));
     }
-    currentUrl.searchParams.delete("authon_oauth_state");
-    currentUrl.searchParams.delete("authon_oauth_error");
-    window.history.replaceState({}, "", currentUrl.toString());
   }
   async apiGet(path) {
     const res = await fetch(`${this.config.apiUrl}${path}`, {
@@ -4825,33 +5254,143 @@ var Authon = class {
       return void 0;
     }
   }
-  consumeMagicLinkFromUrl() {
-    if (typeof window === "undefined") return Promise.resolve(null);
+  magicLinkRequestKey(token) {
+    return `${this.config.apiUrl}|${this.publishableKey}|${token}`;
+  }
+  sharedMagicLinkRequest(key, body) {
+    let pending = magicLinkResponses.get(key);
+    if (!pending) {
+      pending = this.apiPost("/v1/auth/passwordless/verify", body);
+      magicLinkResponses.set(key, pending);
+      pending.catch(() => void 0);
+    }
+    return pending;
+  }
+  magicLinkNonceKey() {
+    return `${MAGIC_LINK_NONCE_KEY}${this.config.apiUrl}|${this.publishableKey}`;
+  }
+  /**
+   * New random value for a link request, kept in this origin's localStorage (shared by its tabs, so
+   * the link may open in a new tab). Null when there is no browser storage; such links always ask
+   * for confirmation.
+   */
+  createMagicLinkNonce() {
+    if (typeof window === "undefined" || this.config.sessionMode !== "browser") return null;
+    try {
+      const bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      let binary = "";
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      const nonce = btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+      localStorage.setItem(this.magicLinkNonceKey(), nonce);
+      return localStorage.getItem(this.magicLinkNonceKey()) === nonce ? nonce : null;
+    } catch {
+      return null;
+    }
+  }
+  readMagicLinkNonce() {
+    try {
+      return localStorage.getItem(this.magicLinkNonceKey());
+    } catch {
+      return null;
+    }
+  }
+  restoreMagicLinkNonce(previous) {
+    try {
+      if (previous) localStorage.setItem(this.magicLinkNonceKey(), previous);
+      else localStorage.removeItem(this.magicLinkNonceKey());
+    } catch {
+    }
+  }
+  clearMagicLinkNonce() {
+    try {
+      localStorage.removeItem(this.magicLinkNonceKey());
+    } catch {
+    }
+  }
+  /**
+   * Read a magic link token from the URL (fragment form first, then the older query form) and
+   * remove it from the address bar and history right away, before any request is made.
+   */
+  takeMagicLinkTokenFromUrl() {
+    if (typeof window === "undefined") return null;
     let url;
     try {
       url = new URL(window.location.href);
     } catch {
-      return Promise.resolve(null);
-    }
-    if (url.searchParams.get(MAGIC_LINK_PARAM) !== "1") return Promise.resolve(null);
-    const token = url.searchParams.get("token");
-    const cleanUrl = () => {
-      try {
-        const current = new URL(window.location.href);
-        current.searchParams.delete("token");
-        current.searchParams.delete(MAGIC_LINK_PARAM);
-        window.history.replaceState(window.history.state, "", current.toString());
-      } catch {
-      }
-    };
-    if (!token) {
-      cleanUrl();
-      return Promise.resolve(null);
-    }
-    return this.verifyPasswordless({ token }).then((user) => user, (err) => {
-      this.emit("error", err instanceof Error ? err : new Error(String(err)));
       return null;
-    }).finally(cleanUrl);
+    }
+    const hash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const inHash = hash.get(MAGIC_LINK_PARAM) === "1";
+    const inQuery = url.searchParams.get(MAGIC_LINK_PARAM) === "1";
+    if (!inHash && !inQuery) return null;
+    const token = (inHash ? hash.get("token") : null) || (inQuery ? url.searchParams.get("token") : null);
+    if (inQuery) {
+      url.searchParams.delete("token");
+      url.searchParams.delete(MAGIC_LINK_PARAM);
+    }
+    if (inHash) {
+      hash.delete("token");
+      hash.delete(MAGIC_LINK_PARAM);
+      const rest = hash.toString();
+      url.hash = rest ? `#${rest}` : "";
+    }
+    try {
+      window.history.replaceState(window.history.state, "", url.toString());
+    } catch {
+    }
+    return token || null;
+  }
+  /**
+   * Page-load handling. The link finishes silently only when this browser holds the value sent with
+   * the request and nobody is signed in; otherwise it is left unused and the app is asked to confirm.
+   * That stops a link someone else requested (for their own account) from signing this browser in.
+   */
+  consumeMagicLinkFromUrl() {
+    const pageKey = `${this.config.apiUrl}|${this.publishableKey}`;
+    const fromUrl = this.takeMagicLinkTokenFromUrl();
+    const token = fromUrl ?? pageMagicLinkTokens.get(pageKey) ?? null;
+    if (!token) return Promise.resolve(null);
+    const key = `${this.magicLinkRequestKey(token)}|load`;
+    let pending = magicLinkResponses.get(key);
+    if (!pending) {
+      pageMagicLinkTokens.set(pageKey, token);
+      pending = (async () => {
+        try {
+          await this.session.waitUntilReady();
+        } catch {
+        }
+        const signedIn = this.session.getUser() !== null;
+        const browserNonce = signedIn ? null : this.readMagicLinkNonce();
+        const res = await this.apiPost("/v1/auth/passwordless/verify", {
+          token,
+          requireBrowserBinding: true,
+          ...browserNonce ? { browserNonce } : {}
+        });
+        if (isMagicLinkConfirmation(res)) return { ...res, reason: signedIn ? "signed_in" : "unrecognized_browser" };
+        return res;
+      })();
+      magicLinkResponses.set(key, pending);
+      pending.catch(() => void 0).finally(() => {
+        if (pageMagicLinkTokens.get(pageKey) === token) pageMagicLinkTokens.delete(pageKey);
+      });
+    }
+    return pending.then((res) => {
+      if (isMagicLinkConfirmation(res)) {
+        const reason = res.reason ?? "unrecognized_browser";
+        this.pendingMagicLink = { token, email: res.email, reason };
+        this.emit("magicLinkConfirmationRequired", { email: res.email, reason });
+        if (!this.listeners.get("magicLinkConfirmationRequired")?.size) this.showBuiltInMagicLinkConfirm(res.email);
+        return null;
+      }
+      this.clearMagicLinkNonce();
+      return this.handleAuthCompletion(res);
+    }).catch((err) => {
+      if (!(err instanceof AuthonMfaRequiredError)) {
+        this.emit("error", err instanceof Error ? err : new Error(String(err)));
+      }
+      return null;
+    });
   }
   // ── WebAuthn helpers ──
   /** Authon returns WebAuthn options at the top level; very old servers wrapped them in `options`. */
@@ -4950,6 +5489,8 @@ export {
   generateQrSvg,
   getProviderButtonConfig,
   getStrings,
+  safeHttpUrl,
+  safeImageDataUrl,
   translations
 };
 //# sourceMappingURL=index.js.map

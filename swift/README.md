@@ -104,8 +104,13 @@ let user = try await authon.signIn(email: "user@example.com", password: "secret"
 ### OAuth (Social Login)
 
 ```swift
+// Web OAuth needs a callback scheme. Add "com.example.app://" to the
+// project's allowed origins in the Authon dashboard.
+let authon = Authon(publishableKey: "pk_live_...", oauthCallbackScheme: "com.example.app")
 let user = try await authon.signInWithOAuth(.google)
-// Opens ASWebAuthenticationSession → system browser
+// ASWebAuthenticationSession (iOS and macOS) with PKCE: Authon redirects to
+// com.example.app://oauth-callback with a one-time code, and the SDK exchanges
+// it with its verifier at POST /v1/auth/oauth/token. Tokens are never polled by state.
 ```
 
 ### Native Apple Sign In (macOS / iOS)
@@ -115,7 +120,7 @@ On macOS and iOS, calling `signInWithOAuth(.apple)` automatically uses `ASAuthor
 ```swift
 let user = try await authon.signInWithOAuth(.apple)
 // macOS/iOS: native Apple Sign In sheet → POST /v1/auth/oauth/native
-// Other platforms: ASWebAuthenticationSession → /v1/auth/oauth/redirect
+// Fallback (native sheet unavailable): ASWebAuthenticationSession with PKCE (needs oauthCallbackScheme)
 ```
 
 #### Required setup
@@ -148,6 +153,8 @@ do {
     let user = try await authon.verifyMfa(mfaToken: error.mfaToken, code: "123456")
 }
 ```
+
+`signInWithOAuth(_:)` follows the same contract: for an account with MFA it throws `AuthonMfaRequiredError` (no session yet) and you finish with `verifyMfa(mfaToken:code:)`. `SignInView` handles this for its social buttons.
 
 ### Passwordless
 
@@ -185,7 +192,7 @@ let user = try await authon.verifyWeb3Signature(
 |--------|-------------|
 | `signIn(email:password:)` | Email/password sign in |
 | `signUp(email:password:displayName:)` | Register new user |
-| `signInWithOAuth(_:)` | OAuth sign in — native Apple sheet on macOS/iOS, ASWebAuthenticationSession elsewhere |
+| `signInWithOAuth(_:)` | OAuth sign in — native Apple sheet on macOS/iOS; other providers use ASWebAuthenticationSession + PKCE (requires `oauthCallbackScheme`) |
 | `signOut()` | Sign out, clear Keychain |
 | `getUser()` | Refresh user from server |
 | `getToken()` | Get cached access token |

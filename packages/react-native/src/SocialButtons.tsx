@@ -30,7 +30,7 @@ export function SocialButtons({
   labels,
   buttonProps,
 }: SocialButtonsProps) {
-  const { providers, startOAuth, completeOAuth } = useAuthon();
+  const { providers, startOAuth, completeOAuth, handleOAuthCallback } = useAuthon();
   const [loadingProvider, setLoadingProvider] = useState<string | null>(null);
 
   if (providers.length === 0) return null;
@@ -40,9 +40,19 @@ export function SocialButtons({
   const handlePress = async (provider: OAuthProviderType) => {
     setLoadingProvider(provider);
     try {
+      // Needs oauthReturnTo on AuthonProvider (your app's deep link, allowed in the project).
       const { url, state } = await startOAuth(provider);
-      await Linking.openURL(url);
-      await completeOAuth(state);
+      const completed = completeOAuth(state);
+      // The one-time code comes back through the deep link; the state alone cannot get tokens.
+      const subscription = Linking.addEventListener?.('url', ({ url: callbackUrl }: { url: string }) => {
+        void handleOAuthCallback(callbackUrl).catch(() => undefined);
+      });
+      try {
+        await Linking.openURL(url);
+        await completed;
+      } finally {
+        subscription?.remove();
+      }
       onSuccess?.();
     } catch (e: any) {
       const error = e instanceof Error ? e : new Error(String(e));

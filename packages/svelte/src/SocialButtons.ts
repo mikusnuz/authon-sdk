@@ -151,7 +151,14 @@ export function renderSocialButtons(options: SocialButtonsOptions): () => void {
         btn.style.paddingLeft = '16px';
         btn.style.paddingRight = '16px';
         const buttonLabel = labels?.[provider] ?? `Continue with ${displayName}`;
-        btn.innerHTML = `<span style="display:flex;align-items:center;flex-shrink:0">${iconSvg}</span><span style="font-size:15px;font-weight:600;white-space:nowrap">${buttonLabel}</span>`;
+        // The icon is a built-in SVG constant; the label is caller data, so it goes in as text only.
+        const iconSpan = document.createElement('span');
+        iconSpan.style.cssText = 'display:flex;align-items:center;flex-shrink:0';
+        iconSpan.innerHTML = iconSvg;
+        const labelSpan = document.createElement('span');
+        labelSpan.style.cssText = 'font-size:15px;font-weight:600;white-space:nowrap';
+        labelSpan.textContent = String(buttonLabel);
+        btn.replaceChildren(iconSpan, labelSpan);
       }
 
       btn.addEventListener('click', () => handleClick(provider, btn));

@@ -8,11 +8,21 @@ describe('createAuthonWalletToken', () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({ token: 't', expiresAt: '2030-01-01T00:00:00.000Z' }), { status: 200 }));
     vi.stubGlobal('fetch', fetchMock);
     const result = await createAuthonWalletToken({ userId: 'u 1', secretKey: 'sk_test_abc', apiUrl: 'https://api.example.dev/' });
-    expect(result).toEqual({ token: 't', expiresAt: '2030-01-01T00:00:00.000Z' });
+    expect(result).toEqual({ token: 't', expiresAt: '2030-01-01T00:00:00.000Z', sessionBound: false });
     const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://api.example.dev/v1/backend/users/u%201/wallet-token');
     expect(init.method).toBe('POST');
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer sk_test_abc');
+    expect(JSON.parse(init.body as string)).toEqual({});
+  });
+
+  it('binds the token to the session when the access token is passed', async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ token: 't', expiresAt: '2030-01-01T00:00:00.000Z', sessionBound: true }), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const result = await createAuthonWalletToken({ userId: 'u', secretKey: 'sk_test_abc', accessToken: 'at' });
+    expect(result.sessionBound).toBe(true);
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toEqual({ accessToken: 'at' });
   });
 
   it('refuses publishable keys and failed responses', async () => {

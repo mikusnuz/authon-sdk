@@ -1,5 +1,9 @@
 # @authon/vue
 
+## 0.9.1
+
+- Requires @authon/js 0.9.1 (security release).
+
 ## 0.9.0
 
 ### Minor Changes

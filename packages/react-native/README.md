@@ -89,19 +89,44 @@ export default function App() {
 ### Add Google OAuth Login
 
 ```tsx
-import { Linking } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuthon } from '@authon/react-native';
 
+// 1. Add your app scheme (e.g. "myapp://") to the project's allowed origins in the dashboard.
+// 2. Optionally set <AuthonProvider oauthReturnTo="myapp://oauth-callback" ...> so
+//    startOAuth() and <SocialButtons /> know where to return.
 function GoogleButton() {
   const { startOAuth, completeOAuth } = useAuthon();
 
   const handlePress = async () => {
-    const { url, state } = await startOAuth('google');
-    await Linking.openURL(url);
-    await completeOAuth(state);
+    const { url } = await startOAuth('google', { returnTo: 'myapp://oauth-callback' });
+    const result = await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
+    if (result.type === 'success') await completeOAuth(result.url);
   };
 
   return <Button title="Sign in with Google" onPress={handlePress} />;
+}
+```
+
+From 0.9.1, OAuth uses PKCE:
+- `startOAuth` keeps a verifier in the client and sends only its hash.
+- Authon redirects to `returnTo` with a one-time `authon_code`.
+- `completeOAuth(callbackUrl)` exchanges that code with the verifier.
+- `GET /v1/auth/oauth/poll` returns status only, so `completeOAuth(state)` on its own can no longer get tokens. It now waits until `handleOAuthCallback(url)` receives the deep link.
+- `crypto.getRandomValues` is required (Expo SDK 49+ or `react-native-get-random-values`).
+- If the user has MFA enabled, `completeOAuth` / `handleOAuthCallback` reject with `AuthonMfaRequiredError` (and emit `mfaRequired`). No session exists yet; finish with `verifyMfa(error.mfaToken, code)`:
+
+```tsx
+import { AuthonMfaRequiredError, useAuthon } from '@authon/react-native';
+
+const { completeOAuth, verifyMfa } = useAuthon();
+try {
+  await completeOAuth(result.url);
+} catch (err) {
+  if (err instanceof AuthonMfaRequiredError) {
+    const code = await askUserForTotpCode();
+    await verifyMfa(err.mfaToken, code);
+  } else throw err;
 }
 ```
 
@@ -115,13 +140,13 @@ function GoogleButton() {
   const { startOAuth, completeOAuth } = useAuthon();
 
   const handlePress = async () => {
-    const { url, state } = await startOAuth('google', {
-      flow: 'redirect',
+    // https bridge on an allowed origin that 302-redirects to
+    // myapp://oauth-callback, forwarding authon_code and authon_oauth_state.
+    const { url } = await startOAuth('google', {
       returnTo: 'https://your-domain.com/mobile-callback',
     });
-    const pollPromise = completeOAuth(state);
-    await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
-    await pollPromise;
+    const result = await WebBrowser.openAuthSessionAsync(url, 'myapp://oauth-callback');
+    if (result.type === 'success') await completeOAuth(result.url);
   };
 
   return <Button title="Sign in with Google" onPress={handlePress} />;
@@ -176,7 +201,7 @@ await signOut();
 
 | Hook | Returns |
 |------|---------|
-| `useAuthon()` | `{ isLoaded, isSignedIn, user, signIn, signUp, signOut, getToken, providers, branding, startOAuth, completeOAuth, on, client }` |
+| `useAuthon()` | `{ isLoaded, isSignedIn, user, signIn, signUp, signOut, getToken, providers, branding, startOAuth, completeOAuth, handleOAuthCallback, verifyMfa, on, client }` |
 | `useUser()` | `{ isLoaded, isSignedIn, user }` |
 | `useAuthonWeb3()` | Web3 wallet auth |
 | `useAuthonPasswordless()` | OTP and magic link |

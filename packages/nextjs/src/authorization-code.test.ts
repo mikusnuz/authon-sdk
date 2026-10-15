@@ -121,3 +121,24 @@ describe('Next.js BFF authorization helpers', () => {
     );
   });
 });
+
+describe('readAuthonAuthorizationCallback', () => {
+  it('reads a normal code callback', async () => {
+    const { readAuthonAuthorizationCallback } = await import('./authorization-code');
+    expect(readAuthonAuthorizationCallback(new URLSearchParams('code=c1&state=s1'))).toEqual({ type: 'code', code: 'c1', state: 's1' });
+  });
+
+  it('reports MFA instead of a missing code', async () => {
+    const { readAuthonAuthorizationCallback } = await import('./authorization-code');
+    expect(readAuthonAuthorizationCallback({ error: 'mfa_required', mfa_token: 'm1', state: 's1' }))
+      .toEqual({ type: 'mfa_required', mfaToken: 'm1', state: 's1' });
+    expect(readAuthonAuthorizationCallback({ error: 'mfa_required', state: 's1' }))
+      .toEqual({ type: 'error', error: 'invalid_mfa_callback', state: 's1' });
+  });
+
+  it('passes other errors through', async () => {
+    const { readAuthonAuthorizationCallback } = await import('./authorization-code');
+    expect(readAuthonAuthorizationCallback(new URLSearchParams('error=access_denied&state=s2')))
+      .toEqual({ type: 'error', error: 'access_denied', state: 's2' });
+  });
+});

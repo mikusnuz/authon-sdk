@@ -64,6 +64,8 @@ describe('magic link handling on page load', () => {
     window.history.replaceState({}, '', `/welcome?next=%2Fcart&token=${TOKEN}&authon_magic_link=1`);
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
     const authon = new Authon('pk_live_magic-auto');
+    // The token leaves the address bar before any request is made.
+    expect(window.location.search).toBe('?next=%2Fcart');
     const signedIn = vi.fn();
     authon.on('signedIn', signedIn);
 
@@ -75,7 +77,7 @@ describe('magic link handling on page load', () => {
     expect(vi.mocked(fetch)).toHaveBeenCalledOnce();
     const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(String(url)).toBe('https://api.authon.dev/v1/auth/passwordless/verify');
-    expect(JSON.parse(String((init as RequestInit).body))).toEqual({ token: TOKEN });
+    expect(JSON.parse(String((init as RequestInit).body))).toEqual({ token: TOKEN, requireBrowserBinding: true });
     expect(window.location.search).toBe('?next=%2Fcart');
   });
 
@@ -120,6 +122,7 @@ describe('magic link handling on page load', () => {
     ]);
     expect([a?.id, b?.id, c.id]).toEqual(['user_1', 'user_1', 'user_1']);
     expect(vi.mocked(fetch)).toHaveBeenCalledOnce();
+    expect(second.getUser()?.id).toBe('user_1');
   });
 
   it('asks Authon to send the link back to the current page', async () => {
@@ -130,6 +133,7 @@ describe('magic link handling on page load', () => {
     expect(bodyOf(vi.mocked(fetch).mock.calls[0])).toEqual({
       email: 'person@example.com',
       redirectUrl: `${window.location.origin}/login?next=1`,
+      browserNonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
     });
   });
 
@@ -137,7 +141,147 @@ describe('magic link handling on page load', () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'Magic link sent' }));
     const authon = new Authon('pk_live_magic-send-off', { autoHandleMagicLink: false });
     await authon.sendMagicLink('person@example.com');
-    expect(bodyOf(vi.mocked(fetch).mock.calls[0])).toEqual({ email: 'person@example.com' });
+    expect(bodyOf(vi.mocked(fetch).mock.calls[0])).toEqual({
+      email: 'person@example.com',
+      browserNonce: expect.stringMatching(/^[A-Za-z0-9_-]{43}$/),
+    });
+  });
+});
+
+describe('magic link login CSRF protection', () => {
+  beforeEach(() => {
+    vi.stubGlobal('localStorage', new MemoryStorage());
+    vi.stubGlobal('fetch', vi.fn());
+  });
+
+  afterEach(() => {
+    window.history.replaceState({}, '', '/');
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('sends the nonce this browser stored when it asked for the link, then forgets it', async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'Magic link sent' }));
+    const sender = new Authon('pk_live_csrf-bound', { autoHandleMagicLink: false });
+    await sender.sendMagicLink('person@example.com');
+    const nonce = bodyOf(vi.mocked(fetch).mock.calls[0]).browserNonce;
+
+    const token = 'C'.repeat(43);
+    window.history.replaceState({}, '', `/welcome#authon_magic_link=1&token=${token}`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    const authon = new Authon('pk_live_csrf-bound');
+    expect(window.location.hash).toBe('');
+    expect((await authon.handleMagicLink())?.id).toBe('user_1');
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token, requireBrowserBinding: true, browserNonce: nonce });
+    expect(window.location.pathname).toBe('/welcome');
+    expect([...Array(localStorage.length).keys()].map((i) => localStorage.key(i)).some((k) => k?.startsWith('authon_magic_link_nonce:'))).toBe(false);
+  });
+
+  it('keeps other fragment content when it removes a fragment link', async () => {
+    const token = 'D'.repeat(43);
+    window.history.replaceState({}, '', `/app?x=1#tab=2&authon_magic_link=1&token=${token}`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    const authon = new Authon('pk_live_csrf-hash');
+    expect(window.location.search).toBe('?x=1');
+    expect(window.location.hash).toBe('#tab=2');
+    await authon.handleMagicLink();
+  });
+
+  it('does not sign in with a link from another browser; asks to confirm instead', async () => {
+    const token = 'E'.repeat(43);
+    window.history.replaceState({}, '', `/?token=${token}&authon_magic_link=1`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'attacker@example.com' }));
+    const authon = new Authon('pk_live_csrf-other');
+    const asked = vi.fn();
+    const signedIn = vi.fn();
+    authon.on('magicLinkConfirmationRequired', asked);
+    authon.on('signedIn', signedIn);
+
+    expect(await authon.handleMagicLink()).toBeNull();
+    expect(asked).toHaveBeenCalledWith({ email: 'attacker@example.com', reason: 'unrecognized_browser' });
+    expect(signedIn).not.toHaveBeenCalled();
+    expect(authon.getUser()).toBeNull();
+    expect(authon.getPendingMagicLink()).toEqual({ email: 'attacker@example.com', reason: 'unrecognized_browser' });
+
+    // Only an explicit OK signs in, with a plain verify call.
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    expect((await authon.confirmMagicLink()).id).toBe('user_1');
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token });
+    expect(authon.getPendingMagicLink()).toBeNull();
+  });
+
+  it('shows the built-in confirmation when the app does not handle the event', async () => {
+    const token = 'H'.repeat(43);
+    window.history.replaceState({}, '', `/?token=${token}&authon_magic_link=1`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'x@example.com' }));
+    vi.spyOn(Authon.prototype, 'openSignIn').mockResolvedValue();
+    const shown = vi.spyOn(ModalRenderer.prototype, 'showMagicLinkConfirm').mockImplementation(() => undefined);
+    const close = vi.spyOn(ModalRenderer.prototype, 'close').mockImplementation(() => undefined);
+    const authon = new Authon('pk_live_csrf-builtin');
+
+    expect(await authon.handleMagicLink()).toBeNull();
+    await vi.waitFor(() => expect(shown).toHaveBeenCalled());
+    const [email, onConfirm] = shown.mock.calls[0];
+    expect(email).toBe('x@example.com');
+    expect(authon.getUser()).toBeNull();
+
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    onConfirm();
+    await vi.waitFor(() => expect(authon.getUser()?.id).toBe('user_1'));
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token });
+    await vi.waitFor(() => expect(close).toHaveBeenCalled());
+  });
+
+  it('does not show the built-in confirmation when the app listens for the event', async () => {
+    window.history.replaceState({}, '', `/?token=${'I'.repeat(43)}&authon_magic_link=1`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'y@example.com' }));
+    const open = vi.spyOn(Authon.prototype, 'openSignIn').mockResolvedValue();
+    const authon = new Authon('pk_live_csrf-listener');
+    authon.on('magicLinkConfirmationRequired', () => undefined);
+    await authon.handleMagicLink();
+    expect(open).not.toHaveBeenCalled();
+  });
+
+  it('dismissMagicLink drops the pending link', async () => {
+    window.history.replaceState({}, '', `/?token=${'F'.repeat(43)}&authon_magic_link=1`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'a@example.com' }));
+    const authon = new Authon('pk_live_csrf-dismiss');
+    await authon.handleMagicLink();
+    authon.dismissMagicLink();
+    expect(authon.getPendingMagicLink()).toBeNull();
+    await expect(authon.confirmMagicLink()).rejects.toThrow('No magic link is waiting for confirmation');
+  });
+
+  it('never replaces a signed-in session automatically, even in the requesting browser', async () => {
+    const authon = new Authon('pk_live_csrf-signed-in', { autoHandleMagicLink: false });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'Magic link sent' }));
+    await authon.sendMagicLink('other@example.com');
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
+    await authon.verifyPasswordless({ email: 'person@example.com', code: '123456' });
+    expect(authon.getUser()?.id).toBe('user_1');
+
+    const token = 'G'.repeat(43);
+    window.history.replaceState({}, '', `/#authon_magic_link=1&token=${token}`);
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'other@example.com' }));
+    expect(await authon.handleMagicLink()).toBeNull();
+    // No nonce is sent, so the server cannot finish the link.
+    expect(bodyOf(vi.mocked(fetch).mock.calls[2])).toEqual({ token, requireBrowserBinding: true });
+    expect(authon.getPendingMagicLink()).toEqual({ email: 'other@example.com', reason: 'signed_in' });
+    expect(authon.getUser()?.id).toBe('user_1');
+  });
+
+  it('keeps the earlier nonce when sending a new link fails', async () => {
+    const authon = new Authon('pk_live_csrf-send-fail', { autoHandleMagicLink: false });
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'Magic link sent' }));
+    await authon.sendMagicLink('person@example.com');
+    const first = bodyOf(vi.mocked(fetch).mock.calls[0]).browserNonce;
+    vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ message: 'Too many requests' }, 429));
+    await expect(authon.sendMagicLink('person@example.com')).rejects.toThrow();
+    const stored = [...Array(localStorage.length).keys()]
+      .map((i) => localStorage.key(i)!)
+      .filter((k) => k.startsWith('authon_magic_link_nonce:'))
+      .map((k) => localStorage.getItem(k));
+    expect(stored).toEqual([first]);
   });
 });
 

@@ -79,6 +79,15 @@ await authon.signInWithOAuth('google', { flowMode: 'redirect' });
 // microsoft, kakao, naver, line, x
 ```
 
+How the OAuth result reaches your page (0.9.1+):
+
+- The SDK creates a PKCE verifier for every sign-in and sends Authon only its SHA-256 hash.
+- After the provider login, Authon hands the browser a one-time code (60 seconds, single use). It never hands it raw tokens.
+- Popup: the code is posted only to the exact origin that started sign-in. If the popup lost its opener (cross-origin isolation or Safari), it returns to your page and passes the code to the waiting tab through same-origin storage.
+- Redirect: the code comes back to your page as `?authon_code=...&authon_oauth_state=...`. The SDK removes both parameters as soon as it loads.
+- The SDK exchanges code + verifier at `POST /v1/auth/oauth/token`. `GET /v1/auth/oauth/poll` only reports `pending`, `completed` or `error`.
+- Your page's origin must be listed in the project's **Allowed Origins** (or set as its domain). Authon refuses to start OAuth from any other origin.
+
 ### Add Email/Password Auth
 
 ```ts
@@ -204,7 +213,31 @@ const provider = authon.wallet.provider(1);           // EIP-1193: eth_accounts,
 
 Default card text and colors can be set once with `new Authon(pk, { wallet: { ui: { ... } } })`. In BFF mode (`sessionMode: 'bff'`) pass `wallet.getToken`, a function that returns a short-lived wallet token minted on your server with `createAuthonWalletToken` from `@authon/nextjs/server`.
 
-`wallet.origin` defaults to `https://wallet.authon.dev` with the default `apiUrl`; set it explicitly when using a custom `apiUrl`. Other provider methods throw an error with code `4200`. Wallet failures are thrown as `AuthonWalletError` with a `code` (`NOT_FOUND`, `NEEDS_RESTORE`, `NOT_PROTECTED`, `PRF_UNSUPPORTED`, `ORIGIN_NOT_ALLOWED`, `USER_CANCELLED`, `TIMEOUT`, `NEEDS_POPUP`, `POPUP_BLOCKED`, `NOT_SIGNED_IN`, `NOT_CONFIGURED`).
+**Do not let users receive funds before `wallet.protected` is true** (`await authon.wallet.isProtected()`). Until `protect()` creates the passkey backup, the wallet exists only as this browser's share plus Authon's share: clearing site data, Safari's storage eviction or a lost device makes it unrecoverable.
+
+Every `signMessage`, `signTypedData` and `signTransaction` needs the user's approval, and resolves only after it. Low-risk requests (personal messages, typed data that grants nothing) show a card inside the wallet frame with the requesting site and the full text; Sign is enabled once the text was scrolled to the end, and text longer than 16,384 characters is refused with `MESSAGE_TOO_LARGE`. High-risk requests (transactions with value or call data, token approvals, permits, Permit2, orders, meta-transactions) show a small card whose button opens an Authon window (`https://wallet.authon.dev/confirm`); the user reviews and approves there, outside your page. The click happens inside the wallet frame, so these methods do not have to run in a click handler. A rejection throws `USER_CANCELLED`, a blocked or closed window `CONFIRM_WINDOW_BLOCKED` / `CONFIRM_WINDOW_CLOSED`; none of them signs. Approval can be turned off only per project in the console's wallet settings, not from the page. The wallet frame refuses to sign messages that start with `create:`, `device:` or `restore:` and typed data under the "Authon Wallet Proof" domain, which are reserved for wallet key proofs.
+
+`revokeDevice()` must run in a browser that holds a device share (the request is signed with it), and the last device of an unprotected wallet cannot be revoked (`LAST_DEVICE`). In BFF mode, pass the user's Authon access token to `createAuthonWalletToken({ accessToken })`: creating, restoring and revoking need a session-bound token (`SESSION_REQUIRED` otherwise). The production wallet frame can only be embedded by `https://` pages, and only by the page itself: if your page is inside another site's iframe, the wallet frame does not load.
+
+When `wallet.backupUpgradeRecommended` is true the passkey backup predates server-verified restores. Offer a button that calls `await authon.wallet.upgradeBackup()` (from a click, on a browser where `needsRestore` is false): it creates a new passkey backup; other devices and sites restore once with the new passkey.
+
+`wallet.origin` defaults to `https://wallet.authon.dev` with the default `apiUrl`; set it explicitly when using a custom `apiUrl`. Other provider methods throw an error with code `4200`. Wallet failures are thrown as `AuthonWalletError` with a `code` (`NOT_FOUND`, `NEEDS_RESTORE`, `NOT_PROTECTED`, `PRF_UNSUPPORTED`, `ORIGIN_NOT_ALLOWED`, `USER_CANCELLED`, `TIMEOUT`, `NEEDS_POPUP`, `POPUP_BLOCKED`, `NOT_SIGNED_IN`, `NOT_CONFIGURED`, `LAST_DEVICE`, `SESSION_REQUIRED`, `STORAGE_UNAVAILABLE`, `CONFIRM_WINDOW_BLOCKED`, `CONFIRM_WINDOW_CLOSED`, `MESSAGE_TOO_LARGE`, `FRAME_OUTDATED`, `BACKUP_KEY_REQUIRED`, `ALREADY_UPGRADED`).
+
+## Security
+
+### Token storage
+
+In the default browser mode (`sessionMode: 'browser'`), the SDK keeps the access token and refresh token in `localStorage` so sessions survive page reloads. Any script that runs on your origin can read `localStorage`. An XSS bug in your app, or a compromised third-party script, can steal the tokens and use them until they expire.
+
+Each refresh token is single-use. A refresh rotates it, and the old token is rejected afterwards.
+
+**Use BFF mode when your project has embedded wallets** or other high-value actions. With `sessionMode: 'bff'`, the SDK never reads or writes browser token storage. Your server holds the Authon tokens in an HttpOnly session, and the wallet gets short-lived, wallet-only tokens through `wallet.getToken` (minted with `createAuthonWalletToken` from `@authon/nextjs/server`). See [BFF authentication with Authorization Code + PKCE](https://github.com/mikusnuz/authon-sdk/blob/main/docs/bff-authorization-code-pkce.md).
+
+If you stay in browser mode, use a strict Content Security Policy, keep third-party scripts to a minimum, and keep access-token TTLs short.
+
+### Branding and profile rendering
+
+The sign-in modal and profile UI escape every project branding value and user field before rendering. Terms and privacy links must be absolute `http(s)` URLs. Logos must be base64 `data:image/(png|jpeg|gif|webp|svg+xml)` URLs and are rendered only through `<img>`. Colors must be hex, `rgb[a]()` or `hsl[a]()`. Custom CSS goes into its own `<style>` element as text, with `</style` sequences removed. Invalid values are dropped and the defaults are used.
 
 ## Environment Variables
 
@@ -251,8 +284,27 @@ new Authon(publishableKey: string, config?: AuthonConfig)
 | `sendEmailOtp(email)` | `Promise<void>` |
 | `verifyPasswordless({ token?, email?, code? })` | `Promise<AuthonUser>` |
 | `handleMagicLink()` | `Promise<AuthonUser \| null>` |
+| `getPendingMagicLink()` | `{ email, reason } \| null` |
+| `confirmMagicLink()` | `Promise<AuthonUser>` |
+| `dismissMagicLink()` | `void` |
 
-Magic links open the page that requested them (or the project's callback URL). With `autoHandleMagicLink` (default `true`) the SDK verifies `?token=...&authon_magic_link=1` on page load, stores the session and removes both parameters. Set it to `false` and call `handleMagicLink()` yourself if you need control. Choose "magic link" or "6-digit code" per project in the console (Sign-in methods > Passwordless).
+Magic links open the project's callback URL/domain at `/auth/verify` when one is set, otherwise the page that requested them. Links requested by this SDK carry the token in the URL fragment (`#authon_magic_link=1&token=...`) on every target, including `/auth/verify`, so it never reaches your server, proxies or logs; read it in the browser (the SDK does). Only requests without the SDK's browser value (older SDKs, direct API calls) still get `?token=...&authon_magic_link=1`, and the SDK keeps reading that form. A custom server-side `/auth/verify` route that reads `?token=` must move to client-side handling. With `autoHandleMagicLink` (default `true`) the SDK removes the link from the URL right away and finishes sign-in on page load. Set it to `false` and call `handleMagicLink()` yourself if you need control. Choose "magic link" or "6-digit code" per project in the console (Sign-in methods > Passwordless); the API rejects the other method with `AUTH_METHOD_DISABLED`.
+
+A link signs in **silently only in the browser that requested it** (the SDK keeps a random value in `localStorage` and sends it with the request) **and only when nobody is signed in yet**. Otherwise, for example a link opened on another device, requested by an older SDK, or sent to you by someone else, nothing is signed in and the SDK fires `magicLinkConfirmationRequired`. Ask the person before you continue:
+
+```ts
+authon.on('magicLinkConfirmationRequired', ({ email, reason }) => {
+  // reason: 'unrecognized_browser' (another browser/device) or 'signed_in' (would replace the current session)
+  if (confirm(`Sign in as ${email}?`)) authon.confirmMagicLink();
+  else authon.dismissMagicLink();
+});
+// or, after `await authon.handleMagicLink()` resolved to null:
+const pending = authon.getPendingMagicLink();
+```
+
+Email codes: a code is checked only against the newest code requested from the same IP (otherwise the newest code). Sending a new code or link cancels earlier links and the codes requested from that IP. Each code allows 5 tries, at most 3 of them from other IPs, so a stranger cannot use up the owner's tries. Repeated wrong codes add short waits (HTTP 429 `PASSWORDLESS_RETRY_LATER` with `retryAfter` seconds, up to 60 s). Sends are limited to 3 per address per 10 minutes (HTTP 429 `PASSWORDLESS_SEND_LIMITED`); after 10 wrong codes for an address within an hour, new codes are spaced 5 minutes apart and allow 3 tries (1 from other IPs). There is no long lockout.
+
+If the account has TOTP MFA, magic link, email code and Web3 sign-in end like password sign-in: the `mfaRequired` event fires and the call rejects with `AuthonMfaRequiredError`; finish with `verifyMfa(error.mfaToken, code)`. In authorization code (BFF) mode the request stays open and `verifyMfa()` completes it. Passkey sign-in already requires user verification on the device and does not ask again.
 
 Sign-in methods that are turned off in the console are rejected by the API with `AUTH_METHOD_DISABLED` (passwordless, passkeys and Web3), not only hidden in the modal.
 
@@ -265,6 +317,8 @@ Sign-in methods that are turned off in the console are rejected by the API with 
 | `listPasskeys()` | `Promise<PasskeyCredential[]>` |
 | `renamePasskey(id, name)` | `Promise<PasskeyCredential>` |
 | `revokePasskey(id)` | `Promise<void>` |
+
+`authenticateWithPasskey` signs in with discoverable passkeys. The `email` argument is still accepted but no longer narrows the list of credentials, so the API does not reveal which addresses have an account or passkeys.
 
 ### Web3
 

@@ -259,9 +259,13 @@ Mobile browsers and some desktop browsers block popups. The SDK has a multi-laye
 
 1. Popup (fast path for desktop)
 2. If popup blocked and `flowMode: 'auto'`, falls back to redirect flow
-3. localStorage cross-tab communication (mobile fallback)
-4. API polling every 1.5 seconds (universal fallback)
+3. If the popup lost its opener (cross-origin isolation, Safari), it returns to your page with a one-time code and hands it to the waiting tab through same-origin localStorage
+4. Status polling every 1.5 seconds (`pending` / `completed` / `error` only — the poll never returns tokens or codes)
 5. `visibilitychange` event handler for when the tab regains focus
+
+From @authon/js 0.9.1, every sign-in uses PKCE:
+- Authon only ever hands the browser a one-time code (60 s, single use), posted to the exact origin that started sign-in. The SDK exchanges it with its verifier at `POST /v1/auth/oauth/token`.
+- **The page origin must be in the project's allowed origins (or be its domain).** Otherwise `GET /oauth/{provider}/url` returns 400 "Origin ... is not in this project's allowed origins".
 
 ### Fix
 
@@ -279,7 +283,7 @@ Mobile browsers and some desktop browsers block popups. The SDK has a multi-laye
 
 4. **Popup timing**: The popup must be opened in direct response to a user gesture (click). If `openSignIn()` is called after an async operation, the popup will be blocked. The SDK handles this internally, but custom flows should ensure synchronous popup opening.
 
-5. **Redirect flow handling**: After redirect-based OAuth, the SDK reads `authon_oauth_state` and `authon_oauth_error` URL params on page load (in `consumeRedirectResultFromUrl`). Make sure your app doesn't strip these params before the SDK initializes.
+5. **Redirect flow handling**: After redirect-based OAuth, the SDK reads `authon_code`, `authon_oauth_state` and `authon_oauth_error` URL params on page load (in `consumeRedirectResultFromUrl`). It exchanges the code with the verifier it saved in `sessionStorage` before leaving the page. Make sure your app doesn't strip these params before the SDK initializes. The redirect must come back in the same tab.
 
 6. **Max timeout**: The OAuth flow times out after 3 minutes (180 seconds). If the user takes longer, the flow silently ends. The popup close detection polls every 500ms.
 

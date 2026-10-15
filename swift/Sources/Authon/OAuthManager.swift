@@ -1,18 +1,24 @@
 import Foundation
 import AuthenticationServices
+import CryptoKit
+import Security
 #if canImport(AppKit)
 import AppKit
 #endif
 
 final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProviding {
     private let api: AuthonAPI
+    /// App URL scheme Authon redirects back to (e.g. "com.example.app"). It must be listed in the
+    /// project's allowed origins as "com.example.app://".
+    private let callbackScheme: String?
 
     #if os(macOS) || os(iOS)
     private var nativeContinuation: CheckedContinuation<ApiAuthResponse, Error>?
     #endif
 
-    init(api: AuthonAPI) {
+    init(api: AuthonAPI, callbackScheme: String? = nil) {
         self.api = api
+        self.callbackScheme = callbackScheme
         super.init()
     }
 
@@ -23,6 +29,9 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
         if provider == .apple {
             do {
                 return try await authenticateWithNativeApple()
+            } catch let mfaError as AuthonMfaRequiredError {
+                // Signed in with Apple, but the account needs MFA: never restart via web OAuth.
+                throw mfaError
             } catch {
                 // Native Apple Sign In failed (Debug build, sandbox, etc.) — fallback to web OAuth
                 return try await authenticateWithWebOAuth(provider: .apple)
@@ -34,48 +43,70 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
 
     // MARK: - Web OAuth (all platforms / non-Apple providers)
 
+    /// PKCE flow: this instance keeps a random verifier and sends only its S256 hash. Authon
+    /// redirects the auth session to `<callbackScheme>://oauth-callback` with a one-time code,
+    /// which is exchanged together with the verifier. The OAuth state alone never yields tokens.
     private func authenticateWithWebOAuth(provider: OAuthProvider) async throws -> ApiAuthResponse {
-        // 1. Get the OAuth URL from the server
-        let redirectUri = "\(api.apiURL)/v1/auth/oauth/redirect"
-        let encodedRedirect = redirectUri.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? redirectUri
-        let urlPath = "/v1/auth/oauth/\(provider.rawValue)/url?redirectUri=\(encodedRedirect)&flow=redirect"
+        guard let scheme = callbackScheme, !scheme.isEmpty else {
+            throw AuthonError(
+                statusCode: 0,
+                message: "Web OAuth needs oauthCallbackScheme in Authon(...) and \"<scheme>://\" in the project's allowed origins",
+                code: "oauth_callback_scheme_missing"
+            )
+        }
+        let returnTo = "\(scheme)://oauth-callback"
+        let verifier = try Self.makeCodeVerifier()
+        let challenge = Self.codeChallenge(for: verifier)
+
+        var components = URLComponents()
+        components.queryItems = [
+            URLQueryItem(name: "redirectUri", value: "\(api.apiURL)/v1/auth/oauth/redirect"),
+            URLQueryItem(name: "flow", value: "redirect"),
+            URLQueryItem(name: "returnTo", value: returnTo),
+            URLQueryItem(name: "codeChallenge", value: challenge),
+            URLQueryItem(name: "codeChallengeMethod", value: "S256"),
+        ]
+        let query = components.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B") ?? ""
 
         struct OAuthUrlResponse: Decodable {
             let url: String
-            let state: String?
+            let state: String
         }
-        let urlResponse: OAuthUrlResponse = try await api.request("GET", urlPath)
-
+        let urlResponse: OAuthUrlResponse = try await api.request("GET", "/v1/auth/oauth/\(provider.rawValue)/url?\(query)")
         guard let authURL = URL(string: urlResponse.url) else {
             throw AuthonError(statusCode: 0, message: "Invalid OAuth URL returned by server", code: "invalid_oauth_url")
         }
 
-        // Extract state from the OAuth URL for polling
-        let state: String
-        if let urlState = urlResponse.state {
-            state = urlState
-        } else if let components = URLComponents(string: urlResponse.url),
-                  let stateParam = components.queryItems?.first(where: { $0.name == "state" })?.value {
-            state = stateParam
-        } else {
-            throw AuthonError(statusCode: 0, message: "Missing state in OAuth URL", code: "oauth_missing_state")
+        let callbackURL = try await runAuthSession(url: authURL, scheme: scheme)
+        let items = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        func value(_ name: String) -> String? { items.first(where: { $0.name == name })?.value }
+
+        guard value("authon_oauth_state") == urlResponse.state else {
+            throw AuthonError(statusCode: 0, message: "OAuth state mismatch", code: "oauth_state_mismatch")
+        }
+        if let error = value("authon_oauth_error") {
+            throw AuthonError(statusCode: 0, message: error, code: "oauth_error")
+        }
+        guard let code = value("authon_code") else {
+            throw AuthonError(statusCode: 0, message: "Missing code in OAuth callback", code: "oauth_missing_code")
         }
 
-        #if os(macOS)
-        // macOS: Open system browser + poll for result
-        // ASWebAuthenticationSession doesn't work because the server shows a "close tab"
-        // page instead of redirecting to authon:// callback scheme.
-        await MainActor.run {
-            NSWorkspace.shared.open(authURL)
+        struct TokenExchangeRequest: Encodable {
+            let code: String
+            let codeVerifier: String
         }
-        return try await pollForResult(state: state)
-        #else
-        // iOS: Use ASWebAuthenticationSession
-        let callbackURL = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
-            let session = ASWebAuthenticationSession(
-                url: authURL,
-                callbackURLScheme: "authon"
-            ) { callbackURL, error in
+        let exchange: OAuthExchangeResponse = try await api.request(
+            "POST",
+            "/v1/auth/oauth/token",
+            body: TokenExchangeRequest(code: code, codeVerifier: verifier)
+        )
+        return try exchange.sessionOrThrow()
+    }
+
+    @MainActor
+    private func runAuthSession(url: URL, scheme: String) async throws -> URL {
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<URL, Error>) in
+            let session = ASWebAuthenticationSession(url: url, callbackURLScheme: scheme) { callbackURL, error in
                 if let error {
                     continuation.resume(throwing: error)
                 } else if let callbackURL {
@@ -86,15 +117,32 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
             }
             session.prefersEphemeralWebBrowserSession = true
             session.presentationContextProvider = self
-            session.start()
+            if !session.start() {
+                continuation.resume(throwing: AuthonError(statusCode: 0, message: "Could not start the OAuth session", code: "oauth_session_failed"))
+            }
         }
+    }
 
-        guard let components = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false),
-              let cbState = components.queryItems?.first(where: { $0.name == "state" })?.value else {
-            throw AuthonError(statusCode: 0, message: "Missing state parameter in OAuth callback", code: "oauth_missing_state")
+    // MARK: - PKCE
+
+    static func makeCodeVerifier() throws -> String {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        let status = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
+        guard status == errSecSuccess else {
+            throw AuthonError(statusCode: 0, message: "Could not generate a PKCE verifier", code: "pkce_random_failed")
         }
-        return try await pollForResult(state: cbState)
-        #endif
+        return base64URL(Data(bytes))
+    }
+
+    static func codeChallenge(for verifier: String) -> String {
+        base64URL(Data(SHA256.hash(data: Data(verifier.utf8))))
+    }
+
+    static func base64URL(_ data: Data) -> String {
+        data.base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
     }
 
     // MARK: - Native Apple Sign In
@@ -117,41 +165,6 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     }
     #endif
 
-    // MARK: - Polling
-
-    private func pollForResult(state: String) async throws -> ApiAuthResponse {
-        let maxAttempts = 360  // 3 minutes at 500ms intervals
-        let pollInterval: UInt64 = 500_000_000 // 500ms in nanoseconds
-
-        for _ in 0..<maxAttempts {
-            let pollPath = "/v1/auth/oauth/poll?state=\(state)"
-            let response: OAuthPollResponse = try await api.request("GET", pollPath)
-
-            switch response.status {
-            case "completed":
-                guard let accessToken = response.accessToken,
-                      let refreshToken = response.refreshToken,
-                      let expiresIn = response.expiresIn,
-                      let user = response.user else {
-                    throw AuthonError(statusCode: 0, message: "OAuth completed but missing response data", code: "oauth_incomplete_response")
-                }
-                return ApiAuthResponse(
-                    accessToken: accessToken,
-                    refreshToken: refreshToken,
-                    expiresIn: expiresIn,
-                    user: user
-                )
-            case "error":
-                let msg = response.message ?? "OAuth authentication failed"
-                throw AuthonError(statusCode: 0, message: msg, code: "oauth_error")
-            default:
-                try await Task.sleep(nanoseconds: pollInterval)
-            }
-        }
-
-        throw AuthonError(statusCode: 0, message: "OAuth polling timed out", code: "oauth_timeout")
-    }
-
     // MARK: - ASWebAuthenticationPresentationContextProviding
 
     func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
@@ -171,13 +184,51 @@ final class OAuthManager: NSObject, ASWebAuthenticationPresentationContextProvid
     }
 }
 
+// MARK: - Exchange response
+
+/// `POST /v1/auth/oauth/token` and `/v1/auth/oauth/native` answer either a session or, for users
+/// with MFA enabled, `{ mfaRequired: true, mfaToken, mfaMethods }`.
+struct OAuthExchangeResponse: Decodable, Sendable {
+    let accessToken: String?
+    let refreshToken: String?
+    let expiresIn: Int?
+    let user: AuthonUser?
+    let mfaRequired: Bool?
+    let mfaToken: String?
+    let mfaMethods: [String]?
+
+    /// The session, or `AuthonMfaRequiredError` to continue with `Authon.verifyMfa(mfaToken:code:)`.
+    func sessionOrThrow() throws -> ApiAuthResponse {
+        if mfaRequired == true {
+            guard let mfaToken, !mfaToken.isEmpty else {
+                throw AuthonError(statusCode: 0, message: "MFA required but no MFA token was returned", code: "oauth_invalid_mfa_response")
+            }
+            throw AuthonMfaRequiredError(mfaToken: mfaToken)
+        }
+        guard let accessToken, let refreshToken, let expiresIn, let user else {
+            throw AuthonError(statusCode: 0, message: "Invalid OAuth token response", code: "oauth_invalid_response")
+        }
+        return ApiAuthResponse(accessToken: accessToken, refreshToken: refreshToken, expiresIn: expiresIn, user: user)
+    }
+}
+
 // MARK: - ASAuthorizationControllerDelegate (native Apple Sign In)
 
 #if os(macOS) || os(iOS)
 extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
 
     func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+        #if canImport(UIKit)
+        if let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first,
+           let window = windowScene.windows.first(where: { $0.isKeyWindow }) {
+            return window
+        }
+        return ASPresentationAnchor()
+        #else
         return NSApplication.shared.keyWindow ?? NSWindow()
+        #endif
     }
 
     func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
@@ -242,22 +293,12 @@ extension OAuthManager: ASAuthorizationControllerDelegate, ASAuthorizationContro
             let identity_token: String
         }
 
-        return try await api.request(
+        let exchange: OAuthExchangeResponse = try await api.request(
             "POST",
             "/v1/auth/oauth/native",
             body: NativeOAuthRequest(provider: "apple", identity_token: identityToken)
         )
+        return try exchange.sessionOrThrow()
     }
 }
 #endif
-
-// MARK: - OAuthPollResponse
-
-struct OAuthPollResponse: Decodable {
-    let status: String
-    let accessToken: String?
-    let refreshToken: String?
-    let expiresIn: Int?
-    let user: AuthonUser?
-    let message: String?
-}

@@ -5,11 +5,13 @@ export {
   createAuthonAuthorizationRequest,
   exchangeAuthonAuthorizationCode,
   handleAuthonAuthorizationCallback,
+  readAuthonAuthorizationCallback,
   revokeAuthonSession,
 } from './authorization-code';
 export type {
   CreateAuthonAuthorizationRequestOptions,
   HandleAuthonAuthorizationCallbackOptions,
+  AuthonAuthorizationCallbackParams,
 } from './authorization-code';
 export { createAuthonWalletToken } from './wallet-token';
 export type { AuthonWalletToken, CreateAuthonWalletTokenOptions } from './wallet-token';

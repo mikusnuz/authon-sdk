@@ -80,7 +80,13 @@ public struct SignInView: View {
                     }
 
                     // Social Buttons
-                    SocialButtons(onSuccess: onSuccess)
+                    SocialButtons(onSuccess: onSuccess, onError: { error in
+                        if let mfaError = error as? AuthonMfaRequiredError {
+                            mfaToken = mfaError.mfaToken
+                        } else {
+                            self.error = error.localizedDescription
+                        }
+                    })
 
                     // Sign Up link
                     signUpLink

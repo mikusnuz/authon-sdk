@@ -15,6 +15,27 @@ export type WalletErrorCode =
   | 'UNSUPPORTED_METHOD'
   | 'INVALID_PARAMS'
   | 'DISPOSED'
+  /** The last device of an unprotected wallet cannot be revoked (the wallet would be lost). */
+  | 'LAST_DEVICE'
+  /** This call needs a token from a signed-in session (not an impersonation or unbound BFF token). */
+  | 'SESSION_REQUIRED'
+  /** The frame could not keep the device key share in this browser's storage. */
+  | 'STORAGE_UNAVAILABLE'
+  /**
+   * A high-risk signature needs the Authon approval window, and it could not be opened
+   * (popup blocked, sandboxed iframe). Nothing was signed.
+   */
+  | 'CONFIRM_WINDOW_BLOCKED'
+  /** The Authon approval window was closed (or timed out) before the user approved. Nothing was signed. */
+  | 'CONFIRM_WINDOW_CLOSED'
+  /** The message or typed data is too long to show in full (over 16,384 characters); the wallet refuses to sign it. */
+  | 'MESSAGE_TOO_LARGE'
+  /** The wallet API no longer serves this frame version; reload the page. */
+  | 'FRAME_OUTDATED'
+  /** The new backup passkey did not report a usable public key. */
+  | 'BACKUP_KEY_REQUIRED'
+  /** upgradeBackup() was called but the backup is already verifiable. */
+  | 'ALREADY_UPGRADED'
   | (string & {});
 
 export class AuthonWalletError extends Error {
@@ -38,9 +59,21 @@ export interface EmbeddedWalletDevice {
 
 export interface EmbeddedWallet {
   address: string;
+  /**
+   * True once the wallet has a passkey backup (`protect()`). An unprotected wallet
+   * exists only as this browser's device share plus the server share: clearing site
+   * data, Safari's storage eviction or a lost device makes it unrecoverable. Do not
+   * let users receive funds until `protected` is true.
+   */
   protected: boolean;
   /** True when the server has a wallet but this browser holds no device share. */
   needsRestore: boolean;
+  /**
+   * True for a passkey backup made before the wallet stored passkey public keys.
+   * Restoring such a backup is less protected; call `upgradeBackup()` from a click
+   * on a device where the wallet works (`needsRestore` false).
+   */
+  backupUpgradeRecommended: boolean;
   devices: EmbeddedWalletDevice[];
 }
 
@@ -159,18 +192,37 @@ export class WalletClient {
     return run;
   }
 
+  /** True when the wallet exists and has a passkey backup. See `EmbeddedWallet.protected`. */
+  async isProtected(): Promise<boolean> {
+    return (await this.get())?.protected === true;
+  }
+
+  /**
+   * Every signature needs the user's approval; a project can turn this off only in its
+   * server-side wallet settings, never from the page.
+   * - Low-risk requests (personal messages, typed data that grants nothing) show a card
+   *   inside the wallet frame with the requesting site and the full text. Sign is
+   *   enabled only after the text was scrolled to the end.
+   * - High-risk requests (transactions with value or call data, approvals, permits,
+   *   orders, meta-transactions) show a small card whose button opens an Authon window
+   *   (`<wallet origin>/confirm`); the user approves there, outside this page. The click
+   *   happens inside the frame, so this method does not need to run in a click handler.
+   * Rejecting gives USER_CANCELLED; a blocked or closed window gives
+   * CONFIRM_WINDOW_BLOCKED / CONFIRM_WINDOW_CLOSED; text over 16,384 characters gives
+   * MESSAGE_TOO_LARGE. None of these ever signs.
+   */
   async signMessage(message: WalletMessage): Promise<Hex> {
-    return this.call<Hex>('wallet.signMessage', { message });
+    return this.call<Hex>('wallet.signMessage', { message }, this.interactiveTimeout());
   }
 
   async signTypedData(typedData: TypedDataPayload): Promise<Hex> {
-    return this.call<Hex>('wallet.signTypedData', { typedData });
+    return this.call<Hex>('wallet.signTypedData', { typedData }, this.interactiveTimeout());
   }
 
   async signTransaction(tx: WalletTransactionRequest): Promise<Hex> {
     const normalized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(tx)) normalized[key] = toBigIntHex(value);
-    return this.call<Hex>('wallet.signTransaction', { tx: normalized });
+    return this.call<Hex>('wallet.signTransaction', { tx: normalized }, this.interactiveTimeout());
   }
 
   /**
@@ -184,10 +236,24 @@ export class WalletClient {
   }
 
   /**
+   * Replaces a legacy passkey backup (`backupUpgradeRecommended`) with a new passkey
+   * whose public key the server keeps, so later restores are verified by the server.
+   * Must be called from a user click handler, on a browser where the wallet works.
+   * The key shares are rotated: other devices and sites restore once with the new
+   * passkey. Not available in the popup fallback.
+   */
+  async upgradeBackup(options: { ui?: WalletConfirmUi } = {}): Promise<void> {
+    await this.call('wallet.upgradeBackup', { ui: options.ui ?? this.options.ui }, this.interactiveTimeout());
+    await this.refresh();
+  }
+
+  /**
    * Restores the wallet on this browser with the passkey (one confirmation tap and
    * the system prompt). By default this browser is added as another device and
    * other devices keep working. Pass `resetOtherDevices: true` when a device was
-   * lost: the key is re-split and every other device must restore again.
+   * lost: the key is re-split and every other device must restore again. The reset
+   * card always shows the wallet's own warning text (custom `ui` text is ignored),
+   * and reset is not available in the popup fallback.
    */
   async restore(options: { ui?: WalletConfirmUi; resetOtherDevices?: boolean } = {}): Promise<void> {
     await this.call(
@@ -198,6 +264,11 @@ export class WalletClient {
     await this.refresh();
   }
 
+  /**
+   * Revokes a device. Must run in a browser that holds a trusted device share (the
+   * frame signs the request with it). The last device of an unprotected wallet
+   * cannot be revoked (LAST_DEVICE).
+   */
   async revokeDevice(deviceId: string): Promise<void> {
     await this.call('wallet.revokeDevice', { deviceId });
     await this.refresh();
@@ -288,6 +359,7 @@ export class WalletClient {
       address: raw.address,
       protected: !!raw.protected,
       needsRestore: !!raw.needsRestore,
+      backupUpgradeRecommended: !!raw.backupUpgradeRecommended,
       devices: Array.isArray(raw.devices) ? raw.devices : [],
     };
   }
@@ -395,7 +467,7 @@ export class WalletClient {
     });
   }
 
-  /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+  /** Signing, protect, restore and upgrade wait for a person (in the frame or the Authon window). */
   private interactiveTimeout(): number {
     return this.options.popupTimeoutMs ?? DEFAULT_POPUP_TIMEOUT_MS;
   }

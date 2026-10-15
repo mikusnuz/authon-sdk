@@ -14,8 +14,13 @@ export interface AuthonConfig {
   sessionMode?: 'browser' | 'bff';
   wallet?: AuthonWalletConfig;
   /**
-   * When the page URL carries a magic link (`?token=...&authon_magic_link=1`), verify it on load,
-   * store the session and remove both parameters from the URL. Default true (browser session mode only).
+   * When the page URL carries a magic link (`#authon_magic_link=1&token=...`, or the older
+   * `?token=...&authon_magic_link=1`), remove it from the URL and finish sign-in on load.
+   * Default true (browser session mode only).
+   *
+   * The link signs in silently only in the browser that asked for it and only when nobody is
+   * signed in yet. Otherwise nothing is signed in: `magicLinkConfirmationRequired` fires and the
+   * app asks "Sign in as x@y?" before calling `confirmMagicLink()`.
    * Set false to handle the link yourself with `handleMagicLink()` or `verifyPasswordless({ token })`.
    */
   autoHandleMagicLink?: boolean;
@@ -28,6 +33,21 @@ export interface SendMagicLinkOptions {
    * no callback URL or domain set.
    */
   redirectUrl?: string;
+}
+
+/**
+ * Why a magic link on this page was not used automatically:
+ * - `unrecognized_browser`: it was requested in another browser or device (or by an older SDK),
+ *   so it could have been sent by someone else to sign you in to their account.
+ * - `signed_in`: someone is already signed in here; the link would replace that session.
+ */
+export type MagicLinkConfirmationReason = 'unrecognized_browser' | 'signed_in';
+
+/** A magic link waiting for the person to confirm. The link is still unused. */
+export interface PendingMagicLink {
+  /** Account the link signs in to. Show it: "Sign in as {email}?" */
+  email: string;
+  reason: MagicLinkConfirmationReason;
 }
 
 export interface AuthonWalletConfig {
@@ -75,6 +95,8 @@ export interface AuthonEvents {
   verificationRequired: (email: string) => void;
   mfaRequired: (mfaToken: string) => void;
   passkeyRegistered: (credential: PasskeyCredential) => void;
+  /** A magic link on this page needs the person's OK; call `confirmMagicLink()` or `dismissMagicLink()`. */
+  magicLinkConfirmationRequired: (pending: PendingMagicLink) => void;
   web3Connected: (wallet: Web3Wallet) => void;
   error: (error: Error) => void;
   walletChanged: (wallet: EmbeddedWallet | null) => void;

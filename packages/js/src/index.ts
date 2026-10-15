@@ -9,6 +9,8 @@ export type {
   OAuthSignInOptions,
   OpenSignInOptions,
   SendMagicLinkOptions,
+  PendingMagicLink,
+  MagicLinkConfirmationReason,
 } from './types';
 export { AuthonMfaRequiredError } from './types';
 export type { SessionChange, SessionChangeListener, SessionChangeReason } from './session';
@@ -31,3 +33,4 @@ export type {
   WalletMessage,
   WalletTransactionRequest,
 } from './wallet';
+export { safeHttpUrl, safeImageDataUrl } from './sanitize';

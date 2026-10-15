@@ -83,12 +83,17 @@ import { createAuthonWalletToken } from '@authon/nextjs/server';
 
 export async function GET() {
   const userId = await getSignedInUserId(); // 자체 세션에서 가져옵니다
-  const { token, expiresAt } = await createAuthonWalletToken({ userId, secretKey: process.env.AUTHON_SECRET_KEY! });
+  const accessToken = await getAuthonAccessToken(); // 서버가 보관한 Authon 액세스 토큰
+  const { token, expiresAt } = await createAuthonWalletToken({
+    userId,
+    accessToken, // 지갑 토큰을 이 세션에 묶습니다
+    secretKey: process.env.AUTHON_SECRET_KEY!,
+  });
   return Response.json({ token, expiresAt });
 }
 ```
 
-이 토큰은 지갑 API에서만 허용됩니다.
+이 토큰은 지갑 API에서만 허용됩니다. `accessToken`을 함께 넘기면 지갑 토큰이 사용자 세션에 묶입니다. 세션이 해제되면 토큰도 더 이상 동작하지 않으며, 지갑 생성·복구·기기 해제는 세션에 묶인 토큰만 허용합니다. `accessToken` 없이 발급한 토큰은 상태 조회·서명·보호에만 쓸 수 있고, 사용자에게 유효한 세션이 하나 이상 남아 있을 때만 동작합니다.
 
 ## 라이선스
 

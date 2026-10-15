@@ -22,13 +22,27 @@ export interface AuthonContextValue extends AuthState {
   providers: OAuthProviderType[];
   /** Branding config (fetched from API) */
   branding: BrandingConfig | null;
-  /** Start OAuth flow — returns { url, state }. Open url in browser, then call completeOAuth(state) */
+  /**
+   * Start OAuth flow — returns { url, state }. Open url in an auth session that returns to your
+   * deep link (returnTo / oauthReturnTo), then pass the callback URL to completeOAuth(url).
+   */
   startOAuth: (
     provider: OAuthProviderType,
     options?: string | StartOAuthOptions,
   ) => Promise<{ url: string; state: string }>;
-  /** Poll for OAuth result after user completes browser flow */
-  completeOAuth: (state: string) => Promise<void>;
+  /**
+   * Finish OAuth: pass the callback URL your app received, or the state to wait until
+   * handleOAuthCallback(url) delivers it. The state alone can no longer fetch tokens.
+   */
+  completeOAuth: (stateOrCallbackUrl: string) => Promise<void>;
+  /** Feed a deep-link callback URL to a pending completeOAuth(state). */
+  handleOAuthCallback: (url: string) => Promise<void>;
+  /**
+   * Finish a sign-in that needs MFA: completeOAuth/handleOAuthCallback reject with
+   * AuthonMfaRequiredError, and signIn returns { mfaRequired, mfaToken }. Pass that token and the
+   * user's TOTP or backup code.
+   */
+  verifyMfa: (mfaToken: string, code: string) => Promise<void>;
   /** Subscribe to auth events */
   on: <K extends AuthonEventType>(event: K, listener: AuthonEvents[K]) => () => void;
   /** Get the underlying client instance */
@@ -168,19 +182,39 @@ export function AuthonProvider({ children, storage, ...config }: AuthonProviderP
     [client],
   );
 
+  const applyOAuthResult = useCallback((tokens: { accessToken: string }, u: AuthonUser) => {
+    setUser(u);
+    setAuthState({
+      isLoaded: true,
+      isSignedIn: true,
+      userId: u?.id || null,
+      sessionId: null,
+      accessToken: tokens.accessToken,
+    });
+  }, []);
+
   const completeOAuthCb = useCallback(
-    async (state: string) => {
-      const { tokens, user: u } = await client.completeOAuth(state);
-      setUser(u);
-      setAuthState({
-        isLoaded: true,
-        isSignedIn: true,
-        userId: u?.id || null,
-        sessionId: null,
-        accessToken: tokens.accessToken,
-      });
+    async (stateOrCallbackUrl: string) => {
+      const { tokens, user: u } = await client.completeOAuth(stateOrCallbackUrl);
+      applyOAuthResult(tokens, u);
     },
-    [client],
+    [client, applyOAuthResult],
+  );
+
+  const handleOAuthCallbackCb = useCallback(
+    async (url: string) => {
+      const { tokens, user: u } = await client.handleOAuthCallback(url);
+      applyOAuthResult(tokens, u);
+    },
+    [client, applyOAuthResult],
+  );
+
+  const verifyMfaCb = useCallback(
+    async (mfaToken: string, code: string) => {
+      const { tokens, user: u } = await client.verifyMfa(mfaToken, code);
+      applyOAuthResult(tokens, u);
+    },
+    [client, applyOAuthResult],
   );
 
   const on = useCallback(
@@ -202,10 +236,12 @@ export function AuthonProvider({ children, storage, ...config }: AuthonProviderP
       branding,
       startOAuth,
       completeOAuth: completeOAuthCb,
+      handleOAuthCallback: handleOAuthCallbackCb,
+      verifyMfa: verifyMfaCb,
       on,
       client,
     }),
-    [authState, user, signIn, signUp, signOut, getToken, providers, branding, startOAuth, completeOAuthCb, on, client],
+    [authState, user, signIn, signUp, signOut, getToken, providers, branding, startOAuth, completeOAuthCb, handleOAuthCallbackCb, verifyMfaCb, on, client],
   );
 
   return <AuthonContext.Provider value={value}>{children}</AuthonContext.Provider>;

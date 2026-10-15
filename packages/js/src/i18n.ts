@@ -35,6 +35,9 @@ export const translations = {
     enterCode: 'Enter verification code',
     codeSentTo: '6-digit code sent to {email}',
     cancel: 'Cancel',
+    magicLinkConfirmTitle: 'Sign in with this account?',
+    magicLinkConfirmBody: 'You will be signed in as {email}. Cancel if you did not request this link.',
+    magicLinkConfirmButton: 'Sign in',
   },
   ko: {
     welcomeBack: '다시 오신 걸 환영합니다',
@@ -70,6 +73,9 @@ export const translations = {
     enterCode: '받은 코드를 입력하세요',
     codeSentTo: '{email}(으)로 6자리 코드를 보냈습니다',
     cancel: '취소',
+    magicLinkConfirmTitle: '이 계정으로 로그인할까요?',
+    magicLinkConfirmBody: '{email} 계정으로 로그인합니다. 직접 요청한 링크가 아니면 취소를 눌러 주세요.',
+    magicLinkConfirmButton: '로그인',
   },
   ja: {
     welcomeBack: 'おかえりなさい',
@@ -105,6 +111,9 @@ export const translations = {
     enterCode: '認証コードを入力',
     codeSentTo: '{email} に6桁のコードを送信しました',
     cancel: 'キャンセル',
+    magicLinkConfirmTitle: 'このアカウントでログインしますか？',
+    magicLinkConfirmBody: '{email} としてログインします。このマジックリンクをリクエストしていない場合は、キャンセルしてください。',
+    magicLinkConfirmButton: 'ログイン',
   },
   'zh-CN': {
     welcomeBack: '欢迎回来',
@@ -140,6 +149,9 @@ export const translations = {
     enterCode: '输入验证码',
     codeSentTo: '6 位验证码已发送至 {email}',
     cancel: '取消',
+    magicLinkConfirmTitle: '要使用此账号登录吗？',
+    magicLinkConfirmBody: '将以 {email} 的身份登录。如果并非本人请求此魔法链接，请取消。',
+    magicLinkConfirmButton: '登录',
   },
   'zh-TW': {
     welcomeBack: '歡迎回來',
@@ -175,6 +187,9 @@ export const translations = {
     enterCode: '輸入驗證碼',
     codeSentTo: '6 位數驗證碼已傳送至 {email}',
     cancel: '取消',
+    magicLinkConfirmTitle: '要使用此帳號登入嗎？',
+    magicLinkConfirmBody: '將以 {email} 的身分登入。若並非本人請求此魔法連結，請取消。',
+    magicLinkConfirmButton: '登入',
   },
   'pt-BR': {
     welcomeBack: 'Bem-vindo de volta',
@@ -210,6 +225,9 @@ export const translations = {
     enterCode: 'Digite o codigo de verificacao',
     codeSentTo: 'Codigo de 6 digitos enviado para {email}',
     cancel: 'Cancelar',
+    magicLinkConfirmTitle: 'Entrar com esta conta?',
+    magicLinkConfirmBody: 'Voce entrara como {email}. Cancele se nao foi voce quem solicitou este Magic Link.',
+    magicLinkConfirmButton: 'Entrar',
   },
   es: {
     welcomeBack: 'Bienvenido de nuevo',
@@ -245,6 +263,9 @@ export const translations = {
     enterCode: 'Introduce el codigo de verificacion',
     codeSentTo: 'Codigo de 6 digitos enviado a {email}',
     cancel: 'Cancelar',
+    magicLinkConfirmTitle: 'Iniciar sesion con esta cuenta?',
+    magicLinkConfirmBody: 'Iniciaras sesion como {email}. Cancela si no solicitaste este Magic Link.',
+    magicLinkConfirmButton: 'Iniciar sesion',
   },
   de: {
     welcomeBack: 'Willkommen zuruck',
@@ -280,6 +301,9 @@ export const translations = {
     enterCode: 'Bestatigungscode eingeben',
     codeSentTo: '6-stelliger Code an {email} gesendet',
     cancel: 'Abbrechen',
+    magicLinkConfirmTitle: 'Mit diesem Konto anmelden?',
+    magicLinkConfirmBody: 'Sie werden als {email} angemeldet. Brechen Sie ab, wenn Sie diesen Magic Link nicht angefordert haben.',
+    magicLinkConfirmButton: 'Anmelden',
   },
   fr: {
     welcomeBack: 'Bon retour',
@@ -315,6 +339,9 @@ export const translations = {
     enterCode: 'Saisissez le code de verification',
     codeSentTo: 'Code a 6 chiffres envoye a {email}',
     cancel: 'Annuler',
+    magicLinkConfirmTitle: 'Se connecter avec ce compte ?',
+    magicLinkConfirmBody: 'Vous serez connecte en tant que {email}. Annulez si ce Magic Link ne vient pas de vous.',
+    magicLinkConfirmButton: 'Se connecter',
   },
   hi: {
     welcomeBack: 'वापसी पर स्वागत है',
@@ -350,6 +377,9 @@ export const translations = {
     enterCode: 'सत्यापन कोड दर्ज करें',
     codeSentTo: '{email} पर 6 अंकों का कोड भेजा गया',
     cancel: 'रद्द करें',
+    magicLinkConfirmTitle: 'क्या इस खाते से साइन इन करें?',
+    magicLinkConfirmBody: 'आप {email} के रूप में साइन इन होंगे। अगर आपने यह मैजिक लिंक नहीं मँगाया है, तो रद्द करें।',
+    magicLinkConfirmButton: 'साइन इन',
   },
   tr: {
     welcomeBack: 'Tekrar hos geldiniz',
@@ -385,6 +415,9 @@ export const translations = {
     enterCode: 'Dogrulama kodunu girin',
     codeSentTo: '{email} adresine 6 haneli kod gonderildi',
     cancel: 'Iptal',
+    magicLinkConfirmTitle: 'Bu hesapla giris yapilsin mi?',
+    magicLinkConfirmBody: '{email} olarak giris yapacaksiniz. Bu Magic Link istegini siz yapmadiysaniz iptal edin.',
+    magicLinkConfirmButton: 'Giris yap',
   },
   id: {
     welcomeBack: 'Selamat datang kembali',
@@ -420,6 +453,9 @@ export const translations = {
     enterCode: 'Masukkan kode verifikasi',
     codeSentTo: 'Kode 6 digit dikirim ke {email}',
     cancel: 'Batal',
+    magicLinkConfirmTitle: 'Masuk dengan akun ini?',
+    magicLinkConfirmBody: 'Anda akan masuk sebagai {email}. Pilih Batal jika Anda tidak meminta Magic link ini.',
+    magicLinkConfirmButton: 'Masuk',
   },
   vi: {
     welcomeBack: 'Chao mung tro lai',
@@ -455,6 +491,9 @@ export const translations = {
     enterCode: 'Nhap ma xac minh',
     codeSentTo: 'Ma 6 chu so da gui den {email}',
     cancel: 'Huy',
+    magicLinkConfirmTitle: 'Dang nhap bang tai khoan nay?',
+    magicLinkConfirmBody: 'Ban se dang nhap voi tu cach {email}. Hay chon Huy neu ban khong yeu cau magic link nay.',
+    magicLinkConfirmButton: 'Dang nhap',
   },
   th: {
     welcomeBack: 'ยินดีต้อนรับกลับ',
@@ -490,6 +529,9 @@ export const translations = {
     enterCode: 'กรอกรหัสยืนยัน',
     codeSentTo: 'ส่งรหัส 6 หลักไปที่ {email} แล้ว',
     cancel: 'ยกเลิก',
+    magicLinkConfirmTitle: 'เข้าสู่ระบบด้วยบัญชีนี้หรือไม่?',
+    magicLinkConfirmBody: 'คุณจะเข้าสู่ระบบในชื่อ {email} หากคุณไม่ได้ขอ Magic Link นี้ ให้กดยกเลิก',
+    magicLinkConfirmButton: 'เข้าสู่ระบบ',
   },
   ru: {
     welcomeBack: 'С возвращением',
@@ -525,6 +567,9 @@ export const translations = {
     enterCode: 'Введите код подтверждения',
     codeSentTo: '6-значный код отправлен на {email}',
     cancel: 'Отмена',
+    magicLinkConfirmTitle: 'Войти с этой учетной записью?',
+    magicLinkConfirmBody: 'Вы войдете как {email}. Нажмите «Отмена», если вы не запрашивали этот Magic Link.',
+    magicLinkConfirmButton: 'Войти',
   },
   it: {
     welcomeBack: 'Bentornato',
@@ -560,6 +605,9 @@ export const translations = {
     enterCode: 'Inserisci il codice di verifica',
     codeSentTo: 'Codice a 6 cifre inviato a {email}',
     cancel: 'Annulla',
+    magicLinkConfirmTitle: 'Accedere con questo account?',
+    magicLinkConfirmBody: 'Accederai come {email}. Annulla se non hai richiesto questo Magic link.',
+    magicLinkConfirmButton: 'Accedi',
   },
   pl: {
     welcomeBack: 'Witaj ponownie',
@@ -595,6 +643,9 @@ export const translations = {
     enterCode: 'Wpisz kod weryfikacyjny',
     codeSentTo: '6-cyfrowy kod wyslano na {email}',
     cancel: 'Anuluj',
+    magicLinkConfirmTitle: 'Zalogowac sie na to konto?',
+    magicLinkConfirmBody: 'Zostaniesz zalogowany jako {email}. Anuluj, jesli nie prosiles o ten Magic Link.',
+    magicLinkConfirmButton: 'Zaloguj sie',
   },
   nl: {
     welcomeBack: 'Welkom terug',
@@ -630,6 +681,9 @@ export const translations = {
     enterCode: 'Voer de verificatiecode in',
     codeSentTo: 'Code van 6 cijfers verstuurd naar {email}',
     cancel: 'Annuleren',
+    magicLinkConfirmTitle: 'Inloggen met dit account?',
+    magicLinkConfirmBody: 'Je wordt ingelogd als {email}. Annuleer als je deze Magic Link niet hebt aangevraagd.',
+    magicLinkConfirmButton: 'Inloggen',
   },
   ar: {
     welcomeBack: 'مرحبًا بعودتك',
@@ -665,6 +719,9 @@ export const translations = {
     enterCode: 'أدخل رمز التحقق',
     codeSentTo: 'تم إرسال رمز من 6 أرقام إلى {email}',
     cancel: 'إلغاء',
+    magicLinkConfirmTitle: 'تسجيل الدخول بهذا الحساب؟',
+    magicLinkConfirmBody: 'سيتم تسجيل دخولك باسم {email}. ألغِ العملية إذا لم تطلب Magic Link هذا.',
+    magicLinkConfirmButton: 'تسجيل الدخول',
   },
   sv: {
     welcomeBack: 'Valkommen tillbaka',
@@ -700,6 +757,9 @@ export const translations = {
     enterCode: 'Ange verifieringskod',
     codeSentTo: '6-siffrig kod skickad till {email}',
     cancel: 'Avbryt',
+    magicLinkConfirmTitle: 'Logga in med det har kontot?',
+    magicLinkConfirmBody: 'Du loggas in som {email}. Avbryt om du inte har begart denna Magic link.',
+    magicLinkConfirmButton: 'Logga in',
   },
   uk: {
     welcomeBack: 'З поверненням',
@@ -735,6 +795,9 @@ export const translations = {
     enterCode: 'Введіть код підтвердження',
     codeSentTo: '6-значний код надіслано на {email}',
     cancel: 'Скасувати',
+    magicLinkConfirmTitle: 'Увійти з цим обліковим записом?',
+    magicLinkConfirmBody: 'Ви увійдете як {email}. Натисніть «Скасувати», якщо ви не запитували цей Magic Link.',
+    magicLinkConfirmButton: 'Увійти',
   },
 } as const;
 
@@ -773,6 +836,9 @@ export interface TranslationStrings {
   /** `{email}` is replaced with the address. */
   codeSentTo: string;
   cancel: string;
+  magicLinkConfirmTitle: string;
+  magicLinkConfirmBody: string;
+  magicLinkConfirmButton: string;
 }
 
 // Languages where the provider name comes before the phrase ("Kakao(으)로 계속하기", "Kakaoで続行").

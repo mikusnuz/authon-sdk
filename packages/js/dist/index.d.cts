@@ -8,7 +8,28 @@ interface SessionChange {
 }
 type SessionChangeListener = (change: SessionChange) => void;
 
-type WalletErrorCode = 'NOT_FOUND' | 'NEEDS_RESTORE' | 'NOT_PROTECTED' | 'PRF_UNSUPPORTED' | 'ORIGIN_NOT_ALLOWED' | 'USER_CANCELLED' | 'TIMEOUT' | 'NEEDS_POPUP' | 'POPUP_BLOCKED' | 'NOT_SIGNED_IN' | 'NOT_CONFIGURED' | 'UNSUPPORTED_METHOD' | 'INVALID_PARAMS' | 'DISPOSED' | (string & {});
+type WalletErrorCode = 'NOT_FOUND' | 'NEEDS_RESTORE' | 'NOT_PROTECTED' | 'PRF_UNSUPPORTED' | 'ORIGIN_NOT_ALLOWED' | 'USER_CANCELLED' | 'TIMEOUT' | 'NEEDS_POPUP' | 'POPUP_BLOCKED' | 'NOT_SIGNED_IN' | 'NOT_CONFIGURED' | 'UNSUPPORTED_METHOD' | 'INVALID_PARAMS' | 'DISPOSED'
+/** The last device of an unprotected wallet cannot be revoked (the wallet would be lost). */
+ | 'LAST_DEVICE'
+/** This call needs a token from a signed-in session (not an impersonation or unbound BFF token). */
+ | 'SESSION_REQUIRED'
+/** The frame could not keep the device key share in this browser's storage. */
+ | 'STORAGE_UNAVAILABLE'
+/**
+ * A high-risk signature needs the Authon approval window, and it could not be opened
+ * (popup blocked, sandboxed iframe). Nothing was signed.
+ */
+ | 'CONFIRM_WINDOW_BLOCKED'
+/** The Authon approval window was closed (or timed out) before the user approved. Nothing was signed. */
+ | 'CONFIRM_WINDOW_CLOSED'
+/** The message or typed data is too long to show in full (over 16,384 characters); the wallet refuses to sign it. */
+ | 'MESSAGE_TOO_LARGE'
+/** The wallet API no longer serves this frame version; reload the page. */
+ | 'FRAME_OUTDATED'
+/** The new backup passkey did not report a usable public key. */
+ | 'BACKUP_KEY_REQUIRED'
+/** upgradeBackup() was called but the backup is already verifiable. */
+ | 'ALREADY_UPGRADED' | (string & {});
 declare class AuthonWalletError extends Error {
     readonly code: WalletErrorCode;
     constructor(code: WalletErrorCode, message?: string);
@@ -23,9 +44,21 @@ interface EmbeddedWalletDevice {
 }
 interface EmbeddedWallet {
     address: string;
+    /**
+     * True once the wallet has a passkey backup (`protect()`). An unprotected wallet
+     * exists only as this browser's device share plus the server share: clearing site
+     * data, Safari's storage eviction or a lost device makes it unrecoverable. Do not
+     * let users receive funds until `protected` is true.
+     */
     protected: boolean;
     /** True when the server has a wallet but this browser holds no device share. */
     needsRestore: boolean;
+    /**
+     * True for a passkey backup made before the wallet stored passkey public keys.
+     * Restoring such a backup is less protected; call `upgradeBackup()` from a click
+     * on a device where the wallet works (`needsRestore` false).
+     */
+    backupUpgradeRecommended: boolean;
     devices: EmbeddedWalletDevice[];
 }
 type WalletChangeListener = (wallet: EmbeddedWallet | null) => void;
@@ -85,6 +118,22 @@ declare class WalletClient {
     constructor(options: WalletClientOptions);
     get(): Promise<EmbeddedWallet | null>;
     ensure(): Promise<EmbeddedWallet>;
+    /** True when the wallet exists and has a passkey backup. See `EmbeddedWallet.protected`. */
+    isProtected(): Promise<boolean>;
+    /**
+     * Every signature needs the user's approval; a project can turn this off only in its
+     * server-side wallet settings, never from the page.
+     * - Low-risk requests (personal messages, typed data that grants nothing) show a card
+     *   inside the wallet frame with the requesting site and the full text. Sign is
+     *   enabled only after the text was scrolled to the end.
+     * - High-risk requests (transactions with value or call data, approvals, permits,
+     *   orders, meta-transactions) show a small card whose button opens an Authon window
+     *   (`<wallet origin>/confirm`); the user approves there, outside this page. The click
+     *   happens inside the frame, so this method does not need to run in a click handler.
+     * Rejecting gives USER_CANCELLED; a blocked or closed window gives
+     * CONFIRM_WINDOW_BLOCKED / CONFIRM_WINDOW_CLOSED; text over 16,384 characters gives
+     * MESSAGE_TOO_LARGE. None of these ever signs.
+     */
     signMessage(message: WalletMessage): Promise<Hex>;
     signTypedData(typedData: TypedDataPayload): Promise<Hex>;
     signTransaction(tx: WalletTransactionRequest): Promise<Hex>;
@@ -97,15 +146,32 @@ declare class WalletClient {
         ui?: WalletConfirmUi;
     }): Promise<void>;
     /**
+     * Replaces a legacy passkey backup (`backupUpgradeRecommended`) with a new passkey
+     * whose public key the server keeps, so later restores are verified by the server.
+     * Must be called from a user click handler, on a browser where the wallet works.
+     * The key shares are rotated: other devices and sites restore once with the new
+     * passkey. Not available in the popup fallback.
+     */
+    upgradeBackup(options?: {
+        ui?: WalletConfirmUi;
+    }): Promise<void>;
+    /**
      * Restores the wallet on this browser with the passkey (one confirmation tap and
      * the system prompt). By default this browser is added as another device and
      * other devices keep working. Pass `resetOtherDevices: true` when a device was
-     * lost: the key is re-split and every other device must restore again.
+     * lost: the key is re-split and every other device must restore again. The reset
+     * card always shows the wallet's own warning text (custom `ui` text is ignored),
+     * and reset is not available in the popup fallback.
      */
     restore(options?: {
         ui?: WalletConfirmUi;
         resetOtherDevices?: boolean;
     }): Promise<void>;
+    /**
+     * Revokes a device. Must run in a browser that holds a trusted device share (the
+     * frame signs the request with it). The last device of an unprotected wallet
+     * cannot be revoked (LAST_DEVICE).
+     */
     revokeDevice(deviceId: string): Promise<void>;
     onChange(listener: WalletChangeListener): () => void;
     provider(chainId: number): EIP1193Provider;
@@ -121,7 +187,7 @@ declare class WalletClient {
     private listen;
     private onMessage;
     private send;
-    /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+    /** Signing, protect, restore and upgrade wait for a person (in the frame or the Authon window). */
     private interactiveTimeout;
     private call;
     private callViaPopup;
@@ -139,8 +205,13 @@ interface AuthonConfig {
     sessionMode?: 'browser' | 'bff';
     wallet?: AuthonWalletConfig;
     /**
-     * When the page URL carries a magic link (`?token=...&authon_magic_link=1`), verify it on load,
-     * store the session and remove both parameters from the URL. Default true (browser session mode only).
+     * When the page URL carries a magic link (`#authon_magic_link=1&token=...`, or the older
+     * `?token=...&authon_magic_link=1`), remove it from the URL and finish sign-in on load.
+     * Default true (browser session mode only).
+     *
+     * The link signs in silently only in the browser that asked for it and only when nobody is
+     * signed in yet. Otherwise nothing is signed in: `magicLinkConfirmationRequired` fires and the
+     * app asks "Sign in as x@y?" before calling `confirmMagicLink()`.
      * Set false to handle the link yourself with `handleMagicLink()` or `verifyPasswordless({ token })`.
      */
     autoHandleMagicLink?: boolean;
@@ -152,6 +223,19 @@ interface SendMagicLinkOptions {
      * no callback URL or domain set.
      */
     redirectUrl?: string;
+}
+/**
+ * Why a magic link on this page was not used automatically:
+ * - `unrecognized_browser`: it was requested in another browser or device (or by an older SDK),
+ *   so it could have been sent by someone else to sign you in to their account.
+ * - `signed_in`: someone is already signed in here; the link would replace that session.
+ */
+type MagicLinkConfirmationReason = 'unrecognized_browser' | 'signed_in';
+/** A magic link waiting for the person to confirm. The link is still unused. */
+interface PendingMagicLink {
+    /** Account the link signs in to. Show it: "Sign in as {email}?" */
+    email: string;
+    reason: MagicLinkConfirmationReason;
 }
 interface AuthonWalletConfig {
     /**
@@ -195,6 +279,8 @@ interface AuthonEvents {
     verificationRequired: (email: string) => void;
     mfaRequired: (mfaToken: string) => void;
     passkeyRegistered: (credential: PasskeyCredential) => void;
+    /** A magic link on this page needs the person's OK; call `confirmMagicLink()` or `dismissMagicLink()`. */
+    magicLinkConfirmationRequired: (pending: PendingMagicLink) => void;
     web3Connected: (wallet: Web3Wallet) => void;
     error: (error: Error) => void;
     walletChanged: (wallet: EmbeddedWallet | null) => void;
@@ -231,12 +317,19 @@ declare class Authon {
     private authorizationContext;
     private verificationToken;
     private magicLinkResult;
+    private pendingMagicLink;
     constructor(publishableKey: string, config?: AuthonConfig);
     getProviders(): Promise<OAuthProviderType[]>;
     openSignIn(options?: OpenSignInOptions): Promise<void>;
     openSignUp(options?: OpenSignInOptions): Promise<void>;
     private prepareAuthorization;
     private authorizationRequestBody;
+    /**
+     * Every sign-in path (password, magic link, email code, wallet, passkey, OAuth) ends here. An
+     * `mfaRequired` body is handled the same way for all of them: `mfaRequired` event +
+     * AuthonMfaRequiredError carrying the token for `verifyMfa()`. In authorization code mode the
+     * request stays open and `verifyMfa()` finishes it.
+     */
     private handleAuthCompletion;
     openProfile(): Promise<void>;
     closeProfile(): void;
@@ -281,10 +374,21 @@ declare class Authon {
     sendMagicLink(email: string, options?: SendMagicLinkOptions): Promise<void>;
     /**
      * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
-     * returns the verification already started on page load. Resolves to null when the URL has no link
-     * or the link could not be used (the reason is emitted as an `error` event).
+     * returns the verification already started on page load. Resolves to null when the URL has no link,
+     * the link could not be used (the reason is emitted as an `error` event), or the link needs the
+     * person's confirmation first (see `getPendingMagicLink()` / `magicLinkConfirmationRequired`).
      */
     handleMagicLink(): Promise<AuthonUser | null>;
+    /**
+     * The magic link from this page that was not used automatically because it was requested in
+     * another browser, or someone is already signed in here. Show "Sign in as {email}?" and call
+     * `confirmMagicLink()` or `dismissMagicLink()`.
+     */
+    getPendingMagicLink(): PendingMagicLink | null;
+    /** Sign in with the pending magic link after the person agreed. Replaces any current session. */
+    confirmMagicLink(): Promise<AuthonUser>;
+    /** Forget the pending magic link without signing in. The link itself stays unused. */
+    dismissMagicLink(): void;
     sendEmailOtp(email: string): Promise<void>;
     verifyPasswordless(options: {
         token?: string;
@@ -343,11 +447,21 @@ declare class Authon {
     private emit;
     private ensureInitialized;
     private autoCreateWallet;
+    private showBuiltInMagicLinkConfirm;
     private getModal;
     private startOAuthFlow;
+    /**
+     * Exchanges a one-time OAuth code from Authon for a session. Requires the verifier generated by
+     * the SDK instance that started the flow. A wrong verifier counts as a failed attempt; Authon
+     * burns the code after 3. Throws AuthonMfaRequiredError (and emits `mfaRequired`) when the user
+     * has MFA enabled; finish with verifyMfa(error.mfaToken, code).
+     */
+    private redeemOAuthCode;
     private normalizeFlowMode;
     private requestOAuthAuthorization;
     private startRedirectOAuthFlow;
+    /** Pending redirect sign-in started from this tab, if the page was opened with its result. */
+    private oauthRedirectResult;
     private consumeRedirectResultFromUrl;
     private apiGet;
     private apiPost;
@@ -359,6 +473,28 @@ declare class Authon {
     private requestWalletSignature;
     /** Current page (without hash or magic link params) as the link target, when this instance handles links. */
     private magicLinkReturnUrl;
+    private magicLinkRequestKey;
+    private sharedMagicLinkRequest;
+    private magicLinkNonceKey;
+    /**
+     * New random value for a link request, kept in this origin's localStorage (shared by its tabs, so
+     * the link may open in a new tab). Null when there is no browser storage; such links always ask
+     * for confirmation.
+     */
+    private createMagicLinkNonce;
+    private readMagicLinkNonce;
+    private restoreMagicLinkNonce;
+    private clearMagicLinkNonce;
+    /**
+     * Read a magic link token from the URL (fragment form first, then the older query form) and
+     * remove it from the address bar and history right away, before any request is made.
+     */
+    private takeMagicLinkTokenFromUrl;
+    /**
+     * Page-load handling. The link finishes silently only when this browser holds the value sent with
+     * the request and nobody is signed in; otherwise it is left unused and the app is asked to confirm.
+     * That stops a link someone else requested (for their own account) from signing this browser in.
+     */
     private consumeMagicLinkFromUrl;
     /** Authon returns WebAuthn options at the top level; very old servers wrapped them in `options`. */
     private unwrapWebAuthnOptions;
@@ -406,6 +542,9 @@ declare const translations: {
         readonly enterCode: "Enter verification code";
         readonly codeSentTo: "6-digit code sent to {email}";
         readonly cancel: "Cancel";
+        readonly magicLinkConfirmTitle: "Sign in with this account?";
+        readonly magicLinkConfirmBody: "You will be signed in as {email}. Cancel if you did not request this link.";
+        readonly magicLinkConfirmButton: "Sign in";
     };
     readonly ko: {
         readonly welcomeBack: "다시 오신 걸 환영합니다";
@@ -441,6 +580,9 @@ declare const translations: {
         readonly enterCode: "받은 코드를 입력하세요";
         readonly codeSentTo: "{email}(으)로 6자리 코드를 보냈습니다";
         readonly cancel: "취소";
+        readonly magicLinkConfirmTitle: "이 계정으로 로그인할까요?";
+        readonly magicLinkConfirmBody: "{email} 계정으로 로그인합니다. 직접 요청한 링크가 아니면 취소를 눌러 주세요.";
+        readonly magicLinkConfirmButton: "로그인";
     };
     readonly ja: {
         readonly welcomeBack: "おかえりなさい";
@@ -476,6 +618,9 @@ declare const translations: {
         readonly enterCode: "認証コードを入力";
         readonly codeSentTo: "{email} に6桁のコードを送信しました";
         readonly cancel: "キャンセル";
+        readonly magicLinkConfirmTitle: "このアカウントでログインしますか？";
+        readonly magicLinkConfirmBody: "{email} としてログインします。このマジックリンクをリクエストしていない場合は、キャンセルしてください。";
+        readonly magicLinkConfirmButton: "ログイン";
     };
     readonly 'zh-CN': {
         readonly welcomeBack: "欢迎回来";
@@ -511,6 +656,9 @@ declare const translations: {
         readonly enterCode: "输入验证码";
         readonly codeSentTo: "6 位验证码已发送至 {email}";
         readonly cancel: "取消";
+        readonly magicLinkConfirmTitle: "要使用此账号登录吗？";
+        readonly magicLinkConfirmBody: "将以 {email} 的身份登录。如果并非本人请求此魔法链接，请取消。";
+        readonly magicLinkConfirmButton: "登录";
     };
     readonly 'zh-TW': {
         readonly welcomeBack: "歡迎回來";
@@ -546,6 +694,9 @@ declare const translations: {
         readonly enterCode: "輸入驗證碼";
         readonly codeSentTo: "6 位數驗證碼已傳送至 {email}";
         readonly cancel: "取消";
+        readonly magicLinkConfirmTitle: "要使用此帳號登入嗎？";
+        readonly magicLinkConfirmBody: "將以 {email} 的身分登入。若並非本人請求此魔法連結，請取消。";
+        readonly magicLinkConfirmButton: "登入";
     };
     readonly 'pt-BR': {
         readonly welcomeBack: "Bem-vindo de volta";
@@ -581,6 +732,9 @@ declare const translations: {
         readonly enterCode: "Digite o codigo de verificacao";
         readonly codeSentTo: "Codigo de 6 digitos enviado para {email}";
         readonly cancel: "Cancelar";
+        readonly magicLinkConfirmTitle: "Entrar com esta conta?";
+        readonly magicLinkConfirmBody: "Voce entrara como {email}. Cancele se nao foi voce quem solicitou este Magic Link.";
+        readonly magicLinkConfirmButton: "Entrar";
     };
     readonly es: {
         readonly welcomeBack: "Bienvenido de nuevo";
@@ -616,6 +770,9 @@ declare const translations: {
         readonly enterCode: "Introduce el codigo de verificacion";
         readonly codeSentTo: "Codigo de 6 digitos enviado a {email}";
         readonly cancel: "Cancelar";
+        readonly magicLinkConfirmTitle: "Iniciar sesion con esta cuenta?";
+        readonly magicLinkConfirmBody: "Iniciaras sesion como {email}. Cancela si no solicitaste este Magic Link.";
+        readonly magicLinkConfirmButton: "Iniciar sesion";
     };
     readonly de: {
         readonly welcomeBack: "Willkommen zuruck";
@@ -651,6 +808,9 @@ declare const translations: {
         readonly enterCode: "Bestatigungscode eingeben";
         readonly codeSentTo: "6-stelliger Code an {email} gesendet";
         readonly cancel: "Abbrechen";
+        readonly magicLinkConfirmTitle: "Mit diesem Konto anmelden?";
+        readonly magicLinkConfirmBody: "Sie werden als {email} angemeldet. Brechen Sie ab, wenn Sie diesen Magic Link nicht angefordert haben.";
+        readonly magicLinkConfirmButton: "Anmelden";
     };
     readonly fr: {
         readonly welcomeBack: "Bon retour";
@@ -686,6 +846,9 @@ declare const translations: {
         readonly enterCode: "Saisissez le code de verification";
         readonly codeSentTo: "Code a 6 chiffres envoye a {email}";
         readonly cancel: "Annuler";
+        readonly magicLinkConfirmTitle: "Se connecter avec ce compte ?";
+        readonly magicLinkConfirmBody: "Vous serez connecte en tant que {email}. Annulez si ce Magic Link ne vient pas de vous.";
+        readonly magicLinkConfirmButton: "Se connecter";
     };
     readonly hi: {
         readonly welcomeBack: "वापसी पर स्वागत है";
@@ -721,6 +884,9 @@ declare const translations: {
         readonly enterCode: "सत्यापन कोड दर्ज करें";
         readonly codeSentTo: "{email} पर 6 अंकों का कोड भेजा गया";
         readonly cancel: "रद्द करें";
+        readonly magicLinkConfirmTitle: "क्या इस खाते से साइन इन करें?";
+        readonly magicLinkConfirmBody: "आप {email} के रूप में साइन इन होंगे। अगर आपने यह मैजिक लिंक नहीं मँगाया है, तो रद्द करें।";
+        readonly magicLinkConfirmButton: "साइन इन";
     };
     readonly tr: {
         readonly welcomeBack: "Tekrar hos geldiniz";
@@ -756,6 +922,9 @@ declare const translations: {
         readonly enterCode: "Dogrulama kodunu girin";
         readonly codeSentTo: "{email} adresine 6 haneli kod gonderildi";
         readonly cancel: "Iptal";
+        readonly magicLinkConfirmTitle: "Bu hesapla giris yapilsin mi?";
+        readonly magicLinkConfirmBody: "{email} olarak giris yapacaksiniz. Bu Magic Link istegini siz yapmadiysaniz iptal edin.";
+        readonly magicLinkConfirmButton: "Giris yap";
     };
     readonly id: {
         readonly welcomeBack: "Selamat datang kembali";
@@ -791,6 +960,9 @@ declare const translations: {
         readonly enterCode: "Masukkan kode verifikasi";
         readonly codeSentTo: "Kode 6 digit dikirim ke {email}";
         readonly cancel: "Batal";
+        readonly magicLinkConfirmTitle: "Masuk dengan akun ini?";
+        readonly magicLinkConfirmBody: "Anda akan masuk sebagai {email}. Pilih Batal jika Anda tidak meminta Magic link ini.";
+        readonly magicLinkConfirmButton: "Masuk";
     };
     readonly vi: {
         readonly welcomeBack: "Chao mung tro lai";
@@ -826,6 +998,9 @@ declare const translations: {
         readonly enterCode: "Nhap ma xac minh";
         readonly codeSentTo: "Ma 6 chu so da gui den {email}";
         readonly cancel: "Huy";
+        readonly magicLinkConfirmTitle: "Dang nhap bang tai khoan nay?";
+        readonly magicLinkConfirmBody: "Ban se dang nhap voi tu cach {email}. Hay chon Huy neu ban khong yeu cau magic link nay.";
+        readonly magicLinkConfirmButton: "Dang nhap";
     };
     readonly th: {
         readonly welcomeBack: "ยินดีต้อนรับกลับ";
@@ -861,6 +1036,9 @@ declare const translations: {
         readonly enterCode: "กรอกรหัสยืนยัน";
         readonly codeSentTo: "ส่งรหัส 6 หลักไปที่ {email} แล้ว";
         readonly cancel: "ยกเลิก";
+        readonly magicLinkConfirmTitle: "เข้าสู่ระบบด้วยบัญชีนี้หรือไม่?";
+        readonly magicLinkConfirmBody: "คุณจะเข้าสู่ระบบในชื่อ {email} หากคุณไม่ได้ขอ Magic Link นี้ ให้กดยกเลิก";
+        readonly magicLinkConfirmButton: "เข้าสู่ระบบ";
     };
     readonly ru: {
         readonly welcomeBack: "С возвращением";
@@ -896,6 +1074,9 @@ declare const translations: {
         readonly enterCode: "Введите код подтверждения";
         readonly codeSentTo: "6-значный код отправлен на {email}";
         readonly cancel: "Отмена";
+        readonly magicLinkConfirmTitle: "Войти с этой учетной записью?";
+        readonly magicLinkConfirmBody: "Вы войдете как {email}. Нажмите «Отмена», если вы не запрашивали этот Magic Link.";
+        readonly magicLinkConfirmButton: "Войти";
     };
     readonly it: {
         readonly welcomeBack: "Bentornato";
@@ -931,6 +1112,9 @@ declare const translations: {
         readonly enterCode: "Inserisci il codice di verifica";
         readonly codeSentTo: "Codice a 6 cifre inviato a {email}";
         readonly cancel: "Annulla";
+        readonly magicLinkConfirmTitle: "Accedere con questo account?";
+        readonly magicLinkConfirmBody: "Accederai come {email}. Annulla se non hai richiesto questo Magic link.";
+        readonly magicLinkConfirmButton: "Accedi";
     };
     readonly pl: {
         readonly welcomeBack: "Witaj ponownie";
@@ -966,6 +1150,9 @@ declare const translations: {
         readonly enterCode: "Wpisz kod weryfikacyjny";
         readonly codeSentTo: "6-cyfrowy kod wyslano na {email}";
         readonly cancel: "Anuluj";
+        readonly magicLinkConfirmTitle: "Zalogowac sie na to konto?";
+        readonly magicLinkConfirmBody: "Zostaniesz zalogowany jako {email}. Anuluj, jesli nie prosiles o ten Magic Link.";
+        readonly magicLinkConfirmButton: "Zaloguj sie";
     };
     readonly nl: {
         readonly welcomeBack: "Welkom terug";
@@ -1001,6 +1188,9 @@ declare const translations: {
         readonly enterCode: "Voer de verificatiecode in";
         readonly codeSentTo: "Code van 6 cijfers verstuurd naar {email}";
         readonly cancel: "Annuleren";
+        readonly magicLinkConfirmTitle: "Inloggen met dit account?";
+        readonly magicLinkConfirmBody: "Je wordt ingelogd als {email}. Annuleer als je deze Magic Link niet hebt aangevraagd.";
+        readonly magicLinkConfirmButton: "Inloggen";
     };
     readonly ar: {
         readonly welcomeBack: "مرحبًا بعودتك";
@@ -1036,6 +1226,9 @@ declare const translations: {
         readonly enterCode: "أدخل رمز التحقق";
         readonly codeSentTo: "تم إرسال رمز من 6 أرقام إلى {email}";
         readonly cancel: "إلغاء";
+        readonly magicLinkConfirmTitle: "تسجيل الدخول بهذا الحساب؟";
+        readonly magicLinkConfirmBody: "سيتم تسجيل دخولك باسم {email}. ألغِ العملية إذا لم تطلب Magic Link هذا.";
+        readonly magicLinkConfirmButton: "تسجيل الدخول";
     };
     readonly sv: {
         readonly welcomeBack: "Valkommen tillbaka";
@@ -1071,6 +1264,9 @@ declare const translations: {
         readonly enterCode: "Ange verifieringskod";
         readonly codeSentTo: "6-siffrig kod skickad till {email}";
         readonly cancel: "Avbryt";
+        readonly magicLinkConfirmTitle: "Logga in med det har kontot?";
+        readonly magicLinkConfirmBody: "Du loggas in som {email}. Avbryt om du inte har begart denna Magic link.";
+        readonly magicLinkConfirmButton: "Logga in";
     };
     readonly uk: {
         readonly welcomeBack: "З поверненням";
@@ -1106,6 +1302,9 @@ declare const translations: {
         readonly enterCode: "Введіть код підтвердження";
         readonly codeSentTo: "6-значний код надіслано на {email}";
         readonly cancel: "Скасувати";
+        readonly magicLinkConfirmTitle: "Увійти з цим обліковим записом?";
+        readonly magicLinkConfirmBody: "Ви увійдете як {email}. Натисніть «Скасувати», якщо ви не запитували цей Magic Link.";
+        readonly magicLinkConfirmButton: "Увійти";
     };
 };
 interface TranslationStrings {
@@ -1143,6 +1342,9 @@ interface TranslationStrings {
     /** `{email}` is replaced with the address. */
     codeSentTo: string;
     cancel: string;
+    magicLinkConfirmTitle: string;
+    magicLinkConfirmBody: string;
+    magicLinkConfirmButton: string;
 }
 /** Strings missing in a locale fall back to English. */
 declare function getStrings(locale: string): TranslationStrings;
@@ -1222,4 +1424,13 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, MAGIC_LINK_PARAM, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SendMagicLinkOptions, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletConfirmUi, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+/** Returns the normalized URL when it parses as an absolute http(s) URL, otherwise null. */
+declare function safeHttpUrl(value: unknown): string | null;
+/**
+ * Returns the value when it is a base64 data URL of an allowed raster/SVG image type,
+ * otherwise null. Callers must only use the result as an <img src> (never inline SVG),
+ * which keeps SVG scripts from executing.
+ */
+declare function safeImageDataUrl(value: unknown): string | null;
+
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, MAGIC_LINK_PARAM, type MagicLinkConfirmationReason, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, type PendingMagicLink, ProfileRenderer, type ProviderButtonConfig, type SendMagicLinkOptions, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletConfirmUi, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, safeHttpUrl, safeImageDataUrl, translations };

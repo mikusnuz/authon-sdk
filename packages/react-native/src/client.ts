@@ -15,11 +15,12 @@ import type {
   StartOAuthOptions,
   TokenPair,
   ApiAuthResponse,
-  OAuthCompletedResponse,
   OAuthErrorResponse,
   AuthonEventType,
   AuthonEvents,
 } from './types';
+import { AuthonMfaRequiredError } from './types';
+import { createPkcePair, parseOAuthCallback } from './pkce';
 
 const DEFAULT_API_URL = 'https://api.authon.dev';
 
@@ -34,7 +35,14 @@ interface ProvidersResponse {
   providerConfigs?: Partial<Record<OAuthProviderType, { oauthFlow?: StartOAuthOptions['flow'] }>>;
 }
 
-type OAuthPollResponse = OAuthCompletedResponse | OAuthErrorResponse;
+interface PendingOAuthFlow {
+  verifier: string;
+  createdAt: number;
+  waiters: Array<{
+    resolve: (value: { tokens: TokenPair; user: AuthonUser }) => void;
+    reject: (error: Error) => void;
+  }>;
+}
 
 function getStorageKey(publishableKey: string): string {
   return `authon_session_${publishableKey.slice(0, 16)}`;
@@ -58,9 +66,13 @@ export class AuthonMobileClient {
   private _providers: OAuthProviderType[] = [];
   private _branding: BrandingConfig | null = null;
   private _initialized = false;
+  private oauthReturnTo: string | undefined;
+  /** In-flight OAuth sign-ins by state. The PKCE verifier never leaves this object. */
+  private oauthFlows = new Map<string, PendingOAuthFlow>();
 
   constructor(config: AuthonReactNativeConfig) {
     this.publishableKey = config.publishableKey;
+    this.oauthReturnTo = config.oauthReturnTo;
     this.apiUrl = (config.apiUrl || DEFAULT_API_URL).replace(/\/$/, '');
     this.storageKey = getStorageKey(config.publishableKey);
   }
@@ -154,6 +166,21 @@ export class AuthonMobileClient {
 
   async verifyEmail(email: string, code: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
     const res = (await this.request('POST', '/v1/auth/verify-email', { email, code })) as ApiAuthResponse;
+    this.tokens = this.toTokenPair(res);
+    this.user = res.user;
+    await this.persistTokens();
+    this.scheduleRefresh(this.tokens.expiresAt);
+    this.emit('signedIn', res.user);
+    return { tokens: this.tokens, user: res.user };
+  }
+
+  /**
+   * Second step of a sign-in that answered mfaRequired (password sign-in, or OAuth via
+   * AuthonMfaRequiredError): trade the mfaToken plus the user's TOTP or backup code for a session.
+   */
+  async verifyMfa(mfaToken: string, code: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const res = (await this.request('POST', '/v1/auth/mfa/verify', { mfaToken, code })) as ApiAuthResponse;
+    if (!res?.accessToken || !res.refreshToken || !res.user) throw new Error('Invalid MFA response');
     this.tokens = this.toTokenPair(res);
     this.user = res.user;
     await this.persistTokens();
@@ -280,6 +307,16 @@ export class AuthonMobileClient {
     return this._branding;
   }
 
+  /**
+   * Starts an OAuth sign-in. Returns the provider URL to open (use an auth session such as
+   * expo-web-browser `openAuthSessionAsync(url, returnTo)`) and the flow state.
+   *
+   * `returnTo` (or `oauthReturnTo` in the config) must be your app's deep link, e.g.
+   * `myapp://oauth-callback`, with the scheme listed in the project's allowed origins
+   * (`myapp://`), or an https bridge page on an allowed origin that forwards the query to the
+   * deep link. Authon sends a one-time code there; only this client, which holds the PKCE
+   * verifier, can trade it for a session.
+   */
   async getOAuthUrl(
     provider: string,
     options?: string | StartOAuthOptions,
@@ -288,19 +325,32 @@ export class AuthonMobileClient {
       typeof options === 'string'
         ? { redirectUri: options }
         : (options ?? {});
-    const redirectUri = normalized.redirectUri || `${this.apiUrl}/v1/auth/oauth/redirect`;
-    const flow = normalized.flow || 'redirect';
-    const params = new URLSearchParams({ redirectUri, flow });
-    if (normalized.returnTo) {
-      params.set('returnTo', normalized.returnTo);
+    const returnTo = normalized.returnTo || this.oauthReturnTo;
+    if (!returnTo) {
+      throw new Error(
+        'Authon OAuth needs returnTo: pass startOAuth(provider, { returnTo: "myapp://oauth-callback" }) or set oauthReturnTo on AuthonProvider, and add "myapp://" to the project\'s allowed origins.',
+      );
     }
-    return (await this.request(
+    const redirectUri = normalized.redirectUri || `${this.apiUrl}/v1/auth/oauth/redirect`;
+    const pkce = createPkcePair();
+    const params = new URLSearchParams({
+      redirectUri,
+      flow: 'redirect',
+      returnTo,
+      codeChallenge: pkce.challenge,
+      codeChallengeMethod: 'S256',
+    });
+    const result = (await this.request(
       'GET',
       `/v1/auth/oauth/${provider}/url?${params.toString()}`,
     )) as { url: string; state: string };
+    this.pruneOAuthFlows();
+    this.oauthFlows.set(result.state, { verifier: pkce.verifier, createdAt: Date.now(), waiters: [] });
+    return result;
   }
 
-  async pollOAuth(state: string): Promise<OAuthPollResponse | null> {
+  /** Status of a flow: pending, completed or error. Never returns tokens or codes. */
+  async pollOAuth(state: string): Promise<OAuthErrorResponse | { status: 'pending' | 'completed' } | null> {
     try {
       const res = await fetch(
         `${this.apiUrl}/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`,
@@ -308,40 +358,101 @@ export class AuthonMobileClient {
       );
       if (!res.ok) return null;
       const data = (await res.json()) as Record<string, unknown>;
-      if (data.status === 'completed' && data.accessToken) {
-        return data as unknown as OAuthCompletedResponse;
-      }
       if (data.status === 'error') {
         return {
           status: 'error',
           message: typeof data.message === 'string' ? data.message : 'OAuth failed',
         };
       }
-      return null;
+      if (data.status === 'completed') return { status: 'completed' };
+      return { status: 'pending' };
     } catch {
       return null;
     }
   }
 
-  /** Poll for OAuth completion (3 minute timeout, matching JS SDK) */
-  async completeOAuth(state: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
-    const maxAttempts = 360; // 3 minutes at 500ms intervals
-    for (let i = 0; i < maxAttempts; i++) {
-      const result = await this.pollOAuth(state);
-      if (result) {
-        if (result.status === 'error') {
-          throw new Error(result.message || 'OAuth failed');
-        }
-        this.tokens = this.toTokenPair(result);
-        this.user = result.user;
-        await this.persistTokens();
-        this.scheduleRefresh(this.tokens.expiresAt);
-        this.emit('signedIn', result.user);
-        return { tokens: this.tokens, user: result.user };
+  /**
+   * Finishes an OAuth sign-in from the callback URL your app received (deep link), exchanging the
+   * one-time code with this client's PKCE verifier.
+   * Throws AuthonMfaRequiredError (and emits `mfaRequired`) when the user has MFA enabled; finish
+   * with verifyMfa(error.mfaToken, code).
+   */
+  async handleOAuthCallback(url: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    const parsed = parseOAuthCallback(url);
+    if (!parsed?.state) throw new Error('Not an Authon OAuth callback URL');
+    const flow = this.oauthFlows.get(parsed.state);
+    if (!flow) throw new Error('No OAuth sign-in in progress for this callback');
+    this.oauthFlows.delete(parsed.state);
+    const settle = (error: Error | null, value?: { tokens: TokenPair; user: AuthonUser }) => {
+      for (const waiter of flow.waiters) {
+        if (error) waiter.reject(error);
+        else waiter.resolve(value!);
       }
-      await new Promise((r) => setTimeout(r, 500));
+    };
+    try {
+      if (parsed.error || !parsed.code) throw new Error(parsed.error || 'OAuth failed');
+      const res = (await this.request('POST', '/v1/auth/oauth/token', {
+        code: parsed.code,
+        codeVerifier: flow.verifier,
+      })) as ApiAuthResponse & { mfaRequired?: boolean; mfaToken?: string; mfaMethods?: string[] };
+      if (res.mfaRequired) {
+        if (typeof res.mfaToken !== 'string' || !res.mfaToken) throw new Error('Invalid MFA response');
+        this.emit('mfaRequired', res.mfaToken);
+        throw new AuthonMfaRequiredError(res.mfaToken, Array.isArray(res.mfaMethods) ? res.mfaMethods : ['totp']);
+      }
+      this.tokens = this.toTokenPair(res);
+      this.user = res.user;
+      await this.persistTokens();
+      this.scheduleRefresh(this.tokens.expiresAt);
+      this.emit('signedIn', res.user);
+      const value = { tokens: this.tokens, user: res.user };
+      settle(null, value);
+      return value;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      settle(error);
+      throw error;
     }
-    throw new Error('OAuth timeout');
+  }
+
+  /**
+   * Completes OAuth. Pass the callback URL your app received to finish immediately, or the
+   * state to wait (3 minute timeout) until handleOAuthCallback(url) is called with it.
+   * The state alone can no longer fetch tokens from Authon.
+   */
+  async completeOAuth(stateOrCallbackUrl: string): Promise<{ tokens: TokenPair; user: AuthonUser }> {
+    if (stateOrCallbackUrl.includes('://') || stateOrCallbackUrl.includes('?')) {
+      return this.handleOAuthCallback(stateOrCallbackUrl);
+    }
+    const state = stateOrCallbackUrl;
+    const flow = this.oauthFlows.get(state);
+    if (!flow) throw new Error('No OAuth sign-in in progress for this state');
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const timeout = setTimeout(() => finish(new Error('OAuth timeout')), 180_000);
+      const poll = setInterval(async () => {
+        const status = await this.pollOAuth(state);
+        if (status?.status === 'error') finish(new Error(status.message || 'OAuth failed'));
+      }, 1500);
+      const finish = (error: Error | null, value?: { tokens: TokenPair; user: AuthonUser }) => {
+        if (done) return;
+        done = true;
+        clearTimeout(timeout);
+        clearInterval(poll);
+        if (error) {
+          if (this.oauthFlows.get(state) === flow) this.oauthFlows.delete(state);
+          reject(error);
+        } else resolve(value!);
+      };
+      flow.waiters.push({ resolve: (value) => finish(null, value), reject: (error) => finish(error) });
+    });
+  }
+
+  private pruneOAuthFlows(): void {
+    const now = Date.now();
+    for (const [state, flow] of this.oauthFlows) {
+      if (now - flow.createdAt > 10 * 60 * 1000) this.oauthFlows.delete(state);
+    }
   }
 
   getApiUrl(): string {
@@ -377,7 +488,13 @@ export class AuthonMobileClient {
       address,
       chain,
       walletType,
-    })) as ApiAuthResponse;
+    })) as ApiAuthResponse & { mfaRequired?: boolean; mfaToken?: string; mfaMethods?: string[] };
+    if (res.mfaRequired) {
+      // Account has a second factor: finish with verifyMfa(error.mfaToken, code), as for password/OAuth.
+      if (typeof res.mfaToken !== 'string' || !res.mfaToken) throw new Error('Invalid MFA response');
+      this.emit('mfaRequired', res.mfaToken);
+      throw new AuthonMfaRequiredError(res.mfaToken, Array.isArray(res.mfaMethods) ? res.mfaMethods : ['totp']);
+    }
     this.tokens = this.toTokenPair(res);
     this.user = res.user;
     await this.persistTokens();
@@ -422,7 +539,13 @@ export class AuthonMobileClient {
     const res = (await this.request('POST', '/v1/auth/passwordless/verify', {
       email: identifier,
       code,
-    })) as ApiAuthResponse;
+    })) as ApiAuthResponse & { mfaRequired?: boolean; mfaToken?: string; mfaMethods?: string[] };
+    if (res.mfaRequired) {
+      // Account has a second factor: finish with verifyMfa(error.mfaToken, code), as for password/OAuth.
+      if (typeof res.mfaToken !== 'string' || !res.mfaToken) throw new Error('Invalid MFA response');
+      this.emit('mfaRequired', res.mfaToken);
+      throw new AuthonMfaRequiredError(res.mfaToken, Array.isArray(res.mfaMethods) ? res.mfaMethods : ['totp']);
+    }
     this.tokens = this.toTokenPair(res);
     this.user = res.user;
     await this.persistTokens();

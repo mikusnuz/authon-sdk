@@ -2,14 +2,15 @@ import type { BrandingConfig, OAuthProviderType } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
 import { getProviderButtonConfig } from './providers';
 import { getStrings, type TranslationStrings } from './i18n';
-
-function hexToRgba(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+import {
+  colorWithAlpha,
+  escapeHtml,
+  safeColor,
+  safeHttpUrl,
+  safeImageDataUrl,
+  safeRadius,
+  sanitizeCustomCss,
+} from './sanitize';
 
 const WALLET_OPTIONS = [
   { id: 'pexus', name: 'Pexus', color: '#7c3aed' },
@@ -26,7 +27,7 @@ function walletIconSvg(id: string): string {
     case 'phantom':
       return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#ab9ff2"/><circle cx="9" cy="11" r="1.5" fill="#fff"/><circle cx="15" cy="11" r="1.5" fill="#fff"/><path d="M6 12c0-3.3 2.7-6 6-6s6 2.7 6 6v2c0 1.1-.9 2-2 2H8c-1.1 0-2-.9-2-2v-2z" stroke="#fff" stroke-width="1.5" fill="none"/></svg>`;
     default:
-      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#666"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12">${id[0]?.toUpperCase() ?? 'W'}</text></svg>`;
+      return `<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect width="24" height="24" rx="6" fill="#666"/><text x="12" y="16" text-anchor="middle" fill="#fff" font-size="12">${escapeHtml(id[0]?.toUpperCase() ?? 'W')}</text></svg>`;
   }
 }
 
@@ -53,6 +54,7 @@ export class ModalRenderer {
 
   // Overlay state
   private currentOverlay: string = 'none';
+  private magicLinkConfirmHandlers: { onConfirm: () => void; onCancel: () => void } | null = null;
   private selectedWallet: string = '';
   private overlayEmail: string = '';
   private overlayError: string = '';
@@ -203,6 +205,26 @@ export class ModalRenderer {
     if (styleEl) {
       styleEl.textContent = this.buildCSS();
     }
+    this.applyCustomCss();
+  }
+
+  /** Project custom CSS lives in its own <style>, set via textContent so it cannot inject markup. */
+  private applyCustomCss(): void {
+    if (!this.shadowRoot) return;
+    const css = sanitizeCustomCss(this.branding.customCss);
+    let el = this.shadowRoot.getElementById('authon-custom-style');
+    if (!css) {
+      el?.remove();
+      return;
+    }
+    if (!el) {
+      el = document.createElement('style');
+      el.id = 'authon-custom-style';
+      const themeStyle = this.shadowRoot.getElementById('authon-theme-style');
+      if (themeStyle) themeStyle.after(el);
+      else this.shadowRoot.prepend(el);
+    }
+    el.textContent = css;
   }
 
   private startThemeObserver(): void {
@@ -257,7 +279,7 @@ export class ModalRenderer {
       btn.disabled = true;
       btn.style.opacity = '0.7';
     } else {
-      btn.innerHTML = btn.dataset.originalText || 'Continue';
+      btn.textContent = btn.dataset.originalText || 'Continue';
       btn.disabled = false;
       btn.style.opacity = '1';
     }
@@ -421,6 +443,15 @@ export class ModalRenderer {
     this.renderOverlay();
   }
 
+  /** Ask before using a magic link this browser did not request (login CSRF guard). */
+  showMagicLinkConfirm(email: string, onConfirm: () => void, onCancel: () => void): void {
+    this.overlayEmail = email;
+    this.overlayError = '';
+    this.magicLinkConfirmHandlers = { onConfirm, onCancel };
+    this.currentOverlay = 'magic-link-confirm';
+    this.renderOverlay();
+  }
+
   showPasskeySuccess(): void {
     this.overlayError = '';
     this.currentOverlay = 'passkey-success';
@@ -479,6 +510,7 @@ export class ModalRenderer {
 
     this.shadowRoot = host.attachShadow({ mode: 'open' });
     this.shadowRoot.innerHTML = this.buildShell(view);
+    this.applyCustomCss();
     this.attachInnerEvents(view);
     this.attachShellEvents();
 
@@ -529,7 +561,7 @@ export class ModalRenderer {
             const isWhiteBg = config.bgColor === '#ffffff';
             const btnBg = dark && isWhiteBg ? '#f8fafc' : config.bgColor;
             const btnBorder = isWhiteBg ? (dark ? '#475569' : '#e5e7eb') : config.bgColor;
-            return `<button class="provider-btn" data-provider="${p}" style="background:${btnBg};color:${config.textColor};border:1px solid ${btnBorder}">
+            return `<button class="provider-btn" data-provider="${escapeHtml(p)}" style="background:${btnBg};color:${config.textColor};border:1px solid ${btnBorder}">
               <span class="provider-icon">${config.iconSvg}</span>
               <span>${config.label}</span>
             </button>`;
@@ -589,14 +621,17 @@ export class ModalRenderer {
       ? `<div class="auth-methods">${methodButtons.join('')}</div>`
       : '';
 
+    const termsUrl = safeHttpUrl(b.termsUrl);
+    const privacyUrl = safeHttpUrl(b.privacyUrl);
     const footer =
-      b.termsUrl || b.privacyUrl
+      termsUrl || privacyUrl
         ? `<div class="footer">
-          ${b.termsUrl && /^https?:\/\//i.test(b.termsUrl) ? `<a href="${b.termsUrl}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ''}
-          ${b.termsUrl && b.privacyUrl ? ' · ' : ''}
-          ${b.privacyUrl && /^https?:\/\//i.test(b.privacyUrl) ? `<a href="${b.privacyUrl}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ''}
+          ${termsUrl ? `<a href="${escapeHtml(termsUrl)}" target="_blank" rel="noopener noreferrer">Terms of Service</a>` : ''}
+          ${termsUrl && privacyUrl ? ' · ' : ''}
+          ${privacyUrl ? `<a href="${escapeHtml(privacyUrl)}" target="_blank" rel="noopener noreferrer">Privacy Policy</a>` : ''}
         </div>`
         : '';
+    const logoUrl = safeImageDataUrl(b.logoDataUrl);
 
     const titleHtml = isSignUp
       ? `<div class="title-row">
@@ -608,9 +643,9 @@ export class ModalRenderer {
       : `<h2 class="title">${title}</h2>`;
 
     return `
-      ${b.logoDataUrl ? `<img src="${b.logoDataUrl}" alt="Logo" class="logo" />` : ''}
+      ${logoUrl ? `<img src="${escapeHtml(logoUrl)}" alt="Logo" class="logo" />` : ''}
       ${titleHtml}
-      ${b.brandName ? `<p class="brand-name">${b.brandName}</p>` : ''}
+      ${b.brandName ? `<p class="brand-name">${escapeHtml(b.brandName)}</p>` : ''}
       ${showProviders ? `<div class="providers">${providerButtons}</div>` : ''}
       ${divider}
       ${emailForm}
@@ -680,8 +715,8 @@ export class ModalRenderer {
   private buildCSS(): string {
     const b = this.branding;
     const dark = this.isDark();
-    const bg = dark ? (b.darkBg || '#0f172a') : (b.lightBg || '#ffffff');
-    const text = dark ? (b.darkText || '#f1f5f9') : (b.lightText || '#111827');
+    const bg = dark ? safeColor(b.darkBg, '#0f172a') : safeColor(b.lightBg, '#ffffff');
+    const text = dark ? safeColor(b.darkText, '#f1f5f9') : safeColor(b.lightText, '#111827');
     const mutedText = dark ? '#94a3b8' : '#6b7280';
     const dimText = dark ? '#64748b' : '#9ca3af';
     const borderColor = dark ? '#334155' : '#d1d5db';
@@ -690,8 +725,8 @@ export class ModalRenderer {
 
     return `
       :host {
-        --authon-primary-start: ${b.primaryColorStart || '#7c3aed'};
-        --authon-primary-end: ${b.primaryColorEnd || '#4f46e5'};
+        --authon-primary-start: ${safeColor(b.primaryColorStart, '#7c3aed')};
+        --authon-primary-end: ${safeColor(b.primaryColorEnd, '#4f46e5')};
         --authon-bg: ${bg};
         --authon-text: ${text};
         --authon-muted: ${mutedText};
@@ -699,11 +734,11 @@ export class ModalRenderer {
         --authon-border: ${borderColor};
         --authon-divider: ${dividerColor};
         --authon-input-bg: ${inputBg};
-        --authon-overlay-bg: ${hexToRgba(bg, 0.92)};
-        --authon-overlay-bg-solid: ${hexToRgba(bg, 0.97)};
+        --authon-overlay-bg: ${colorWithAlpha(bg, 0.92)};
+        --authon-overlay-bg-solid: ${colorWithAlpha(bg, 0.97)};
         --authon-backdrop-bg: rgba(0,0,0,${dark ? '0.7' : '0.5'});
         --authon-shadow-opacity: ${dark ? '0.5' : '0.25'};
-        --authon-radius: ${b.borderRadius ?? 12}px;
+        --authon-radius: ${safeRadius(b.borderRadius)}px;
         --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--authon-font);
         color: var(--authon-text);
@@ -1014,7 +1049,6 @@ export class ModalRenderer {
       @keyframes slideIn { from { opacity: 0; transform: translate(-50%, -48%); } to { opacity: 1; transform: translate(-50%, -50%); } }
       @keyframes check-draw { to { stroke-dashoffset: 0; } }
       @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
-      ${b.customCss || ''}
     `;
   }
 
@@ -1054,7 +1088,7 @@ export class ModalRenderer {
         const walletItems = WALLET_OPTIONS.map(w =>
           `<button class="wallet-btn" data-wallet="${w.id}">
             <span class="wallet-icon">${walletIconSvg(w.id)}</span>
-            <span>${w.name}</span>
+            <span>${escapeHtml(w.name)}</span>
           </button>`
         ).join('');
         return `
@@ -1122,6 +1156,16 @@ export class ModalRenderer {
         `;
       }
 
+      case 'magic-link-confirm': {
+        return `
+          <div class="overlay-title">${this.t.magicLinkConfirmTitle}</div>
+          <span class="overlay-subtitle">${this.t.magicLinkConfirmBody.replace('{email}', () => this.escapeHtml(this.overlayEmail))}</span>
+          ${errorHtml}
+          <button class="pwless-submit" id="magic-link-confirm-btn">${this.t.magicLinkConfirmButton}</button>
+          <button class="cancel-link" id="overlay-cancel">${this.t.cancel}</button>
+        `;
+      }
+
       case 'passwordless-sent': {
         return `
           <div class="success-check" style="background:linear-gradient(135deg, var(--authon-primary-start, #7c3aed), var(--authon-primary-end, #4f46e5))">
@@ -1186,7 +1230,21 @@ export class ModalRenderer {
     // Cancel button
     const cancelBtn = overlay.querySelector('#overlay-cancel');
     if (cancelBtn) {
-      cancelBtn.addEventListener('click', () => this.hideOverlay());
+      cancelBtn.addEventListener('click', () => {
+        const confirmHandlers = this.currentOverlay === 'magic-link-confirm' ? this.magicLinkConfirmHandlers : null;
+        this.magicLinkConfirmHandlers = null;
+        this.hideOverlay();
+        confirmHandlers?.onCancel();
+      });
+    }
+
+    const magicConfirmBtn = overlay.querySelector('#magic-link-confirm-btn');
+    if (magicConfirmBtn) {
+      magicConfirmBtn.addEventListener('click', () => {
+        const handlers = this.magicLinkConfirmHandlers;
+        this.magicLinkConfirmHandlers = null;
+        handlers?.onConfirm();
+      });
     }
 
     // Wallet buttons
@@ -1276,11 +1334,7 @@ export class ModalRenderer {
   }
 
   private escapeHtml(str: string): string {
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    return escapeHtml(str);
   }
 
   // ── Event binding ──

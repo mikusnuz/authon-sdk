@@ -1,6 +1,6 @@
 import type { ProjectOptions } from '../prompts.js';
 
-export const AUTHON_SDK_VERSION = '^0.9.0';
+export const AUTHON_SDK_VERSION = '^0.9.1';
 export const AUTHON_NODE_VERSION = '^0.3.0';
 
 export function generateEnvExample(options: ProjectOptions): string {

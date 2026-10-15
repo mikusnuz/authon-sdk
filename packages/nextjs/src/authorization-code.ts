@@ -167,3 +167,34 @@ export async function revokeAuthonSession(options: { secretKey: string; sessionI
   });
   if (!response.ok && response.status !== 404) throw new Error(`Authon session revoke failed (${response.status})`);
 }
+
+export type AuthonAuthorizationCallbackParams =
+  | { type: 'code'; code: string; state: string }
+  /**
+   * The account has MFA on. Show a TOTP form in the browser and finish with the SDK's
+   * `verifyMfa(mfaToken, code)`; Authon then issues the authorization code for this same request.
+   */
+  | { type: 'mfa_required'; mfaToken: string; state: string }
+  | { type: 'error'; error: string; state: string | null };
+
+/** Reads the query Authon sends back to a BFF callback route. */
+export function readAuthonAuthorizationCallback(
+  params: URLSearchParams | Record<string, string | string[] | undefined>,
+): AuthonAuthorizationCallbackParams {
+  const get = (key: string): string | null => {
+    if (params instanceof URLSearchParams) return params.get(key);
+    const value = params[key];
+    return Array.isArray(value) ? value[0] ?? null : value ?? null;
+  };
+  const state = get('state');
+  const error = get('error');
+  if (error === 'mfa_required') {
+    const mfaToken = get('mfa_token');
+    if (mfaToken && state) return { type: 'mfa_required', mfaToken, state };
+    return { type: 'error', error: 'invalid_mfa_callback', state };
+  }
+  if (error) return { type: 'error', error, state };
+  const code = get('code');
+  if (code && state) return { type: 'code', code, state };
+  return { type: 'error', error: 'invalid_callback', state };
+}

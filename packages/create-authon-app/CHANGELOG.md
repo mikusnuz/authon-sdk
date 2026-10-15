@@ -1,5 +1,9 @@
 # @authon/create-app
 
+## 0.1.7
+
+- Scaffold the 0.9.1 SDK release line (security release: OAuth PKCE code exchange, magic link browser binding, MFA on passwordless and web3 sign-in).
+
 ## 0.1.6
 
 - Scaffold the 0.9.0 SDK release line (embedded wallets, passkey and magic link fixes).

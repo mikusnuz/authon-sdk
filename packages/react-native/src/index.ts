@@ -9,6 +9,7 @@ export type { UseAuthonPasswordlessReturn } from './useAuthonPasswordless';
 export { useAuthonPasskeys } from './useAuthonPasskeys';
 export type { UseAuthonPasskeysReturn } from './useAuthonPasskeys';
 export { AuthonMobileClient } from './client';
+export { AuthonMfaRequiredError } from './types';
 export { ProviderIcon } from './icons';
 export { SocialButton } from './SocialButton';
 export type { SocialButtonProps } from './SocialButton';

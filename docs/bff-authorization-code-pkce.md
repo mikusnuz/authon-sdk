@@ -46,17 +46,27 @@ const { authorization } = await createAuthonAuthorizationRequest({
 Handle the callback entirely on the server:
 
 ```ts
-import { handleAuthonAuthorizationCallback } from '@authon/nextjs/server';
+import { handleAuthonAuthorizationCallback, readAuthonAuthorizationCallback } from '@authon/nextjs/server';
+
+const callback = readAuthonAuthorizationCallback(request.nextUrl.searchParams);
+if (callback.type === 'mfa_required') {
+  // The account has MFA on: render a TOTP form and finish in the browser with
+  // authon.verifyMfa(callback.mfaToken, totpCode). Authon then completes this same
+  // authorization request and redirects back here with a code.
+}
+if (callback.type !== 'code') throw new Error(callback.type === 'error' ? callback.error : 'mfa_required');
 
 const tokens = await handleAuthonAuthorizationCallback({
-  code: request.nextUrl.searchParams.get('code')!,
-  state: request.nextUrl.searchParams.get('state')!,
+  code: callback.code,
+  state: callback.state,
   redirectUri: process.env.AUTHON_REDIRECT_URI!,
   secretKey: process.env.AUTHON_SECRET_KEY!,
 });
 
 // Store tokens in your server-side session store. Never serialize them into HTML or JSON.
 ```
+
+Passwordless (code mode) and web3 sign-in for accounts with MFA come back as `?error=mfa_required&mfa_token=...&state=...` instead of a code. The MFA token is a short-lived first-factor token; it is not a session and needs the TOTP code.
 
 The helper stores the verifier, state, callback and timestamp in an encrypted `HttpOnly`, `SameSite=Lax` transaction cookie and deletes it before exchanging the code.
 

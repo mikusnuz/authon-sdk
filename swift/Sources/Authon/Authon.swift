@@ -20,11 +20,14 @@ public final class Authon: ObservableObject {
 
     // MARK: - Init
 
-    public init(publishableKey: String, apiURL: String = "https://api.authon.dev") {
+    /// - Parameter oauthCallbackScheme: URL scheme for web OAuth (Google, GitHub, ...), e.g.
+    ///   "com.example.app". Add "com.example.app://" to the project's allowed origins. Native
+    ///   Sign in with Apple does not need it.
+    public init(publishableKey: String, apiURL: String = "https://api.authon.dev", oauthCallbackScheme: String? = nil) {
         let api = AuthonAPI(publishableKey: publishableKey, apiURL: apiURL)
         self.api = api
         self.brandingManager = BrandingManager(api: api)
-        self.oauthManager = OAuthManager(api: api)
+        self.oauthManager = OAuthManager(api: api, callbackScheme: oauthCallbackScheme)
 
         // Temporary placeholders — replaced after init
         var refreshedHandler: ((TokenPair, AuthonUser) -> Void)!
@@ -202,8 +205,17 @@ public final class Authon: ObservableObject {
 
     // MARK: - OAuth
 
+    /// Signs in with an OAuth provider. For users with MFA enabled this throws
+    /// `AuthonMfaRequiredError` (and emits `.mfaRequired`); finish with
+    /// `verifyMfa(mfaToken:code:)`, exactly like `signIn(email:password:)`.
     public func signInWithOAuth(_ provider: OAuthProvider) async throws -> AuthonUser {
-        let response = try await oauthManager.authenticate(provider: provider)
+        let response: ApiAuthResponse
+        do {
+            response = try await oauthManager.authenticate(provider: provider)
+        } catch let mfaError as AuthonMfaRequiredError {
+            events.emit(.mfaRequired)
+            throw mfaError
+        }
         handleAuthSuccess(response)
         return response.user
     }
@@ -289,10 +301,11 @@ public final class Authon: ObservableObject {
             let email: String?
             let code: String?
         }
-        let response: ApiAuthResponse = try await api.request(
+        let result: OAuthExchangeResponse = try await api.request(
             "POST", "/v1/auth/passwordless/verify",
             body: Body(token: token, email: email, code: code)
         )
+        let response = try sessionOrEmitMfa(result)
         handleAuthSuccess(response)
         return response.user
     }
@@ -388,6 +401,17 @@ public final class Authon: ObservableObject {
         )
     }
 
+    /// Passwordless and web3 sign-in answer like password sign-in when the account has MFA on;
+    /// continue with `verifyMfa(mfaToken:code:)`.
+    private func sessionOrEmitMfa(_ result: OAuthExchangeResponse) throws -> ApiAuthResponse {
+        do {
+            return try result.sessionOrThrow()
+        } catch let mfaError as AuthonMfaRequiredError {
+            events.emit(.mfaRequired)
+            throw mfaError
+        }
+    }
+
     public func verifyWeb3Signature(message: String, signature: String, address: String, chain: Web3Chain, walletType: Web3WalletType) async throws -> AuthonUser {
         struct Body: Encodable {
             let message: String
@@ -396,10 +420,11 @@ public final class Authon: ObservableObject {
             let chain: Web3Chain
             let walletType: Web3WalletType
         }
-        let response: ApiAuthResponse = try await api.request(
+        let result: OAuthExchangeResponse = try await api.request(
             "POST", "/v1/auth/web3/verify",
             body: Body(message: message, signature: signature, address: address, chain: chain, walletType: walletType)
         )
+        let response = try sessionOrEmitMfa(result)
         handleAuthSuccess(response)
         return response.user
     }

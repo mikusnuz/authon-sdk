@@ -1,5 +1,15 @@
 # @authon/react-native
 
+## 0.9.1
+
+### Breaking Changes
+
+- OAuth uses PKCE: `startOAuth` needs `returnTo` (or `oauthReturnTo`) and `completeOAuth` needs the callback URL (or a later `handleOAuthCallback(url)`). The state alone no longer yields tokens, so 0.9.0 and earlier cannot finish social sign-in against the updated API.
+
+### Minor Changes
+
+- OAuth for users with MFA rejects with `AuthonMfaRequiredError` (carrying `mfaToken`) and emits `mfaRequired`. New `verifyMfa(mfaToken, code)` on the client and in `useAuthon()` finishes the sign-in.
+
 ## 0.9.0
 
 ### Minor Changes

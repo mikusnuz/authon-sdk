@@ -1,5 +1,10 @@
 # @authon/react
 
+## 0.9.1
+
+- Validate branding links and logo before rendering them in sign-in and sign-up forms.
+- Requires @authon/js 0.9.1 (OAuth PKCE code exchange, magic link browser binding, MFA on passwordless and web3 sign-in).
+
 ## 0.9.0
 
 ### Minor Changes

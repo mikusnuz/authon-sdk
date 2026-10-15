@@ -1,5 +1,16 @@
 # @authon/js
 
+## 0.9.1
+
+### Breaking Changes
+
+- OAuth now requires an Authon API with PKCE OAuth (`POST /v1/auth/oauth/token`). Redirect-mode OAuth (`flowMode: 'redirect'`, a provider configured for redirect, or the automatic redirect fallback when a popup is blocked) only completes with this SDK version or later; 0.9.0 and earlier cannot finish redirect sign-in against the updated API.
+- A one-time OAuth code is burned after 3 exchanges with a wrong verifier instead of the first one.
+
+### Patch Changes
+
+- OAuth sign-in for users with MFA throws `AuthonMfaRequiredError` and emits `mfaRequired`; finish with `verifyMfa(mfaToken, code)`.
+
 ## 0.9.0
 
 ### Minor Changes

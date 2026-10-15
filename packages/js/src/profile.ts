@@ -1,14 +1,7 @@
 import type { AuthonUser, BrandingConfig, SessionInfo } from '@authon/shared';
 import { DEFAULT_BRANDING } from '@authon/shared';
 import { getStrings, type TranslationStrings } from './i18n';
-
-function hexToRgba(hex: string, alpha: number): string {
-  const h = hex.replace('#', '');
-  const r = parseInt(h.substring(0, 2), 16);
-  const g = parseInt(h.substring(2, 4), 16);
-  const b = parseInt(h.substring(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
+import { colorWithAlpha, escapeHtml, safeAvatarUrl, safeColor, safeRadius } from './sanitize';
 
 function formatRelativeTime(dateStr: string | null): string {
   if (!dateStr) return '—';
@@ -291,10 +284,10 @@ export class ProfileRenderer {
       .slice(0, 2)
       .join('');
 
-    const safeAvatarUrl = u.avatarUrl && /^https?:\/\//i.test(u.avatarUrl) ? u.avatarUrl : null;
-    const avatarHtml = safeAvatarUrl
-      ? `<img class="avatar-img" src="${safeAvatarUrl.replace(/"/g, '&quot;')}" alt="${(u.displayName || '').replace(/"/g, '&quot;')}" />`
-      : `<div class="avatar-placeholder">${initials}</div>`;
+    const avatarUrl = safeAvatarUrl(u.avatarUrl);
+    const avatarHtml = avatarUrl
+      ? `<img class="avatar-img" src="${escapeHtml(avatarUrl)}" alt="${escapeHtml(u.displayName || '')}" />`
+      : `<div class="avatar-placeholder">${escapeHtml(initials)}</div>`;
 
     const closeBtn = this.mode === 'popup'
       ? `<button class="close-btn" id="profile-close-btn" aria-label="Close">
@@ -317,12 +310,12 @@ export class ProfileRenderer {
           <div class="section-label">${this.t.sessions}</div>
           <div class="sessions-list">
             ${this.sessions.map((s) => `
-              <div class="session-item" data-session-id="${s.id}">
+              <div class="session-item" data-session-id="${escapeHtml(s.id)}">
                 <div class="session-info">
-                  <span class="session-device">${parseUserAgent(s.userAgent)}</span>
-                  <span class="session-meta">${s.ipAddress || ''} &middot; ${formatRelativeTime(s.lastActiveAt)}</span>
+                  <span class="session-device">${escapeHtml(parseUserAgent(s.userAgent))}</span>
+                  <span class="session-meta">${escapeHtml(s.ipAddress || '')} &middot; ${escapeHtml(formatRelativeTime(s.lastActiveAt))}</span>
                 </div>
-                <button class="session-revoke-btn" data-session-id="${s.id}" aria-label="Revoke session">
+                <button class="session-revoke-btn" data-session-id="${escapeHtml(s.id)}" aria-label="Revoke session">
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                     <path d="M10.5 3.5L3.5 10.5M3.5 3.5l7 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                   </svg>
@@ -337,8 +330,8 @@ export class ProfileRenderer {
       <div class="profile-header">
         <div class="avatar-wrap">${avatarHtml}</div>
         <div class="header-text">
-          <div class="display-name">${u.displayName || '—'}</div>
-          <div class="email">${u.email || '—'}</div>
+          <div class="display-name">${escapeHtml(u.displayName || '—')}</div>
+          <div class="email">${escapeHtml(u.email || '—')}</div>
         </div>
         ${closeBtn}
       </div>
@@ -346,11 +339,11 @@ export class ProfileRenderer {
       <div class="section">
         <div class="field-row">
           <span class="field-label">${this.t.emailAddress}</span>
-          <span class="field-value readonly">${u.email || '—'}</span>
+          <span class="field-value readonly">${escapeHtml(u.email || '—')}</span>
         </div>
         <div class="field-row">
           <span class="field-label">${this.t.displayName}</span>
-          <span class="field-value">${u.displayName || '—'}</span>
+          <span class="field-value">${escapeHtml(u.displayName || '—')}</span>
         </div>
       </div>
 
@@ -370,7 +363,7 @@ export class ProfileRenderer {
         <div class="avatar-wrap">${avatarHtml}</div>
         <div class="header-text">
           <div class="display-name">${this.t.editProfile}</div>
-          <div class="email">${u.email || '—'}</div>
+          <div class="email">${escapeHtml(u.email || '—')}</div>
         </div>
         ${closeBtn}
       </div>
@@ -382,7 +375,7 @@ export class ProfileRenderer {
             id="profile-displayname-input"
             class="input"
             type="text"
-            value="${u.displayName || ''}"
+            value="${escapeHtml(u.displayName || '')}"
             placeholder="${this.t.displayName}"
             autocomplete="name"
           />
@@ -393,14 +386,14 @@ export class ProfileRenderer {
             id="profile-avatar-input"
             class="input"
             type="url"
-            value="${u.avatarUrl || ''}"
+            value="${escapeHtml(u.avatarUrl || '')}"
             placeholder="https://..."
             autocomplete="off"
           />
         </div>
         <div class="field-group">
           <label class="field-label">${this.t.emailAddress}</label>
-          <input class="input readonly" type="email" value="${u.email || ''}" disabled />
+          <input class="input readonly" type="email" value="${escapeHtml(u.email || '')}" disabled />
         </div>
       </div>
 
@@ -414,8 +407,9 @@ export class ProfileRenderer {
   private buildCSS(): string {
     const b = this.branding;
     const dark = this.isDark();
-    const bg = dark ? (b.darkBg || '#0f172a') : (b.lightBg || '#ffffff');
-    const text = dark ? (b.darkText || '#f1f5f9') : (b.lightText || '#111827');
+    const bg = dark ? safeColor(b.darkBg, '#0f172a') : safeColor(b.lightBg, '#ffffff');
+    const text = dark ? safeColor(b.darkText, '#f1f5f9') : safeColor(b.lightText, '#111827');
+    const primaryStart = safeColor(b.primaryColorStart, '#7c3aed');
     const mutedText = dark ? '#94a3b8' : '#6b7280';
     const dimText = dark ? '#64748b' : '#9ca3af';
     const borderColor = dark ? '#334155' : '#d1d5db';
@@ -426,8 +420,8 @@ export class ProfileRenderer {
 
     return `
       :host {
-        --authon-primary-start: ${b.primaryColorStart || '#7c3aed'};
-        --authon-primary-end: ${b.primaryColorEnd || '#4f46e5'};
+        --authon-primary-start: ${primaryStart};
+        --authon-primary-end: ${safeColor(b.primaryColorEnd, '#4f46e5')};
         --authon-bg: ${bg};
         --authon-text: ${text};
         --authon-muted: ${mutedText};
@@ -438,7 +432,7 @@ export class ProfileRenderer {
         --authon-section-bg: ${sectionBg};
         --authon-session-bg: ${sessionItemBg};
         --authon-backdrop-bg: rgba(0,0,0,${dark ? '0.7' : '0.5'});
-        --authon-radius: ${b.borderRadius ?? 12}px;
+        --authon-radius: ${safeRadius(b.borderRadius)}px;
         --authon-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-family: var(--authon-font);
         color: var(--authon-text);
@@ -563,7 +557,7 @@ export class ProfileRenderer {
         outline: none; transition: border-color 0.15s;
       }
       .input::placeholder { color: var(--authon-dim); }
-      .input:focus { border-color: var(--authon-primary-start); box-shadow: 0 0 0 3px ${hexToRgba(b.primaryColorStart || '#7c3aed', 0.15)}; }
+      .input:focus { border-color: var(--authon-primary-start); box-shadow: 0 0 0 3px ${colorWithAlpha(primaryStart, 0.15)}; }
       .input.readonly, .input:disabled { color: var(--authon-dim); cursor: not-allowed; background: var(--authon-section-bg); }
 
       .sessions-list { display: flex; flex-direction: column; gap: 6px; }

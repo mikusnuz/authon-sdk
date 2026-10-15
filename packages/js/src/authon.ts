@@ -29,6 +29,8 @@ import type {
   OAuthSignInOptions,
   OpenSignInOptions,
   SendMagicLinkOptions,
+  PendingMagicLink,
+  MagicLinkConfirmationReason,
 } from './types';
 import { AuthonMfaRequiredError } from './types';
 import { ModalRenderer } from './modal';
@@ -37,18 +39,72 @@ import { SessionManager } from './session';
 import type { SessionChangeListener } from './session';
 import { generateQrSvg } from './qrcode';
 import { AuthonWalletError, WalletClient } from './wallet';
+import {
+  OAUTH_CODE_PARAM,
+  OAUTH_ERROR_PARAM,
+  OAUTH_POPUP_PARAM,
+  OAUTH_STATE_PARAM,
+  createPkcePair,
+  currentReturnUrl,
+  generateCodeVerifier,
+  handoffKey,
+  pruneHandoffs,
+  saveRedirectVerifier,
+  takeHandoff,
+  takeRedirectVerifier,
+  writeHandoff,
+} from './oauth-pkce';
+import type { OAuthHandoff } from './oauth-pkce';
 
 const DEFAULT_API_URL = 'https://api.authon.dev';
 const DEFAULT_WALLET_ORIGIN = 'https://wallet.authon.dev';
 /** Query flag Authon adds to magic links; `token` alone is too generic to claim. */
 export const MAGIC_LINK_PARAM = 'authon_magic_link';
 
-type PasswordlessVerifyResponse = AuthTokens | AuthorizationCodeResult;
+/** Body Authon returns instead of a session when the account has a second factor (any sign-in method). */
+interface MfaRequiredResponse {
+  mfaRequired: true;
+  mfaToken: string;
+  mfaMethods?: string[];
+}
+
+function isMfaRequired(value: unknown): value is MfaRequiredResponse {
+  return !!value && typeof value === 'object'
+    && (value as { mfaRequired?: unknown }).mfaRequired === true
+    && typeof (value as { mfaToken?: unknown }).mfaToken === 'string';
+}
+
+type PasswordlessVerifyResponse = AuthTokens | AuthorizationCodeResult | MfaRequiredResponse;
+/** What /verify returns instead of a session when the link must be confirmed first. */
+interface MagicLinkConfirmationResponse {
+  status: 'confirmation_required';
+  email: string;
+  reason?: MagicLinkConfirmationReason;
+}
+type MagicLinkVerifyResponse = PasswordlessVerifyResponse | MagicLinkConfirmationResponse;
+
+function isMagicLinkConfirmation(value: unknown): value is MagicLinkConfirmationResponse {
+  return !!value && typeof value === 'object'
+    && (value as { status?: unknown }).status === 'confirmation_required'
+    && typeof (value as { email?: unknown }).email === 'string';
+}
+
 /**
  * In-flight magic link verifications, shared by every Authon instance on the page (React strict
  * mode and app code calling verifyPasswordless({ token }) must not consume the same link twice).
+ * Keys end in `|load` (page-load check, finishes only in the requesting browser) or `|confirm`.
  */
-const magicLinkResponses = new Map<string, Promise<PasswordlessVerifyResponse>>();
+const magicLinkResponses = new Map<string, Promise<MagicLinkVerifyResponse>>();
+
+/**
+ * Magic link token taken from this page's URL, per apiUrl|publishableKey, until its page-load check
+ * settles. The first instance strips the URL at once, so a second instance created meanwhile
+ * (React strict mode) joins the same check instead of seeing no link.
+ */
+const pageMagicLinkTokens = new Map<string, string>();
+
+/** localStorage key of the random value that ties a requested magic link to this browser. */
+const MAGIC_LINK_NONCE_KEY = 'authon_magic_link_nonce:';
 
 interface ProvidersResponse {
   providers: OAuthProviderType[];
@@ -77,6 +133,7 @@ export class Authon {
   private authorizationContext: { options: AuthorizationCodeOptions; requestId: string } | null = null;
   private verificationToken: string | null = null;
   private magicLinkResult: Promise<AuthonUser | null> | null = null;
+  private pendingMagicLink: (PendingMagicLink & { token: string }) | null = null;
 
   constructor(publishableKey: string, config?: AuthonConfig) {
     this.publishableKey = publishableKey;
@@ -166,7 +223,17 @@ export class Authon {
     return this.authorizationContext ? { authorizationRequestId: this.authorizationContext.requestId } : {};
   }
 
-  private handleAuthCompletion(response: AuthTokens | AuthorizationCodeResult): AuthonUser {
+  /**
+   * Every sign-in path (password, magic link, email code, wallet, passkey, OAuth) ends here. An
+   * `mfaRequired` body is handled the same way for all of them: `mfaRequired` event +
+   * AuthonMfaRequiredError carrying the token for `verifyMfa()`. In authorization code mode the
+   * request stays open and `verifyMfa()` finishes it.
+   */
+  private handleAuthCompletion(response: AuthTokens | AuthorizationCodeResult | MfaRequiredResponse): AuthonUser {
+    if (isMfaRequired(response)) {
+      this.emit('mfaRequired', response.mfaToken);
+      throw new AuthonMfaRequiredError(response.mfaToken);
+    }
     if (this.authorizationContext) {
       const candidate = response as Partial<AuthTokens & AuthorizationCodeResult>;
       if (candidate.accessToken || candidate.refreshToken || !candidate.authorizationCode) {
@@ -420,21 +487,56 @@ export class Authon {
 
   async sendMagicLink(email: string, options?: SendMagicLinkOptions): Promise<void> {
     const redirectUrl = options?.redirectUrl ?? this.magicLinkReturnUrl();
-    await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', {
-      email,
-      ...(redirectUrl ? { redirectUrl } : {}),
-      ...this.authorizationRequestBody(),
-    });
+    // Code mode links finish on the Authon server and are bound by PKCE/state instead.
+    const previousNonce = this.readMagicLinkNonce();
+    const browserNonce = this.authorizationContext ? null : this.createMagicLinkNonce();
+    try {
+      await this.apiPost<{ message: string }>('/v1/auth/passwordless/magic-link', {
+        email,
+        ...(redirectUrl ? { redirectUrl } : {}),
+        ...(browserNonce ? { browserNonce } : {}),
+        ...this.authorizationRequestBody(),
+      });
+    } catch (err) {
+      // No new link was sent, so an earlier link from this browser must keep working.
+      if (browserNonce) this.restoreMagicLinkNonce(previousNonce);
+      throw err;
+    }
   }
 
   /**
    * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
-   * returns the verification already started on page load. Resolves to null when the URL has no link
-   * or the link could not be used (the reason is emitted as an `error` event).
+   * returns the verification already started on page load. Resolves to null when the URL has no link,
+   * the link could not be used (the reason is emitted as an `error` event), or the link needs the
+   * person's confirmation first (see `getPendingMagicLink()` / `magicLinkConfirmationRequired`).
    */
   handleMagicLink(): Promise<AuthonUser | null> {
     if (!this.magicLinkResult) this.magicLinkResult = this.consumeMagicLinkFromUrl();
     return this.magicLinkResult;
+  }
+
+  /**
+   * The magic link from this page that was not used automatically because it was requested in
+   * another browser, or someone is already signed in here. Show "Sign in as {email}?" and call
+   * `confirmMagicLink()` or `dismissMagicLink()`.
+   */
+  getPendingMagicLink(): PendingMagicLink | null {
+    if (!this.pendingMagicLink) return null;
+    return { email: this.pendingMagicLink.email, reason: this.pendingMagicLink.reason };
+  }
+
+  /** Sign in with the pending magic link after the person agreed. Replaces any current session. */
+  async confirmMagicLink(): Promise<AuthonUser> {
+    const pending = this.pendingMagicLink;
+    if (!pending) throw new Error('No magic link is waiting for confirmation');
+    const user = await this.verifyPasswordless({ token: pending.token });
+    if (this.pendingMagicLink?.token === pending.token) this.pendingMagicLink = null;
+    return user;
+  }
+
+  /** Forget the pending magic link without signing in. The link itself stays unused. */
+  dismissMagicLink(): void {
+    this.pendingMagicLink = null;
   }
 
   async sendEmailOtp(email: string): Promise<void> {
@@ -447,14 +549,18 @@ export class Authon {
     code?: string;
   }): Promise<AuthonUser> {
     if (options.token && !options.email && !options.code) {
-      const key = `${this.config.apiUrl}|${this.publishableKey}|${options.token}`;
-      let pending = magicLinkResponses.get(key);
-      if (!pending) {
-        pending = this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', { token: options.token });
-        magicLinkResponses.set(key, pending);
-        pending.catch(() => undefined);
+      // An explicit call is the app's (or person's) decision, so no same-browser check. If the
+      // page-load check for this link already signed in, reuse that instead of a second request.
+      const base = this.magicLinkRequestKey(options.token);
+      const onLoad = magicLinkResponses.get(`${base}|load`);
+      if (onLoad) {
+        const loaded = await onLoad.catch(() => null);
+        if (loaded && !isMagicLinkConfirmation(loaded)) return this.handleAuthCompletion(loaded);
       }
-      return this.handleAuthCompletion(await pending);
+      const res = await this.sharedMagicLinkRequest(`${base}|confirm`, { token: options.token });
+      if (isMagicLinkConfirmation(res)) throw new Error('Magic link needs confirmation');
+      if (this.pendingMagicLink?.token === options.token) this.pendingMagicLink = null;
+      return this.handleAuthCompletion(res);
     }
     const res = await this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', options);
     return this.handleAuthCompletion(res);
@@ -568,7 +674,7 @@ export class Authon {
     chain: Web3Chain,
     walletType: Web3WalletType,
   ): Promise<AuthonUser> {
-    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult>('/v1/auth/web3/verify', {
+    const res = await this.apiPost<AuthTokens | AuthorizationCodeResult | MfaRequiredResponse>('/v1/auth/web3/verify', {
       message,
       signature,
       address,
@@ -796,6 +902,27 @@ export class Authon {
     }
   }
 
+  private showBuiltInMagicLinkConfirm(email: string): void {
+    if (typeof document === 'undefined') return;
+    void this.openSignIn()
+      .then(() => {
+        const modal = this.getModal();
+        modal.showMagicLinkConfirm(
+          email,
+          () => {
+            this.confirmMagicLink()
+              .then(() => modal.close())
+              .catch((err) => modal.showOverlayError(err instanceof Error ? err.message : String(err)));
+          },
+          () => {
+            this.dismissMagicLink();
+            modal.close();
+          },
+        );
+      })
+      .catch(() => undefined);
+  }
+
   private getModal(): ModalRenderer {
     if (!this.modal) {
       this.modal = new ModalRenderer({
@@ -931,7 +1058,16 @@ export class Authon {
         return;
       }
 
-      const { url, state } = await this.requestOAuthAuthorization(provider, 'popup');
+      // BFF code mode (responseType 'code') keeps its own PKCE pair on the app server.
+      // Every other flow uses a verifier that only this SDK instance knows.
+      const codeMode = Boolean(this.authorizationContext);
+      const pkce = codeMode ? null : await createPkcePair();
+      const { url, state } = await this.requestOAuthAuthorization(
+        provider,
+        'popup',
+        pkce ? currentReturnUrl() : undefined,
+        pkce?.challenge,
+      );
 
       this.modal?.showLoading();
 
@@ -960,50 +1096,63 @@ export class Authon {
 
       let resolved = false;
       let cleaned = false;
-      const storageKey = `authon-oauth-${state}`;
+      const storageKey = handoffKey(state);
 
-      const codeMode = Boolean(this.authorizationContext);
-      const resolve = (response: AuthTokens | AuthorizationCodeResult) => {
+      const closePopup = () => {
+        try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
+      };
+
+      const resolve = (response: AuthorizationCodeResult) => {
         if (resolved) return;
         resolved = true;
         cleanup();
-        try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
-        if (!codeMode) {
-          try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
-        }
+        closePopup();
         this.handleAuthCompletion(response);
         this.modal?.close();
       };
 
       const handleError = (msg: string) => {
         if (resolved) return;
+        resolved = true;
         cleanup();
+        closePopup();
         this.session.clearSession();
         this.modal?.hideLoading();
         this.modal?.showError(msg);
         this.emit('error', new Error(msg));
       };
 
-      const pollApi = async () => {
+      // PKCE mode: trade the one-time code for a session with this instance's verifier.
+      const redeem = async (code: string) => {
+        if (resolved || !pkce) return;
+        resolved = true;
+        cleanup();
+        closePopup();
+        try {
+          await this.redeemOAuthCode(code, pkce.verifier);
+          this.modal?.close();
+        } catch (err) {
+          if (err instanceof AuthonMfaRequiredError) {
+            this.modal?.close();
+            return;
+          }
+          const msg = err instanceof Error ? err.message : String(err);
+          this.modal?.hideLoading();
+          this.modal?.showError(msg);
+          this.emit('error', err instanceof Error ? err : new Error(msg));
+        }
+      };
+
+      // Status only: the poll never carries tokens or codes. It just reports failures early.
+      const pollStatus = async () => {
         if (resolved || cleaned) return;
         try {
-          const result = await this.apiGet<{ status: string; accessToken?: string; refreshToken?: string; authorizationCode?: string; state?: string; expiresIn?: number; user?: AuthonUser; message?: string }>(
+          const result = await this.apiGet<{ status: string; message?: string }>(
             `/v1/auth/oauth/poll?state=${encodeURIComponent(state)}`,
           );
-          if (codeMode && result.status === 'completed' && result.authorizationCode) {
-            resolve({ authorizationCode: result.authorizationCode, state: result.state!, expiresIn: result.expiresIn! });
-          } else if (result.status === 'completed' && result.accessToken) {
-            resolve({
-              accessToken: result.accessToken,
-              refreshToken: result.refreshToken!,
-              expiresIn: result.expiresIn!,
-              user: result.user!,
-            });
-          } else if (result.status === 'error') {
-            handleError(result.message || 'Authentication failed');
-          }
+          if (result.status === 'error') handleError(result.message || 'Authentication failed');
         } catch {
-          // Network error — keep polling
+          // Network error — keep waiting
         }
       };
 
@@ -1018,7 +1167,7 @@ export class Authon {
         if (maxTimer) clearTimeout(maxTimer);
       };
 
-      // 1. postMessage handler (fast path — Chrome/Firefox desktop)
+      // 1. postMessage from the Authon popup page (sent only to this exact origin)
       const expectedOrigin = new URL(this.config.apiUrl).origin;
       const messageHandler = (e: MessageEvent) => {
         if (e.origin !== expectedOrigin || e.source !== popup) return;
@@ -1040,58 +1189,58 @@ export class Authon {
           resolve({ authorizationCode: e.data.authorizationCode, state: e.data.state, expiresIn: e.data.expiresIn });
           return;
         }
-        if (e.data?.type === 'authon-oauth-callback' && e.data.tokens) {
-          resolve(e.data.tokens as AuthTokens);
+        if (e.data?.state !== state) return;
+        if (e.data?.type === 'authon-oauth-error') {
+          handleError(typeof e.data.error === 'string' ? e.data.error : 'Authentication failed');
+          return;
+        }
+        if (e.data?.type === 'authon-oauth-pkce' && typeof e.data.code === 'string') {
+          void redeem(e.data.code);
         }
       };
       window.addEventListener('message', messageHandler);
 
-      // 2. localStorage handler (mobile fallback — cross-tab communication)
+      // 2. Same-origin handoff (popup lost its opener and finished on this origin)
+      const consumeHandoff = (value: OAuthHandoff | null) => {
+        if (!value) return;
+        if (value.code) void redeem(value.code);
+        else if (value.error) handleError(value.error);
+      };
       const storageHandler = (e: StorageEvent) => {
         if (e.key !== storageKey || !e.newValue) return;
-        try {
-          const data = JSON.parse(e.newValue);
-          if (data.tokens) resolve(data.tokens as AuthTokens);
-          else if (data.error) handleError(data.error);
-        } catch { /* ignore */ }
+        consumeHandoff(takeHandoff(state));
       };
-      if (!codeMode) window.addEventListener('storage', storageHandler);
-
-      // Also check localStorage immediately in case it was set before listener
       if (!codeMode) {
-        try {
-          const existing = localStorage.getItem(storageKey);
-          if (existing) {
-            const data = JSON.parse(existing);
-            if (data.tokens) { resolve(data.tokens as AuthTokens); return; }
-          }
-        } catch { /* ignore */ }
+        window.addEventListener('storage', storageHandler);
+        consumeHandoff(takeHandoff(state));
+        if (resolved) return;
       }
 
-      // 3. API polling (fallback for all browsers)
-      const apiPollTimer = setInterval(pollApi, 1500);
+      // 3. Status polling (error detection only)
+      const apiPollTimer = setInterval(pollStatus, 1500);
 
-      // 4. visibilitychange — poll immediately when tab regains focus (mobile)
+      // 4. visibilitychange — check immediately when the tab regains focus (mobile)
       const visibilityHandler = () => {
         if (document.visibilityState === 'visible' && !resolved && !cleaned) {
-          pollApi();
+          if (!codeMode) consumeHandoff(takeHandoff(state));
+          void pollStatus();
         }
       };
       document.addEventListener('visibilitychange', visibilityHandler);
 
-      // 5. Popup close detection
+      // 5. Popup close detection. A popup that lost its opener also reports closed, and may still
+      // hand the code over through storage, so keep listening until the max timeout.
       const closePollTimer = setInterval(() => {
         if (resolved || cleaned) return;
         try {
           if (popup && popup.closed) {
             clearInterval(closePollTimer);
-            // Poll immediately + give a few more seconds
-            pollApi();
+            void pollStatus();
             setTimeout(() => {
               if (resolved || cleaned) return;
-              pollApi().then(() => {
+              void pollStatus().then(() => {
                 if (resolved || cleaned) return;
-                cleanup();
+                if (codeMode) cleanup();
                 this.modal?.hideLoading();
               });
             }, 3000);
@@ -1113,6 +1262,24 @@ export class Authon {
     }
   }
 
+  /**
+   * Exchanges a one-time OAuth code from Authon for a session. Requires the verifier generated by
+   * the SDK instance that started the flow. A wrong verifier counts as a failed attempt; Authon
+   * burns the code after 3. Throws AuthonMfaRequiredError (and emits `mfaRequired`) when the user
+   * has MFA enabled; finish with verifyMfa(error.mfaToken, code).
+   */
+  private async redeemOAuthCode(code: string, codeVerifier: string): Promise<AuthonUser> {
+    const res = await this.apiPost<AuthTokens & { mfaRequired?: boolean; mfaToken?: string }>(
+      '/v1/auth/oauth/token',
+      { code, codeVerifier },
+    );
+    if (res.mfaRequired && res.mfaToken) {
+      this.emit('mfaRequired', res.mfaToken);
+      throw new AuthonMfaRequiredError(res.mfaToken);
+    }
+    return this.handleAuthCompletion(res);
+  }
+
   private normalizeFlowMode(mode: unknown): OAuthFlowMode {
     if (mode === 'popup' || mode === 'redirect' || mode === 'auto') {
       return mode;
@@ -1124,6 +1291,7 @@ export class Authon {
     provider: OAuthProviderType,
     flowMode: 'popup' | 'redirect',
     returnTo?: string,
+    codeChallenge?: string,
   ): Promise<{ url: string; state: string; flowMode?: 'popup' | 'redirect' }> {
     const redirectUri = `${this.config.apiUrl}/v1/auth/oauth/redirect`;
     const params = new URLSearchParams({
@@ -1136,6 +1304,9 @@ export class Authon {
     }
     if (this.authorizationContext) {
       params.set('authorizationRequestId', this.authorizationContext.requestId);
+    } else if (codeChallenge) {
+      params.set('codeChallenge', codeChallenge);
+      params.set('codeChallengeMethod', 'S256');
     }
 
     return this.apiGet<{ url: string; state: string; flowMode?: 'popup' | 'redirect' }>(
@@ -1144,13 +1315,19 @@ export class Authon {
   }
 
   private async startRedirectOAuthFlow(provider: OAuthProviderType): Promise<void> {
-    const { url } = await this.requestOAuthAuthorization(
+    const pkce = this.authorizationContext ? null : await createPkcePair();
+    const { url, state } = await this.requestOAuthAuthorization(
       provider,
       'redirect',
-      window.location.href,
+      pkce ? currentReturnUrl() : window.location.href,
+      pkce?.challenge,
     );
+    if (pkce) saveRedirectVerifier(state, pkce.verifier);
     window.location.assign(url);
   }
+
+  /** Pending redirect sign-in started from this tab, if the page was opened with its result. */
+  private oauthRedirectResult: Promise<AuthonUser | null> | null = null;
 
   private consumeRedirectResultFromUrl(): void {
     if (typeof window === 'undefined') return;
@@ -1162,39 +1339,49 @@ export class Authon {
       return;
     }
 
-    const state = currentUrl.searchParams.get('authon_oauth_state');
-    const explicitError = currentUrl.searchParams.get('authon_oauth_error');
-    if (!state && !explicitError) return;
+    pruneHandoffs();
 
-    let consumed = false;
+    const code = currentUrl.searchParams.get(OAUTH_CODE_PARAM);
+    const state = currentUrl.searchParams.get(OAUTH_STATE_PARAM);
+    const explicitError = currentUrl.searchParams.get(OAUTH_ERROR_PARAM);
+    const fromPopup = currentUrl.searchParams.get(OAUTH_POPUP_PARAM) === '1';
+    if (!code && !state && !explicitError) return;
 
-    if (state) {
-      try {
-        const storageKey = `authon-oauth-${state}`;
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          const data = JSON.parse(stored) as { tokens?: AuthTokens; error?: string };
-          if (data.tokens) {
-            this.session.setSession(data.tokens);
-            consumed = true;
-          } else if (data.error) {
-            this.emit('error', new Error(data.error));
-            consumed = true;
-          }
-          localStorage.removeItem(storageKey);
-        }
-      } catch {
-        // Ignore storage parsing failures
-      }
+    // Remove the one-time values from the address bar and history right away.
+    for (const param of [OAUTH_CODE_PARAM, OAUTH_STATE_PARAM, OAUTH_ERROR_PARAM, OAUTH_POPUP_PARAM]) {
+      currentUrl.searchParams.delete(param);
+    }
+    window.history.replaceState({}, '', currentUrl.toString());
+
+    if (fromPopup && state) {
+      // This page is the sign-in popup that lost its opener. Hand the result to the SDK instance
+      // waiting in the opener tab (same origin only) and close.
+      writeHandoff(state, code ? { code } : { error: explicitError || 'Authentication failed' });
+      try { window.close(); } catch { /* ignore */ }
+      return;
     }
 
-    if (!consumed && explicitError) {
+    if (code && state) {
+      const verifier = takeRedirectVerifier(state);
+      if (verifier) {
+        this.oauthRedirectResult = this.redeemOAuthCode(code, verifier).catch((err) => {
+          if (!(err instanceof AuthonMfaRequiredError)) {
+            this.emit('error', err instanceof Error ? err : new Error(String(err)));
+          }
+          return null;
+        });
+        return;
+      }
+      // Not started from this tab (or forged): never redeem it. The deliberately wrong verifier
+      // counts toward the code's failed-attempt limit, after which Authon burns it.
+      void this.apiPost('/v1/auth/oauth/token', { code, codeVerifier: generateCodeVerifier() }).catch(() => undefined);
+      return;
+    }
+
+    if (explicitError) {
+      if (state) takeRedirectVerifier(state);
       this.emit('error', new Error(explicitError));
     }
-
-    currentUrl.searchParams.delete('authon_oauth_state');
-    currentUrl.searchParams.delete('authon_oauth_error');
-    window.history.replaceState({}, '', currentUrl.toString());
   }
 
   private async apiGet<T>(path: string): Promise<T> {
@@ -1326,36 +1513,161 @@ export class Authon {
     }
   }
 
-  private consumeMagicLinkFromUrl(): Promise<AuthonUser | null> {
-    if (typeof window === 'undefined') return Promise.resolve(null);
+  private magicLinkRequestKey(token: string): string {
+    return `${this.config.apiUrl}|${this.publishableKey}|${token}`;
+  }
+
+  private sharedMagicLinkRequest(key: string, body: Record<string, unknown>): Promise<MagicLinkVerifyResponse> {
+    let pending = magicLinkResponses.get(key);
+    if (!pending) {
+      pending = this.apiPost<MagicLinkVerifyResponse>('/v1/auth/passwordless/verify', body);
+      magicLinkResponses.set(key, pending);
+      pending.catch(() => undefined);
+    }
+    return pending;
+  }
+
+  private magicLinkNonceKey(): string {
+    return `${MAGIC_LINK_NONCE_KEY}${this.config.apiUrl}|${this.publishableKey}`;
+  }
+
+  /**
+   * New random value for a link request, kept in this origin's localStorage (shared by its tabs, so
+   * the link may open in a new tab). Null when there is no browser storage; such links always ask
+   * for confirmation.
+   */
+  private createMagicLinkNonce(): string | null {
+    if (typeof window === 'undefined' || this.config.sessionMode !== 'browser') return null;
+    try {
+      const bytes = new Uint8Array(32);
+      crypto.getRandomValues(bytes);
+      let binary = '';
+      for (const byte of bytes) binary += String.fromCharCode(byte);
+      const nonce = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      localStorage.setItem(this.magicLinkNonceKey(), nonce);
+      return localStorage.getItem(this.magicLinkNonceKey()) === nonce ? nonce : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private readMagicLinkNonce(): string | null {
+    try {
+      return localStorage.getItem(this.magicLinkNonceKey());
+    } catch {
+      return null;
+    }
+  }
+
+  private restoreMagicLinkNonce(previous: string | null): void {
+    try {
+      if (previous) localStorage.setItem(this.magicLinkNonceKey(), previous);
+      else localStorage.removeItem(this.magicLinkNonceKey());
+    } catch {
+      // ignore
+    }
+  }
+
+  private clearMagicLinkNonce(): void {
+    try {
+      localStorage.removeItem(this.magicLinkNonceKey());
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
+   * Read a magic link token from the URL (fragment form first, then the older query form) and
+   * remove it from the address bar and history right away, before any request is made.
+   */
+  private takeMagicLinkTokenFromUrl(): string | null {
+    if (typeof window === 'undefined') return null;
     let url: URL;
     try {
       url = new URL(window.location.href);
     } catch {
-      return Promise.resolve(null);
+      return null;
     }
-    if (url.searchParams.get(MAGIC_LINK_PARAM) !== '1') return Promise.resolve(null);
-    const token = url.searchParams.get('token');
-    const cleanUrl = () => {
-      try {
-        const current = new URL(window.location.href);
-        current.searchParams.delete('token');
-        current.searchParams.delete(MAGIC_LINK_PARAM);
-        window.history.replaceState(window.history.state, '', current.toString());
-      } catch {
-        // ignore
-      }
-    };
-    if (!token) {
-      cleanUrl();
-      return Promise.resolve(null);
+    const hash = new URLSearchParams(url.hash.replace(/^#/, ''));
+    const inHash = hash.get(MAGIC_LINK_PARAM) === '1';
+    const inQuery = url.searchParams.get(MAGIC_LINK_PARAM) === '1';
+    if (!inHash && !inQuery) return null;
+    const token = (inHash ? hash.get('token') : null) || (inQuery ? url.searchParams.get('token') : null);
+    if (inQuery) {
+      url.searchParams.delete('token');
+      url.searchParams.delete(MAGIC_LINK_PARAM);
     }
-    return this.verifyPasswordless({ token })
-      .then((user) => user, (err) => {
-        this.emit('error', err instanceof Error ? err : new Error(String(err)));
-        return null;
+    if (inHash) {
+      hash.delete('token');
+      hash.delete(MAGIC_LINK_PARAM);
+      const rest = hash.toString();
+      url.hash = rest ? `#${rest}` : '';
+    }
+    try {
+      window.history.replaceState(window.history.state, '', url.toString());
+    } catch {
+      // ignore
+    }
+    return token || null;
+  }
+
+  /**
+   * Page-load handling. The link finishes silently only when this browser holds the value sent with
+   * the request and nobody is signed in; otherwise it is left unused and the app is asked to confirm.
+   * That stops a link someone else requested (for their own account) from signing this browser in.
+   */
+  private consumeMagicLinkFromUrl(): Promise<AuthonUser | null> {
+    const pageKey = `${this.config.apiUrl}|${this.publishableKey}`;
+    const fromUrl = this.takeMagicLinkTokenFromUrl();
+    const token = fromUrl ?? pageMagicLinkTokens.get(pageKey) ?? null;
+    if (!token) return Promise.resolve(null);
+
+    const key = `${this.magicLinkRequestKey(token)}|load`;
+    let pending = magicLinkResponses.get(key);
+    if (!pending) {
+      pageMagicLinkTokens.set(pageKey, token);
+      pending = (async (): Promise<MagicLinkVerifyResponse> => {
+        try {
+          await this.session.waitUntilReady();
+        } catch {
+          // a failed refresh just means nobody is signed in
+        }
+        const signedIn = this.session.getUser() !== null;
+        const browserNonce = signedIn ? null : this.readMagicLinkNonce();
+        const res = await this.apiPost<MagicLinkVerifyResponse>('/v1/auth/passwordless/verify', {
+          token,
+          requireBrowserBinding: true,
+          ...(browserNonce ? { browserNonce } : {}),
+        });
+        if (isMagicLinkConfirmation(res)) return { ...res, reason: signedIn ? 'signed_in' : 'unrecognized_browser' };
+        return res;
+      })();
+      magicLinkResponses.set(key, pending);
+      pending.catch(() => undefined).finally(() => {
+        if (pageMagicLinkTokens.get(pageKey) === token) pageMagicLinkTokens.delete(pageKey);
+      });
+    }
+
+    return pending
+      .then((res) => {
+        if (isMagicLinkConfirmation(res)) {
+          const reason = res.reason ?? 'unrecognized_browser';
+          this.pendingMagicLink = { token, email: res.email, reason };
+          this.emit('magicLinkConfirmationRequired', { email: res.email, reason });
+          // Apps that do not handle the event get the built-in confirmation instead of a silent stop.
+          if (!this.listeners.get('magicLinkConfirmationRequired')?.size) this.showBuiltInMagicLinkConfirm(res.email);
+          return null;
+        }
+        this.clearMagicLinkNonce();
+        return this.handleAuthCompletion(res);
       })
-      .finally(cleanUrl);
+      .catch((err) => {
+        // MFA is not a failure: `mfaRequired` was emitted with the token for verifyMfa().
+        if (!(err instanceof AuthonMfaRequiredError)) {
+          this.emit('error', err instanceof Error ? err : new Error(String(err)));
+        }
+        return null;
+      });
   }
 
   // ── WebAuthn helpers ──
