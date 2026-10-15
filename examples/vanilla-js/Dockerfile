@@ -11,6 +11,8 @@ WORKDIR /app
 COPY --from=sdk-build /app/packages/ ./packages/
 COPY examples/vanilla-js/ ./examples/vanilla-js/
 WORKDIR /app/examples/vanilla-js
+# Example package.json files use workspace:* for local development; npm needs file: paths.
+RUN node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));for(const k of ['dependencies','devDependencies'])for(const d in p[k]||{})if(String(p[k][d]).startsWith('workspace:'))p[k][d]='file:../../packages/'+d.replace('@authon/','');fs.writeFileSync('package.json',JSON.stringify(p,null,2))"
 RUN npm install
 ARG VITE_AUTHON_PUBLISHABLE_KEY
 ARG VITE_AUTHON_API_URL
