@@ -36,6 +36,16 @@ function signOut() {
 
 <template>
   <div class="page">
+    <ClientOnly>
+      <template #fallback>
+      <div class="auth-page">
+        <div class="hero">
+          <div class="badge">@authon/nuxt SDK</div>
+          <p class="subtitle">Loading...</p>
+        </div>
+      </div>
+      </template>
+
       <div v-if="isLoading" class="auth-page">
         <div class="hero">
           <div class="badge">@authon/nuxt SDK</div>
@@ -168,5 +178,6 @@ function signOut() {
         <WalletPanel />
       </div>
     </div>
+    </ClientOnly>
   </div>
 </template>
