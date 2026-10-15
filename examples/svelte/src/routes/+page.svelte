@@ -3,6 +3,9 @@
   import { getAuthon } from '@authon/svelte'
   import type { AuthonStore } from '@authon/svelte'
   import type { AuthonUser } from '@authon/shared'
+  import PasswordlessPanel from '$lib/components/PasswordlessPanel.svelte'
+  import PasskeyPanel from '$lib/components/PasskeyPanel.svelte'
+  import WalletPanel from '$lib/components/WalletPanel.svelte'
 
   let authon: AuthonStore | null = browser ? getAuthon() : null
 
@@ -84,6 +87,10 @@
           </div>
           <button class="btn btn-outline btn-sm" on:click={signOut}>Sign Out</button>
         </div>
+        {#if authon}
+          <PasskeyPanel {authon} />
+          <WalletPanel {authon} />
+        {/if}
       </div>
     </div>
   {:else}
@@ -98,6 +105,9 @@
         <button class="btn btn-primary" on:click={signIn}>Sign In</button>
         <button class="btn btn-outline" on:click={signUp}>Create Account</button>
       </div>
+      {#if authon}
+        <PasswordlessPanel {authon} />
+      {/if}
       <div class="feature-grid">
         <div class="feature-card">
           <div class="feature-icon">
@@ -145,6 +155,30 @@
           <div>
             <div class="feature-title">MFA Support</div>
             <div class="feature-desc">TOTP authenticator app</div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="15" r="4"/>
+              <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Passkeys + Passwordless</div>
+            <div class="feature-desc">Passkey, email code, magic link</div>
+          </div>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="6" width="20" height="14" rx="2"/>
+              <path d="M16 13h2M2 10h20M6 6V4h12v2"/>
+            </svg>
+          </div>
+          <div>
+            <div class="feature-title">Embedded Wallet</div>
+            <div class="feature-desc">Sign messages, passkey backup</div>
           </div>
         </div>
       </div>

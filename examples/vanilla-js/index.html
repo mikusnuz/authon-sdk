@@ -21,6 +21,38 @@
             <button id="signin-btn" class="btn btn-primary">Sign In</button>
             <button id="signup-btn" class="btn btn-outline">Create Account</button>
           </div>
+          <div class="panel">
+            <div class="panel-title">Sign in without a password</div>
+            <p class="panel-desc">Get a one-time code or a magic link by email, or use a passkey saved on this device.</p>
+            <div id="pl-email-step">
+              <div class="panel-stack">
+                <input id="pl-email" class="field" type="email" placeholder="you@example.com" />
+                <div class="field-row">
+                  <button id="pl-send-code" class="btn btn-primary btn-sm">Email me a code</button>
+                  <button id="pl-send-link" class="btn btn-outline btn-sm">Send magic link</button>
+                </div>
+              </div>
+            </div>
+            <div id="pl-code-step" style="display:none">
+              <div class="panel-stack">
+                <p class="panel-desc">Enter the code sent to <span id="pl-code-email"></span>.</p>
+                <div class="field-row">
+                  <input id="pl-code" class="field" inputmode="numeric" autocomplete="one-time-code" placeholder="123456" />
+                  <button id="pl-verify" class="btn btn-primary btn-sm">Verify code</button>
+                </div>
+                <button class="btn-link pl-reset">Use a different email</button>
+              </div>
+            </div>
+            <div id="pl-link-step" style="display:none">
+              <div class="panel-stack">
+                <div class="alert alert-success">Magic link sent to <span id="pl-link-email"></span>. Open it in this browser to finish signing in.</div>
+                <button class="btn-link pl-reset">Use a different email</button>
+              </div>
+            </div>
+            <div class="panel-divider"><span>or</span></div>
+            <button id="pl-passkey" class="btn btn-outline btn-sm">Sign in with passkey</button>
+            <div id="pl-error"></div>
+          </div>
           <div class="feature-grid">
             <div class="feature-card">
               <div class="feature-icon">
@@ -70,6 +102,30 @@
                 <div class="feature-desc">TOTP authenticator app</div>
               </div>
             </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="15" r="4"/>
+                  <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="feature-title">Passkeys + Passwordless</div>
+                <div class="feature-desc">Passkey, email code, magic link</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <path d="M16 13h2M2 10h20M6 6V4h12v2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="feature-title">Embedded Wallet</div>
+                <div class="feature-desc">Sign messages, passkey backup</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -99,6 +155,51 @@
                   <span class="info-badge" id="user-verified"></span>
                 </div>
               </div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Passkeys</div>
+              <p class="panel-desc">Add a passkey so you can sign in next time with Face ID, Touch ID or a security key.</p>
+              <button id="pk-register" class="btn btn-primary btn-sm">Register passkey</button>
+              <div id="pk-result"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Wallet</div>
+              <p class="panel-desc">An embedded EVM wallet created for this account. The project must have wallets turned on.</p>
+              <p id="wl-loading" class="panel-desc" style="display:none">Loading wallet...</p>
+              <div id="wl-body" style="display:none">
+                <div class="panel-stack">
+                  <div class="info-grid">
+                    <div class="info-row">
+                      <span class="info-label">Address</span>
+                      <span class="info-value mono" id="wl-address"></span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Passkey backup</span>
+                      <span class="info-badge" id="wl-protected"></span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">This browser</span>
+                      <span class="info-badge" id="wl-restore-state"></span>
+                    </div>
+                    <div class="info-row">
+                      <span class="info-label">Devices</span>
+                      <span class="info-value" id="wl-devices"></span>
+                    </div>
+                  </div>
+                  <div id="wl-restore-row" class="field-row" style="display:none">
+                    <button id="wl-restore" class="btn btn-primary btn-sm">Restore wallet</button>
+                    <button id="wl-restore-reset" class="btn btn-outline btn-sm">Restore and reset other devices</button>
+                  </div>
+                  <button id="wl-protect" class="btn btn-primary btn-sm" style="display:none">Protect wallet</button>
+                  <div class="field-row">
+                    <input id="wl-message" class="field" value="Hello from Authon" />
+                    <button id="wl-sign" class="btn btn-outline btn-sm">Sign message</button>
+                  </div>
+                  <div id="wl-signature" class="output" style="display:none"></div>
+                </div>
+              </div>
+              <div id="wl-error"></div>
+              <button id="wl-retry" class="btn btn-outline btn-sm" style="display:none">Try again</button>
             </div>
           </div>
         </div>

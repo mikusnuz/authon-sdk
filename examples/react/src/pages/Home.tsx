@@ -1,4 +1,7 @@
 import { useAuthon, SignedIn, SignedOut, UserButton } from '@authon/react'
+import PasswordlessPanel from '../components/PasswordlessPanel'
+import PasskeyPanel from '../components/PasskeyPanel'
+import WalletPanel from '../components/WalletPanel'
 
 export default function Home() {
   const { user, signOut, client } = useAuthon()
@@ -17,6 +20,7 @@ export default function Home() {
             <button className="btn btn-primary" onClick={() => client?.openSignIn()}>Sign In</button>
             <button className="btn btn-outline" onClick={() => client?.openSignUp()}>Create Account</button>
           </div>
+          <PasswordlessPanel />
           <div className="feature-grid">
             <div className="feature-card">
               <div className="feature-icon">
@@ -64,6 +68,30 @@ export default function Home() {
               <div>
                 <div className="feature-title">MFA Support</div>
                 <div className="feature-desc">TOTP authenticator app</div>
+              </div>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="15" r="4"/>
+                  <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+                </svg>
+              </div>
+              <div>
+                <div className="feature-title">Passkeys + Passwordless</div>
+                <div className="feature-desc">Passkey, email code, magic link</div>
+              </div>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <path d="M16 13h2M2 10h20M6 6V4h12v2"/>
+                </svg>
+              </div>
+              <div>
+                <div className="feature-title">Embedded Wallet</div>
+                <div className="feature-desc">Sign messages, passkey backup</div>
               </div>
             </div>
           </div>
@@ -115,6 +143,8 @@ export default function Home() {
                 Sign Out
               </button>
             </div>
+            <PasskeyPanel />
+            <WalletPanel />
           </div>
         </div>
       </SignedIn>

@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { useAuthon, AuthonSignedIn, AuthonSignedOut, AuthonUserButton } from '@authon/vue'
+import PasswordlessPanel from './components/PasswordlessPanel.vue'
+import PasskeyPanel from './components/PasskeyPanel.vue'
+import WalletPanel from './components/WalletPanel.vue'
 
 const { user, openSignIn, openSignUp } = useAuthon()
 </script>
@@ -18,6 +21,7 @@ const { user, openSignIn, openSignUp } = useAuthon()
           <button class="btn btn-primary" @click="openSignIn">Sign In</button>
           <button class="btn btn-outline" @click="openSignUp">Create Account</button>
         </div>
+        <PasswordlessPanel />
         <div class="feature-grid">
           <div class="feature-card">
             <div class="feature-icon">
@@ -67,6 +71,30 @@ const { user, openSignIn, openSignUp } = useAuthon()
               <div class="feature-desc">TOTP authenticator app</div>
             </div>
           </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="8" cy="15" r="4"/>
+                <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+              </svg>
+            </div>
+            <div>
+              <div class="feature-title">Passkeys + Passwordless</div>
+              <div class="feature-desc">Passkey, email code, magic link</div>
+            </div>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="6" width="20" height="14" rx="2"/>
+                <path d="M16 13h2M2 10h20M6 6V4h12v2"/>
+              </svg>
+            </div>
+            <div>
+              <div class="feature-title">Embedded Wallet</div>
+              <div class="feature-desc">Sign messages, passkey backup</div>
+            </div>
+          </div>
         </div>
       </div>
     </AuthonSignedOut>
@@ -110,6 +138,8 @@ const { user, openSignIn, openSignUp } = useAuthon()
               </div>
             </div>
           </div>
+          <PasskeyPanel />
+          <WalletPanel />
         </div>
       </div>
     </AuthonSignedIn>

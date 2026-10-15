@@ -9,7 +9,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     ...provideAuthon({
       publishableKey: publishableKey,
-      config: apiUrl ? { apiUrl } : undefined,
+      config: {
+        ...(apiUrl ? { apiUrl } : {}),
+        // Create the embedded wallet in the background after sign-in (needs wallets turned on for the project).
+        wallet: { autoCreate: true },
+      },
     }),
   ],
 }

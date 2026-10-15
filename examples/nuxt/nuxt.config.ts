@@ -3,6 +3,8 @@ export default defineNuxtConfig({
   authon: {
     config: {
       theme: 'auto',
+      // Create the embedded wallet in the background after sign-in (needs wallets turned on for the project).
+      wallet: { autoCreate: true },
     },
   },
   app: {

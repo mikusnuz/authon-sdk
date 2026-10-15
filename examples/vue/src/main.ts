@@ -15,7 +15,11 @@ const app = createApp(App)
 app.use(
   createAuthon({
     publishableKey,
-    config: apiUrl ? { apiUrl } : undefined,
+    config: {
+      ...(apiUrl ? { apiUrl } : {}),
+      // Create the embedded wallet in the background after sign-in (needs wallets turned on for the project).
+      wallet: { autoCreate: true },
+    },
   }) as unknown as Plugin,
 )
 

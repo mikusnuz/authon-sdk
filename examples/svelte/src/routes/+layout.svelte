@@ -10,7 +10,11 @@
       console.error('PUBLIC_AUTHON_PUBLISHABLE_KEY is required. Copy .env.example to .env and add your publishable key.')
     } else {
       const apiUrl = env.PUBLIC_AUTHON_API_URL || undefined
-      initAuthon(publishableKey, apiUrl ? { apiUrl } : undefined)
+      initAuthon(publishableKey, {
+        ...(apiUrl ? { apiUrl } : {}),
+        // Create the embedded wallet in the background after sign-in (needs wallets turned on for the project).
+        wallet: { autoCreate: true },
+      })
     }
   }
 </script>

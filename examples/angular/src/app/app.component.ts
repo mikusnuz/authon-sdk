@@ -2,11 +2,14 @@ import { Component, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angula
 import { CommonModule } from '@angular/common'
 import { AuthonService } from '@authon/angular'
 import type { AuthonUser } from '@authon/shared'
+import { PasswordlessPanelComponent } from './passwordless-panel.component'
+import { PasskeyPanelComponent } from './passkey-panel.component'
+import { WalletPanelComponent } from './wallet-panel.component'
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, PasswordlessPanelComponent, PasskeyPanelComponent, WalletPanelComponent],
   template: `
     <div class="page">
       @if (isLoading) {
@@ -49,6 +52,8 @@ import type { AuthonUser } from '@authon/shared'
               </div>
               <button class="btn btn-outline btn-sm" (click)="signOut()">Sign Out</button>
             </div>
+            <app-passkey-panel />
+            <app-wallet-panel />
           </div>
         </div>
       } @else {
@@ -63,6 +68,7 @@ import type { AuthonUser } from '@authon/shared'
             <button class="btn btn-primary" (click)="openSignIn()">Sign In</button>
             <button class="btn btn-outline" (click)="openSignUp()">Create Account</button>
           </div>
+          <app-passwordless-panel />
           <div class="feature-grid">
             <div class="feature-card">
               <div class="feature-icon">
@@ -110,6 +116,30 @@ import type { AuthonUser } from '@authon/shared'
               <div>
                 <div class="feature-title">MFA Support</div>
                 <div class="feature-desc">TOTP authenticator app</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="8" cy="15" r="4"/>
+                  <path d="M10.85 12.15L19 4M18 5l2 2M15 8l2 2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="feature-title">Passkeys + Passwordless</div>
+                <div class="feature-desc">Passkey, email code, magic link</div>
+              </div>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="6" width="20" height="14" rx="2"/>
+                  <path d="M16 13h2M2 10h20M6 6V4h12v2"/>
+                </svg>
+              </div>
+              <div>
+                <div class="feature-title">Embedded Wallet</div>
+                <div class="feature-desc">Sign messages, passkey backup</div>
               </div>
             </div>
           </div>
