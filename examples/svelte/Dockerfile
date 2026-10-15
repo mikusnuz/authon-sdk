@@ -6,19 +6,16 @@ COPY packages/ ./packages/
 RUN pnpm install --frozen-lockfile --ignore-scripts || pnpm install --no-frozen-lockfile
 RUN pnpm --filter '@authon/*' --filter '!@authon/react-native' build
 
-FROM node:20-alpine AS build
-WORKDIR /app
-COPY --from=sdk-build /app/packages/ ./packages/
+FROM sdk-build AS build
+# Build inside the pnpm workspace so workspace:* resolves to the SDK packages built above.
 COPY examples/svelte/ ./examples/svelte/
+RUN pnpm install --frozen-lockfile --ignore-scripts --filter authon-svelte-example... || pnpm install --no-frozen-lockfile --filter authon-svelte-example...
 WORKDIR /app/examples/svelte
-# Example package.json files use workspace:* for local development; npm needs file: paths.
-RUN node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));for(const k of ['dependencies','devDependencies'])for(const d in p[k]||{})if(String(p[k][d]).startsWith('workspace:'))p[k][d]='file:../../packages/'+d.replace('@authon/','');fs.writeFileSync('package.json',JSON.stringify(p,null,2))"
-RUN npm install
 ARG PUBLIC_AUTHON_PUBLISHABLE_KEY
 ARG PUBLIC_AUTHON_API_URL
 ENV PUBLIC_AUTHON_PUBLISHABLE_KEY=$PUBLIC_AUTHON_PUBLISHABLE_KEY
 ENV PUBLIC_AUTHON_API_URL=$PUBLIC_AUTHON_API_URL
-RUN npm run build
+RUN pnpm run build
 
 FROM node:20-alpine
 WORKDIR /app
