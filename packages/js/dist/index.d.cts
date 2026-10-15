@@ -8,6 +8,126 @@ interface SessionChange {
 }
 type SessionChangeListener = (change: SessionChange) => void;
 
+type WalletErrorCode = 'NOT_FOUND' | 'NEEDS_RESTORE' | 'NOT_PROTECTED' | 'PRF_UNSUPPORTED' | 'ORIGIN_NOT_ALLOWED' | 'USER_CANCELLED' | 'TIMEOUT' | 'NEEDS_POPUP' | 'POPUP_BLOCKED' | 'NOT_SIGNED_IN' | 'NOT_CONFIGURED' | 'UNSUPPORTED_METHOD' | 'INVALID_PARAMS' | 'DISPOSED' | (string & {});
+declare class AuthonWalletError extends Error {
+    readonly code: WalletErrorCode;
+    constructor(code: WalletErrorCode, message?: string);
+}
+type Hex = `0x${string}`;
+interface EmbeddedWalletDevice {
+    id: string;
+    label: string;
+    createdAt: string;
+    lastUsedAt: string | null;
+    current: boolean;
+}
+interface EmbeddedWallet {
+    address: string;
+    protected: boolean;
+    /** True when the server has a wallet but this browser holds no device share. */
+    needsRestore: boolean;
+    devices: EmbeddedWalletDevice[];
+}
+type WalletChangeListener = (wallet: EmbeddedWallet | null) => void;
+interface TypedDataPayload {
+    domain: Record<string, unknown>;
+    types: Record<string, Array<{
+        name: string;
+        type: string;
+    }>>;
+    primaryType: string;
+    message: Record<string, unknown>;
+}
+interface WalletTransactionRequest {
+    to?: string;
+    from?: string;
+    value?: string | number | bigint;
+    data?: string;
+    nonce?: string | number;
+    gas?: string | number | bigint;
+    gasLimit?: string | number | bigint;
+    gasPrice?: string | number | bigint;
+    maxFeePerGas?: string | number | bigint;
+    maxPriorityFeePerGas?: string | number | bigint;
+    chainId?: string | number;
+    type?: string | number;
+}
+type WalletMessage = string | {
+    raw: string;
+};
+interface EIP1193RequestArguments {
+    method: string;
+    params?: unknown[] | Record<string, unknown>;
+}
+interface EIP1193Provider {
+    request(args: EIP1193RequestArguments): Promise<unknown>;
+}
+interface WalletClientOptions {
+    publishableKey: string;
+    walletOrigin: string | null;
+    /** Resolves a valid session token, refreshing it when needed. */
+    getToken: () => Promise<string | null>;
+    timeoutMs?: number;
+    popupTimeoutMs?: number;
+    /** Default appearance of the protect/restore confirmation card. */
+    ui?: WalletConfirmUi;
+}
+declare class WalletClient {
+    private readonly options;
+    private readonly listeners;
+    private readonly pending;
+    private iframe;
+    private frameReady;
+    private abortFrame;
+    private listening;
+    private ensuring;
+    private counter;
+    constructor(options: WalletClientOptions);
+    get(): Promise<EmbeddedWallet | null>;
+    ensure(): Promise<EmbeddedWallet>;
+    signMessage(message: WalletMessage): Promise<Hex>;
+    signTypedData(typedData: TypedDataPayload): Promise<Hex>;
+    signTransaction(tx: WalletTransactionRequest): Promise<Hex>;
+    /**
+     * Creates a passkey and backs up the wallet. Must be called from a user click
+     * handler: the browser only allows the passkey prompt (or the popup fallback)
+     * during a user gesture.
+     */
+    protect(options?: {
+        ui?: WalletConfirmUi;
+    }): Promise<void>;
+    /**
+     * Restores the wallet on this browser with the passkey (one confirmation tap and
+     * the system prompt). By default this browser is added as another device and
+     * other devices keep working. Pass `resetOtherDevices: true` when a device was
+     * lost: the key is re-split and every other device must restore again.
+     */
+    restore(options?: {
+        ui?: WalletConfirmUi;
+        resetOtherDevices?: boolean;
+    }): Promise<void>;
+    revokeDevice(deviceId: string): Promise<void>;
+    onChange(listener: WalletChangeListener): () => void;
+    provider(chainId: number): EIP1193Provider;
+    /** Removes the frame and rejects in-flight requests. Called on sign-out. */
+    dispose(): void;
+    private refresh;
+    private notify;
+    private normalize;
+    private requireOrigin;
+    private frameUrl;
+    private ensureFrame;
+    private setFrameVisible;
+    private listen;
+    private onMessage;
+    private send;
+    /** Protect/restore wait for a person to tap the confirmation and the passkey prompt. */
+    private interactiveTimeout;
+    private call;
+    private callViaPopup;
+    private waitForPopupReady;
+}
+
 type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 interface AuthonConfig {
     apiUrl?: string;
@@ -17,6 +137,52 @@ interface AuthonConfig {
     locale?: string;
     appearance?: Partial<BrandingConfig>;
     sessionMode?: 'browser' | 'bff';
+    wallet?: AuthonWalletConfig;
+    /**
+     * When the page URL carries a magic link (`?token=...&authon_magic_link=1`), verify it on load,
+     * store the session and remove both parameters from the URL. Default true (browser session mode only).
+     * Set false to handle the link yourself with `handleMagicLink()` or `verifyPasswordless({ token })`.
+     */
+    autoHandleMagicLink?: boolean;
+}
+interface SendMagicLinkOptions {
+    /**
+     * Page the link should open. Defaults to the current page when `autoHandleMagicLink` is on.
+     * Authon only uses it when its origin is in the project's allowed origins and the project has
+     * no callback URL or domain set.
+     */
+    redirectUrl?: string;
+}
+interface AuthonWalletConfig {
+    /**
+     * Origin of the wallet frame. Defaults to https://wallet.authon.dev when apiUrl is the
+     * default Authon API; required when a custom apiUrl is used.
+     */
+    origin?: string;
+    /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
+    autoCreate?: boolean;
+    /** Text and colors of the one-tap confirmation shown before the passkey prompt (protect/restore). */
+    ui?: WalletConfirmUi;
+    /**
+     * Supplies the token the wallet sends to Authon. Required with sessionMode 'bff',
+     * where the browser holds no Authon session: fetch a short-lived wallet token
+     * from your server (see createAuthonWalletToken in @authon/nextjs/server).
+     */
+    getToken?: () => Promise<string | null | undefined>;
+}
+/**
+ * Appearance of the small confirmation card the wallet frame shows right before
+ * the system passkey prompt. Browsers only allow the prompt after a click inside
+ * the wallet frame, so this single tap cannot be skipped.
+ */
+interface WalletConfirmUi {
+    title?: string;
+    message?: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    /** Hex color such as #2563eb */
+    accentColor?: string;
+    theme?: 'light' | 'dark';
 }
 interface OAuthSignInOptions {
     flowMode?: OAuthFlowMode;
@@ -31,6 +197,8 @@ interface AuthonEvents {
     passkeyRegistered: (credential: PasskeyCredential) => void;
     web3Connected: (wallet: Web3Wallet) => void;
     error: (error: Error) => void;
+    walletChanged: (wallet: EmbeddedWallet | null) => void;
+    walletError: (error: AuthonWalletError) => void;
     authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
 type OpenSignInOptions = AuthorizationCodeOptions | {
@@ -42,10 +210,15 @@ declare class AuthonMfaRequiredError extends Error {
     constructor(mfaToken: string);
 }
 
+/** Query flag Authon adds to magic links; `token` alone is too generic to claim. */
+declare const MAGIC_LINK_PARAM = "authon_magic_link";
 declare class Authon {
     private publishableKey;
     private config;
     private session;
+    readonly wallet: WalletClient;
+    private walletAutoCreate;
+    private walletEnabled;
     private modal;
     private profile;
     private listeners;
@@ -57,6 +230,7 @@ declare class Authon {
     private turnstileSiteKey;
     private authorizationContext;
     private verificationToken;
+    private magicLinkResult;
     constructor(publishableKey: string, config?: AuthonConfig);
     getProviders(): Promise<OAuthProviderType[]>;
     openSignIn(options?: OpenSignInOptions): Promise<void>;
@@ -104,7 +278,13 @@ declare class Authon {
     disableMfa(code: string): Promise<void>;
     getMfaStatus(): Promise<MfaStatus>;
     regenerateBackupCodes(code: string): Promise<string[]>;
-    sendMagicLink(email: string): Promise<void>;
+    sendMagicLink(email: string, options?: SendMagicLinkOptions): Promise<void>;
+    /**
+     * Finish a magic link sign-in from the current URL. With `autoHandleMagicLink` on (default) this
+     * returns the verification already started on page load. Resolves to null when the URL has no link
+     * or the link could not be used (the reason is emitted as an `error` event).
+     */
+    handleMagicLink(): Promise<AuthonUser | null>;
     sendEmailOtp(email: string): Promise<void>;
     verifyPasswordless(options: {
         token?: string;
@@ -162,6 +342,7 @@ declare class Authon {
     private loadTurnstileScript;
     private emit;
     private ensureInitialized;
+    private autoCreateWallet;
     private getModal;
     private startOAuthFlow;
     private normalizeFlowMode;
@@ -176,6 +357,12 @@ declare class Authon {
     private apiDeleteAuth;
     private getWalletAddress;
     private requestWalletSignature;
+    /** Current page (without hash or magic link params) as the link target, when this instance handles links. */
+    private magicLinkReturnUrl;
+    private consumeMagicLinkFromUrl;
+    /** Authon returns WebAuthn options at the top level; very old servers wrapped them in `options`. */
+    private unwrapWebAuthnOptions;
+    private credentialBase;
     private bufferToBase64url;
     private base64urlToBuffer;
     private deserializeCreationOptions;
@@ -223,6 +410,17 @@ declare const translations: {
         readonly save: "Save";
         readonly signOut: "Sign Out";
         readonly sessions: "Active Sessions";
+        readonly emailCode: "Continue with email code";
+        readonly enterEmail: "Enter your email";
+        readonly sendMagicLink: "Send Magic Link";
+        readonly sendCode: "Send code";
+        readonly sendingMagicLink: "Sending magic link...";
+        readonly sendingCode: "Sending code...";
+        readonly magicLinkSent: "Magic link sent!";
+        readonly checkInbox: "Check your email inbox";
+        readonly enterCode: "Enter verification code";
+        readonly codeSentTo: "6-digit code sent to {email}";
+        readonly cancel: "Cancel";
     };
     readonly ko: {
         readonly welcomeBack: "다시 오신 걸 환영합니다";
@@ -247,6 +445,17 @@ declare const translations: {
         readonly save: "저장";
         readonly signOut: "로그아웃";
         readonly sessions: "활성 세션";
+        readonly emailCode: "이메일 코드로 계속하기";
+        readonly enterEmail: "이메일을 입력하세요";
+        readonly sendMagicLink: "매직 링크 보내기";
+        readonly sendCode: "코드 보내기";
+        readonly sendingMagicLink: "매직 링크를 보내는 중...";
+        readonly sendingCode: "코드를 보내는 중...";
+        readonly magicLinkSent: "매직 링크를 보냈습니다";
+        readonly checkInbox: "메일함에서 링크를 눌러 주세요";
+        readonly enterCode: "받은 코드를 입력하세요";
+        readonly codeSentTo: "{email}(으)로 6자리 코드를 보냈습니다";
+        readonly cancel: "취소";
     };
     readonly ja: {
         readonly welcomeBack: "おかえりなさい";
@@ -271,6 +480,17 @@ declare const translations: {
         readonly save: "保存";
         readonly signOut: "サインアウト";
         readonly sessions: "アクティブセッション";
+        readonly emailCode: "メールコードで続行";
+        readonly enterEmail: "メールアドレスを入力";
+        readonly sendMagicLink: "マジックリンクを送信";
+        readonly sendCode: "コードを送信";
+        readonly sendingMagicLink: "マジックリンクを送信中...";
+        readonly sendingCode: "コードを送信中...";
+        readonly magicLinkSent: "マジックリンクを送信しました";
+        readonly checkInbox: "メールの受信トレイを確認してください";
+        readonly enterCode: "認証コードを入力";
+        readonly codeSentTo: "{email} に6桁のコードを送信しました";
+        readonly cancel: "キャンセル";
     };
     readonly 'zh-CN': {
         readonly welcomeBack: "欢迎回来";
@@ -295,6 +515,17 @@ declare const translations: {
         readonly save: "保存";
         readonly signOut: "退出登录";
         readonly sessions: "活跃会话";
+        readonly emailCode: "使用邮箱验证码继续";
+        readonly enterEmail: "请输入邮箱";
+        readonly sendMagicLink: "发送魔法链接";
+        readonly sendCode: "发送验证码";
+        readonly sendingMagicLink: "正在发送魔法链接...";
+        readonly sendingCode: "正在发送验证码...";
+        readonly magicLinkSent: "魔法链接已发送！";
+        readonly checkInbox: "请查看邮箱收件箱";
+        readonly enterCode: "输入验证码";
+        readonly codeSentTo: "6 位验证码已发送至 {email}";
+        readonly cancel: "取消";
     };
     readonly 'zh-TW': {
         readonly welcomeBack: "歡迎回來";
@@ -319,6 +550,17 @@ declare const translations: {
         readonly save: "儲存";
         readonly signOut: "登出";
         readonly sessions: "活躍工作階段";
+        readonly emailCode: "使用電子郵件驗證碼繼續";
+        readonly enterEmail: "請輸入電子郵件";
+        readonly sendMagicLink: "傳送魔法連結";
+        readonly sendCode: "傳送驗證碼";
+        readonly sendingMagicLink: "正在傳送魔法連結...";
+        readonly sendingCode: "正在傳送驗證碼...";
+        readonly magicLinkSent: "魔法連結已傳送！";
+        readonly checkInbox: "請查看電子郵件收件匣";
+        readonly enterCode: "輸入驗證碼";
+        readonly codeSentTo: "6 位數驗證碼已傳送至 {email}";
+        readonly cancel: "取消";
     };
     readonly 'pt-BR': {
         readonly welcomeBack: "Bem-vindo de volta";
@@ -343,6 +585,17 @@ declare const translations: {
         readonly save: "Salvar";
         readonly signOut: "Sair";
         readonly sessions: "Sessoes ativas";
+        readonly emailCode: "Continuar com codigo por e-mail";
+        readonly enterEmail: "Digite seu e-mail";
+        readonly sendMagicLink: "Enviar Magic Link";
+        readonly sendCode: "Enviar codigo";
+        readonly sendingMagicLink: "Enviando magic link...";
+        readonly sendingCode: "Enviando codigo...";
+        readonly magicLinkSent: "Magic link enviado!";
+        readonly checkInbox: "Verifique sua caixa de entrada";
+        readonly enterCode: "Digite o codigo de verificacao";
+        readonly codeSentTo: "Codigo de 6 digitos enviado para {email}";
+        readonly cancel: "Cancelar";
     };
     readonly es: {
         readonly welcomeBack: "Bienvenido de nuevo";
@@ -367,6 +620,17 @@ declare const translations: {
         readonly save: "Guardar";
         readonly signOut: "Cerrar sesion";
         readonly sessions: "Sesiones activas";
+        readonly emailCode: "Continuar con codigo por correo";
+        readonly enterEmail: "Introduce tu correo electronico";
+        readonly sendMagicLink: "Enviar Magic Link";
+        readonly sendCode: "Enviar codigo";
+        readonly sendingMagicLink: "Enviando magic link...";
+        readonly sendingCode: "Enviando codigo...";
+        readonly magicLinkSent: "Magic link enviado!";
+        readonly checkInbox: "Revisa tu bandeja de entrada";
+        readonly enterCode: "Introduce el codigo de verificacion";
+        readonly codeSentTo: "Codigo de 6 digitos enviado a {email}";
+        readonly cancel: "Cancelar";
     };
     readonly de: {
         readonly welcomeBack: "Willkommen zuruck";
@@ -391,6 +655,17 @@ declare const translations: {
         readonly save: "Speichern";
         readonly signOut: "Abmelden";
         readonly sessions: "Aktive Sitzungen";
+        readonly emailCode: "Weiter mit E-Mail-Code";
+        readonly enterEmail: "E-Mail-Adresse eingeben";
+        readonly sendMagicLink: "Magic Link senden";
+        readonly sendCode: "Code senden";
+        readonly sendingMagicLink: "Magic Link wird gesendet...";
+        readonly sendingCode: "Code wird gesendet...";
+        readonly magicLinkSent: "Magic Link gesendet!";
+        readonly checkInbox: "Prufe dein E-Mail-Postfach";
+        readonly enterCode: "Bestatigungscode eingeben";
+        readonly codeSentTo: "6-stelliger Code an {email} gesendet";
+        readonly cancel: "Abbrechen";
     };
     readonly fr: {
         readonly welcomeBack: "Bon retour";
@@ -415,6 +690,17 @@ declare const translations: {
         readonly save: "Enregistrer";
         readonly signOut: "Se deconnecter";
         readonly sessions: "Sessions actives";
+        readonly emailCode: "Continuer avec un code par e-mail";
+        readonly enterEmail: "Saisissez votre e-mail";
+        readonly sendMagicLink: "Envoyer le Magic Link";
+        readonly sendCode: "Envoyer le code";
+        readonly sendingMagicLink: "Envoi du magic link...";
+        readonly sendingCode: "Envoi du code...";
+        readonly magicLinkSent: "Magic link envoye !";
+        readonly checkInbox: "Verifiez votre boite de reception";
+        readonly enterCode: "Saisissez le code de verification";
+        readonly codeSentTo: "Code a 6 chiffres envoye a {email}";
+        readonly cancel: "Annuler";
     };
     readonly hi: {
         readonly welcomeBack: "वापसी पर स्वागत है";
@@ -439,6 +725,17 @@ declare const translations: {
         readonly save: "सहेजें";
         readonly signOut: "साइन आउट";
         readonly sessions: "सक्रिय सत्र";
+        readonly emailCode: "ईमेल कोड से जारी रखें";
+        readonly enterEmail: "अपना ईमेल दर्ज करें";
+        readonly sendMagicLink: "मैजिक लिंक भेजें";
+        readonly sendCode: "कोड भेजें";
+        readonly sendingMagicLink: "मैजिक लिंक भेजा जा रहा है...";
+        readonly sendingCode: "कोड भेजा जा रहा है...";
+        readonly magicLinkSent: "मैजिक लिंक भेज दिया गया!";
+        readonly checkInbox: "अपना ईमेल इनबॉक्स देखें";
+        readonly enterCode: "सत्यापन कोड दर्ज करें";
+        readonly codeSentTo: "{email} पर 6 अंकों का कोड भेजा गया";
+        readonly cancel: "रद्द करें";
     };
     readonly tr: {
         readonly welcomeBack: "Tekrar hos geldiniz";
@@ -463,6 +760,17 @@ declare const translations: {
         readonly save: "Kaydet";
         readonly signOut: "Cikis yap";
         readonly sessions: "Aktif oturumlar";
+        readonly emailCode: "E-posta kodu ile devam et";
+        readonly enterEmail: "E-posta adresinizi girin";
+        readonly sendMagicLink: "Magic Link gonder";
+        readonly sendCode: "Kod gonder";
+        readonly sendingMagicLink: "Magic Link gonderiliyor...";
+        readonly sendingCode: "Kod gonderiliyor...";
+        readonly magicLinkSent: "Magic Link gonderildi!";
+        readonly checkInbox: "E-posta kutunuzu kontrol edin";
+        readonly enterCode: "Dogrulama kodunu girin";
+        readonly codeSentTo: "{email} adresine 6 haneli kod gonderildi";
+        readonly cancel: "Iptal";
     };
     readonly id: {
         readonly welcomeBack: "Selamat datang kembali";
@@ -487,6 +795,17 @@ declare const translations: {
         readonly save: "Simpan";
         readonly signOut: "Keluar";
         readonly sessions: "Sesi aktif";
+        readonly emailCode: "Lanjutkan dengan kode email";
+        readonly enterEmail: "Masukkan email Anda";
+        readonly sendMagicLink: "Kirim Magic Link";
+        readonly sendCode: "Kirim kode";
+        readonly sendingMagicLink: "Mengirim magic link...";
+        readonly sendingCode: "Mengirim kode...";
+        readonly magicLinkSent: "Magic link terkirim!";
+        readonly checkInbox: "Periksa kotak masuk email Anda";
+        readonly enterCode: "Masukkan kode verifikasi";
+        readonly codeSentTo: "Kode 6 digit dikirim ke {email}";
+        readonly cancel: "Batal";
     };
     readonly vi: {
         readonly welcomeBack: "Chao mung tro lai";
@@ -511,6 +830,17 @@ declare const translations: {
         readonly save: "Luu";
         readonly signOut: "Dang xuat";
         readonly sessions: "Phien dang nhap hoat dong";
+        readonly emailCode: "Tiep tuc voi ma qua email";
+        readonly enterEmail: "Nhap email cua ban";
+        readonly sendMagicLink: "Gui Magic Link";
+        readonly sendCode: "Gui ma";
+        readonly sendingMagicLink: "Dang gui magic link...";
+        readonly sendingCode: "Dang gui ma...";
+        readonly magicLinkSent: "Da gui magic link!";
+        readonly checkInbox: "Kiem tra hop thu email cua ban";
+        readonly enterCode: "Nhap ma xac minh";
+        readonly codeSentTo: "Ma 6 chu so da gui den {email}";
+        readonly cancel: "Huy";
     };
     readonly th: {
         readonly welcomeBack: "ยินดีต้อนรับกลับ";
@@ -535,6 +865,17 @@ declare const translations: {
         readonly save: "บันทึก";
         readonly signOut: "ออกจากระบบ";
         readonly sessions: "เซสชันที่ใช้งานอยู่";
+        readonly emailCode: "ดำเนินการต่อด้วยรหัสทางอีเมล";
+        readonly enterEmail: "กรอกอีเมลของคุณ";
+        readonly sendMagicLink: "ส่ง Magic Link";
+        readonly sendCode: "ส่งรหัส";
+        readonly sendingMagicLink: "กำลังส่ง Magic Link...";
+        readonly sendingCode: "กำลังส่งรหัส...";
+        readonly magicLinkSent: "ส่ง Magic Link แล้ว!";
+        readonly checkInbox: "ตรวจสอบกล่องจดหมายอีเมลของคุณ";
+        readonly enterCode: "กรอกรหัสยืนยัน";
+        readonly codeSentTo: "ส่งรหัส 6 หลักไปที่ {email} แล้ว";
+        readonly cancel: "ยกเลิก";
     };
     readonly ru: {
         readonly welcomeBack: "С возвращением";
@@ -559,6 +900,17 @@ declare const translations: {
         readonly save: "Сохранить";
         readonly signOut: "Выйти";
         readonly sessions: "Активные сеансы";
+        readonly emailCode: "Продолжить с кодом из письма";
+        readonly enterEmail: "Введите адрес электронной почты";
+        readonly sendMagicLink: "Отправить Magic Link";
+        readonly sendCode: "Отправить код";
+        readonly sendingMagicLink: "Отправка Magic Link...";
+        readonly sendingCode: "Отправка кода...";
+        readonly magicLinkSent: "Magic Link отправлен!";
+        readonly checkInbox: "Проверьте входящие письма";
+        readonly enterCode: "Введите код подтверждения";
+        readonly codeSentTo: "6-значный код отправлен на {email}";
+        readonly cancel: "Отмена";
     };
     readonly it: {
         readonly welcomeBack: "Bentornato";
@@ -583,6 +935,17 @@ declare const translations: {
         readonly save: "Salva";
         readonly signOut: "Esci";
         readonly sessions: "Sessioni attive";
+        readonly emailCode: "Continua con codice via email";
+        readonly enterEmail: "Inserisci la tua email";
+        readonly sendMagicLink: "Invia Magic Link";
+        readonly sendCode: "Invia codice";
+        readonly sendingMagicLink: "Invio del magic link...";
+        readonly sendingCode: "Invio del codice...";
+        readonly magicLinkSent: "Magic link inviato!";
+        readonly checkInbox: "Controlla la tua casella email";
+        readonly enterCode: "Inserisci il codice di verifica";
+        readonly codeSentTo: "Codice a 6 cifre inviato a {email}";
+        readonly cancel: "Annulla";
     };
     readonly pl: {
         readonly welcomeBack: "Witaj ponownie";
@@ -607,6 +970,17 @@ declare const translations: {
         readonly save: "Zapisz";
         readonly signOut: "Wyloguj sie";
         readonly sessions: "Aktywne sesje";
+        readonly emailCode: "Kontynuuj z kodem e-mail";
+        readonly enterEmail: "Wpisz swoj e-mail";
+        readonly sendMagicLink: "Wyslij Magic Link";
+        readonly sendCode: "Wyslij kod";
+        readonly sendingMagicLink: "Wysylanie magic linku...";
+        readonly sendingCode: "Wysylanie kodu...";
+        readonly magicLinkSent: "Magic Link wyslany!";
+        readonly checkInbox: "Sprawdz swoja skrzynke e-mail";
+        readonly enterCode: "Wpisz kod weryfikacyjny";
+        readonly codeSentTo: "6-cyfrowy kod wyslano na {email}";
+        readonly cancel: "Anuluj";
     };
     readonly nl: {
         readonly welcomeBack: "Welkom terug";
@@ -631,6 +1005,17 @@ declare const translations: {
         readonly save: "Opslaan";
         readonly signOut: "Uitloggen";
         readonly sessions: "Actieve sessies";
+        readonly emailCode: "Doorgaan met e-mailcode";
+        readonly enterEmail: "Voer je e-mailadres in";
+        readonly sendMagicLink: "Magic Link versturen";
+        readonly sendCode: "Code versturen";
+        readonly sendingMagicLink: "Magic Link wordt verstuurd...";
+        readonly sendingCode: "Code wordt verstuurd...";
+        readonly magicLinkSent: "Magic Link verstuurd!";
+        readonly checkInbox: "Controleer je e-mailinbox";
+        readonly enterCode: "Voer de verificatiecode in";
+        readonly codeSentTo: "Code van 6 cijfers verstuurd naar {email}";
+        readonly cancel: "Annuleren";
     };
     readonly ar: {
         readonly welcomeBack: "مرحبًا بعودتك";
@@ -655,6 +1040,17 @@ declare const translations: {
         readonly save: "حفظ";
         readonly signOut: "تسجيل الخروج";
         readonly sessions: "الجلسات النشطة";
+        readonly emailCode: "المتابعة باستخدام رمز البريد الإلكتروني";
+        readonly enterEmail: "أدخل بريدك الإلكتروني";
+        readonly sendMagicLink: "إرسال Magic Link";
+        readonly sendCode: "إرسال الرمز";
+        readonly sendingMagicLink: "جارٍ إرسال Magic Link...";
+        readonly sendingCode: "جارٍ إرسال الرمز...";
+        readonly magicLinkSent: "تم إرسال Magic Link!";
+        readonly checkInbox: "تحقق من صندوق بريدك الإلكتروني";
+        readonly enterCode: "أدخل رمز التحقق";
+        readonly codeSentTo: "تم إرسال رمز من 6 أرقام إلى {email}";
+        readonly cancel: "إلغاء";
     };
     readonly sv: {
         readonly welcomeBack: "Valkommen tillbaka";
@@ -679,6 +1075,17 @@ declare const translations: {
         readonly save: "Spara";
         readonly signOut: "Logga ut";
         readonly sessions: "Aktiva sessioner";
+        readonly emailCode: "Fortsatt med e-postkod";
+        readonly enterEmail: "Ange din e-post";
+        readonly sendMagicLink: "Skicka Magic Link";
+        readonly sendCode: "Skicka kod";
+        readonly sendingMagicLink: "Skickar magic link...";
+        readonly sendingCode: "Skickar kod...";
+        readonly magicLinkSent: "Magic link skickad!";
+        readonly checkInbox: "Kontrollera din inkorg";
+        readonly enterCode: "Ange verifieringskod";
+        readonly codeSentTo: "6-siffrig kod skickad till {email}";
+        readonly cancel: "Avbryt";
     };
     readonly uk: {
         readonly welcomeBack: "З поверненням";
@@ -703,6 +1110,17 @@ declare const translations: {
         readonly save: "Зберегти";
         readonly signOut: "Вийти";
         readonly sessions: "Активні сеанси";
+        readonly emailCode: "Продовжити з кодом з листа";
+        readonly enterEmail: "Введіть електронну пошту";
+        readonly sendMagicLink: "Надіслати Magic Link";
+        readonly sendCode: "Надіслати код";
+        readonly sendingMagicLink: "Надсилання Magic Link...";
+        readonly sendingCode: "Надсилання коду...";
+        readonly magicLinkSent: "Magic Link надіслано!";
+        readonly checkInbox: "Перевірте вхідні листи";
+        readonly enterCode: "Введіть код підтвердження";
+        readonly codeSentTo: "6-значний код надіслано на {email}";
+        readonly cancel: "Скасувати";
     };
 };
 interface TranslationStrings {
@@ -728,7 +1146,20 @@ interface TranslationStrings {
     save: string;
     signOut: string;
     sessions: string;
+    emailCode: string;
+    enterEmail: string;
+    sendMagicLink: string;
+    sendCode: string;
+    sendingMagicLink: string;
+    sendingCode: string;
+    magicLinkSent: string;
+    checkInbox: string;
+    enterCode: string;
+    /** `{email}` is replaced with the address. */
+    codeSentTo: string;
+    cancel: string;
 }
+/** Strings missing in a locale fall back to English. */
 declare function getStrings(locale: string): TranslationStrings;
 
 declare class ProfileRenderer {
@@ -791,4 +1222,4 @@ declare class ProfileRenderer {
     private attachInnerEvents;
 }
 
-export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, generateQrSvg, getProviderButtonConfig, getStrings, translations };
+export { Authon, type AuthonConfig, type AuthonEventType, type AuthonEvents, type AuthonLocale, AuthonMfaRequiredError, type AuthonWalletConfig, AuthonWalletError, type EIP1193Provider, type EIP1193RequestArguments, type EmbeddedWallet, type EmbeddedWalletDevice, type Hex, MAGIC_LINK_PARAM, type OAuthFlowMode, type OAuthSignInOptions, type OpenSignInOptions, ProfileRenderer, type ProviderButtonConfig, type SendMagicLinkOptions, type SessionChange, type SessionChangeListener, type SessionChangeReason, type TranslationStrings, type TypedDataPayload, type WalletChangeListener, WalletClient, type WalletConfirmUi, type WalletErrorCode, type WalletMessage, type WalletTransactionRequest, generateQrSvg, getProviderButtonConfig, getStrings, translations };

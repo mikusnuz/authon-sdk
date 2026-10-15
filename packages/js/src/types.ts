@@ -1,5 +1,6 @@
 import type { AuthorizationCodeOptions, AuthorizationCodeResult, AuthonUser, BrandingConfig, PasskeyCredential, Web3Wallet } from '@authon/shared';
 import type { SessionChange } from './session';
+import type { AuthonWalletError, EmbeddedWallet } from './wallet';
 
 export type OAuthFlowMode = 'auto' | 'popup' | 'redirect';
 
@@ -11,6 +12,55 @@ export interface AuthonConfig {
   locale?: string;
   appearance?: Partial<BrandingConfig>;
   sessionMode?: 'browser' | 'bff';
+  wallet?: AuthonWalletConfig;
+  /**
+   * When the page URL carries a magic link (`?token=...&authon_magic_link=1`), verify it on load,
+   * store the session and remove both parameters from the URL. Default true (browser session mode only).
+   * Set false to handle the link yourself with `handleMagicLink()` or `verifyPasswordless({ token })`.
+   */
+  autoHandleMagicLink?: boolean;
+}
+
+export interface SendMagicLinkOptions {
+  /**
+   * Page the link should open. Defaults to the current page when `autoHandleMagicLink` is on.
+   * Authon only uses it when its origin is in the project's allowed origins and the project has
+   * no callback URL or domain set.
+   */
+  redirectUrl?: string;
+}
+
+export interface AuthonWalletConfig {
+  /**
+   * Origin of the wallet frame. Defaults to https://wallet.authon.dev when apiUrl is the
+   * default Authon API; required when a custom apiUrl is used.
+   */
+  origin?: string;
+  /** Create the embedded wallet in the background after sign-in when the project enables wallets. */
+  autoCreate?: boolean;
+  /** Text and colors of the one-tap confirmation shown before the passkey prompt (protect/restore). */
+  ui?: WalletConfirmUi;
+  /**
+   * Supplies the token the wallet sends to Authon. Required with sessionMode 'bff',
+   * where the browser holds no Authon session: fetch a short-lived wallet token
+   * from your server (see createAuthonWalletToken in @authon/nextjs/server).
+   */
+  getToken?: () => Promise<string | null | undefined>;
+}
+
+/**
+ * Appearance of the small confirmation card the wallet frame shows right before
+ * the system passkey prompt. Browsers only allow the prompt after a click inside
+ * the wallet frame, so this single tap cannot be skipped.
+ */
+export interface WalletConfirmUi {
+  title?: string;
+  message?: string;
+  confirmLabel?: string;
+  cancelLabel?: string;
+  /** Hex color such as #2563eb */
+  accentColor?: string;
+  theme?: 'light' | 'dark';
 }
 
 export interface OAuthSignInOptions {
@@ -27,6 +77,8 @@ export interface AuthonEvents {
   passkeyRegistered: (credential: PasskeyCredential) => void;
   web3Connected: (wallet: Web3Wallet) => void;
   error: (error: Error) => void;
+  walletChanged: (wallet: EmbeddedWallet | null) => void;
+  walletError: (error: AuthonWalletError) => void;
   authorizationCompleted: (result: AuthorizationCodeResult) => void;
 }
 

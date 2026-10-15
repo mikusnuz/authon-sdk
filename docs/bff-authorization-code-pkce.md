@@ -231,3 +231,38 @@ It adds project callback URLs, hashed authorization requests/codes, durable exte
 ## Existing SPA token mode
 
 The existing browser token flow remains the default for backward compatibility. It uses browser storage and is intended for SPAs that do not have a BFF. New server-session applications should opt into code mode.
+
+## Embedded wallet in BFF mode
+
+The browser has no Authon token in BFF mode, so the embedded wallet cannot use the session directly. Mint a five-minute, wallet-only token on your server and give the SDK a function that fetches it. The token is rejected by every Authon endpoint except the wallet API.
+
+```ts
+// app/api/authon/wallet-token/route.ts
+import { createAuthonWalletToken } from '@authon/nextjs/server';
+
+export async function POST() {
+  const session = await getServerSession(); // your HttpOnly session
+  if (!session) return new Response('Unauthorized', { status: 401 });
+  const { token, expiresAt } = await createAuthonWalletToken({
+    userId: session.authonUserId,
+    secretKey: process.env.AUTHON_SECRET_KEY!,
+  });
+  return Response.json({ token, expiresAt }, { headers: { 'Cache-Control': 'no-store' } });
+}
+```
+
+```ts
+const authon = new Authon(process.env.NEXT_PUBLIC_AUTHON_PUBLISHABLE_KEY!, {
+  sessionMode: 'bff',
+  wallet: {
+    getToken: async () => {
+      const res = await fetch('/api/authon/wallet-token', { method: 'POST' });
+      return res.ok ? (await res.json()).token : null;
+    },
+  },
+});
+
+const wallet = await authon.wallet.ensure();
+```
+
+Protect the token route with your own session and CSRF checks like any other authenticated mutation.

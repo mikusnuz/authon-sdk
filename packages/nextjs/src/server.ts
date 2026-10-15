@@ -11,6 +11,8 @@ export type {
   CreateAuthonAuthorizationRequestOptions,
   HandleAuthonAuthorizationCallbackOptions,
 } from './authorization-code';
+export { createAuthonWalletToken } from './wallet-token';
+export type { AuthonWalletToken, CreateAuthonWalletTokenOptions } from './wallet-token';
 
 const DEFAULT_COOKIE_NAME = 'authon-token';
 
