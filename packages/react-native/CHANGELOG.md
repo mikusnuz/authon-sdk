@@ -1,5 +1,9 @@
 # @authon/react-native
 
+## 0.9.2
+
+- Send `mfaCapable` on passwordless and web3 verification so accounts with MFA get the second-factor step.
+
 ## 0.9.1
 
 ### Breaking Changes

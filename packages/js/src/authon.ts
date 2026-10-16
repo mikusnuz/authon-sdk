@@ -562,7 +562,7 @@ export class Authon {
       if (this.pendingMagicLink?.token === options.token) this.pendingMagicLink = null;
       return this.handleAuthCompletion(res);
     }
-    const res = await this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', options);
+    const res = await this.apiPost<PasswordlessVerifyResponse>('/v1/auth/passwordless/verify', { ...options, mfaCapable: true });
     return this.handleAuthCompletion(res);
   }
 
@@ -680,6 +680,7 @@ export class Authon {
       address,
       chain,
       walletType,
+      mfaCapable: true,
     });
     return this.handleAuthCompletion(res);
   }
@@ -1520,7 +1521,7 @@ export class Authon {
   private sharedMagicLinkRequest(key: string, body: Record<string, unknown>): Promise<MagicLinkVerifyResponse> {
     let pending = magicLinkResponses.get(key);
     if (!pending) {
-      pending = this.apiPost<MagicLinkVerifyResponse>('/v1/auth/passwordless/verify', body);
+      pending = this.apiPost<MagicLinkVerifyResponse>('/v1/auth/passwordless/verify', { ...body, mfaCapable: true });
       magicLinkResponses.set(key, pending);
       pending.catch(() => undefined);
     }
@@ -1637,6 +1638,7 @@ export class Authon {
         const res = await this.apiPost<MagicLinkVerifyResponse>('/v1/auth/passwordless/verify', {
           token,
           requireBrowserBinding: true,
+          mfaCapable: true,
           ...(browserNonce ? { browserNonce } : {}),
         });
         if (isMagicLinkConfirmation(res)) return { ...res, reason: signedIn ? 'signed_in' : 'unrecognized_browser' };

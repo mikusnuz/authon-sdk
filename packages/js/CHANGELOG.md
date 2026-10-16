@@ -1,5 +1,9 @@
 # @authon/js
 
+## 0.9.2
+
+- Send `mfaCapable` on passwordless and web3 verification so accounts with MFA get the second-factor step (older SDKs keep the previous behavior on the server).
+
 ## 0.9.1
 
 ### Breaking Changes

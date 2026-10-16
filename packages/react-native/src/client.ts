@@ -488,6 +488,7 @@ export class AuthonMobileClient {
       address,
       chain,
       walletType,
+      mfaCapable: true,
     })) as ApiAuthResponse & { mfaRequired?: boolean; mfaToken?: string; mfaMethods?: string[] };
     if (res.mfaRequired) {
       // Account has a second factor: finish with verifyMfa(error.mfaToken, code), as for password/OAuth.
@@ -539,6 +540,7 @@ export class AuthonMobileClient {
     const res = (await this.request('POST', '/v1/auth/passwordless/verify', {
       email: identifier,
       code,
+      mfaCapable: true,
     })) as ApiAuthResponse & { mfaRequired?: boolean; mfaToken?: string; mfaMethods?: string[] };
     if (res.mfaRequired) {
       // Account has a second factor: finish with verifyMfa(error.mfaToken, code), as for password/OAuth.

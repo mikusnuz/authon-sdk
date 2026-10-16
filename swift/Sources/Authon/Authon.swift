@@ -300,6 +300,8 @@ public final class Authon: ObservableObject {
             let token: String?
             let email: String?
             let code: String?
+            /// Tells Authon this SDK can continue an MFA challenge.
+            let mfaCapable = true
         }
         let result: OAuthExchangeResponse = try await api.request(
             "POST", "/v1/auth/passwordless/verify",
@@ -419,6 +421,8 @@ public final class Authon: ObservableObject {
             let address: String
             let chain: Web3Chain
             let walletType: Web3WalletType
+            /// Tells Authon this SDK can continue an MFA challenge.
+            let mfaCapable = true
         }
         let result: OAuthExchangeResponse = try await api.request(
             "POST", "/v1/auth/web3/verify",

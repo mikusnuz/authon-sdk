@@ -77,7 +77,7 @@ describe('magic link handling on page load', () => {
     expect(vi.mocked(fetch)).toHaveBeenCalledOnce();
     const [url, init] = vi.mocked(fetch).mock.calls[0];
     expect(String(url)).toBe('https://api.authon.dev/v1/auth/passwordless/verify');
-    expect(JSON.parse(String((init as RequestInit).body))).toEqual({ token: TOKEN, requireBrowserBinding: true });
+    expect(JSON.parse(String((init as RequestInit).body))).toEqual({ token: TOKEN, requireBrowserBinding: true, mfaCapable: true });
     expect(window.location.search).toBe('?next=%2Fcart');
   });
 
@@ -172,7 +172,7 @@ describe('magic link login CSRF protection', () => {
     const authon = new Authon('pk_live_csrf-bound');
     expect(window.location.hash).toBe('');
     expect((await authon.handleMagicLink())?.id).toBe('user_1');
-    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token, requireBrowserBinding: true, browserNonce: nonce });
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token, requireBrowserBinding: true, mfaCapable: true, browserNonce: nonce });
     expect(window.location.pathname).toBe('/welcome');
     expect([...Array(localStorage.length).keys()].map((i) => localStorage.key(i)).some((k) => k?.startsWith('authon_magic_link_nonce:'))).toBe(false);
   });
@@ -206,7 +206,7 @@ describe('magic link login CSRF protection', () => {
     // Only an explicit OK signs in, with a plain verify call.
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
     expect((await authon.confirmMagicLink()).id).toBe('user_1');
-    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token });
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token, mfaCapable: true });
     expect(authon.getPendingMagicLink()).toBeNull();
   });
 
@@ -228,7 +228,7 @@ describe('magic link login CSRF protection', () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse(tokens()));
     onConfirm();
     await vi.waitFor(() => expect(authon.getUser()?.id).toBe('user_1'));
-    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token });
+    expect(bodyOf(vi.mocked(fetch).mock.calls[1])).toEqual({ token, mfaCapable: true });
     await vi.waitFor(() => expect(close).toHaveBeenCalled());
   });
 
@@ -265,7 +265,7 @@ describe('magic link login CSRF protection', () => {
     vi.mocked(fetch).mockResolvedValueOnce(jsonResponse({ status: 'confirmation_required', email: 'other@example.com' }));
     expect(await authon.handleMagicLink()).toBeNull();
     // No nonce is sent, so the server cannot finish the link.
-    expect(bodyOf(vi.mocked(fetch).mock.calls[2])).toEqual({ token, requireBrowserBinding: true });
+    expect(bodyOf(vi.mocked(fetch).mock.calls[2])).toEqual({ token, requireBrowserBinding: true, mfaCapable: true });
     expect(authon.getPendingMagicLink()).toEqual({ email: 'other@example.com', reason: 'signed_in' });
     expect(authon.getUser()?.id).toBe('user_1');
   });
